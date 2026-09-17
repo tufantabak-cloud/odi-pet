@@ -751,6 +751,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     }
   }
 
+  const isTaskDone = (s: any) => s?.status === 'done' || s?.status === 'completed' || Boolean(s?.completed);
+
   const getSchedulesForTab = (tabName: string) => {
     const dbCat = TAB_CATEGORY_MAP[tabName]
     if (!dbCat) return []
@@ -766,7 +768,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         return (s.sub_category || '').includes('Parazit') || (s.title || '').toLowerCase().includes('parazit');
       }
       return true;
-    }).filter((s: any) => s.status !== 'done')
+    }).filter((s: any) => !isTaskDone(s))
   }
 
   const getCompletedSchedulesForTab = (tabName: string) => {
@@ -784,15 +786,15 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         return (s.sub_category || '').includes('Parazit') || (s.title || '').toLowerCase().includes('parazit');
       }
       return true;
-    }).filter((s: any) => s.status === 'done')
+    }).filter((s: any) => isTaskDone(s))
   }
 
   const getSchedulesForPeriod = (period: 'week' | 'all' | 'overdue' | 'done') => {
     const now = new Date()
     
     return localSchedules.filter((s: any) => {
-      if (period === 'done') return s.status === 'done'
-      if (s.status === 'done') return false
+      if (period === 'done') return isTaskDone(s)
+      if (isTaskDone(s)) return false
       
       try {
         const d = getTaskDateTime(s)
@@ -1060,7 +1062,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           )
         ) : (
           list.map((item: any) => {
-          const isCompleted = item.status === 'done';
+          const isCompleted = isTaskDone(item);
           const now = new Date();
           const isOverdue = !isCompleted && getTaskDateTime(item) < now;
 
@@ -1411,7 +1413,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
 
         // Sıradaki
         const now = new Date();
-        const upcomingSchedules = localSchedules.filter((s: any) => s.status !== 'done').sort((a: any, b: any) => getTaskDateTime(a).getTime() - getTaskDateTime(b).getTime());
+        const upcomingSchedules = localSchedules.filter((s: any) => !isTaskDone(s)).sort((a: any, b: any) => getTaskDateTime(a).getTime() - getTaskDateTime(b).getTime());
         const nextSchedule = upcomingSchedules[0]; // Geçmiş veya gelecek, ilk yapılmamış görev
         const nextDateObj = nextSchedule ? getTaskDateTime(nextSchedule) : null;
         const nextDateStr = nextDateObj ? `${nextDateObj.getDate()} ${['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'][nextDateObj.getMonth()]}` : '-';
