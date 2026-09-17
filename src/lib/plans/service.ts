@@ -77,45 +77,129 @@ export async function verifyPetOwnership(userId: string, petId: string) {
   return true;
 }
 
+export async function checkDuplicateActivePlan(
+  supabase: any,
+  input: CreatePlanInput
+): Promise<void> {
+  const isPastDone = !!input.extra_data?.is_past_done;
+  const isRecurring = !!input.repeat_rule && input.repeat_rule !== 'none';
+
+  // Geçmişte uygulanmış tek seferlik bir kayıt giriliyorsa aktif plan açılmadığı için kontrolü atla
+  if (isPastDone && !isRecurring) {
+    return;
+  }
+
+  // Pet'in mevcut aktif veya gecikmiş ana planlarını sorgula
+  const { data: existingPlans } = await supabase
+    .from('plans')
+    .select('id, category, sub_type, title, scheduled_at, extra_data, is_active')
+    .eq('pet_id', input.pet_id)
+    .in('status', ['active', 'overdue'])
+    .is('parent_plan_id', null);
+
+  if (!existingPlans || existingPlans.length === 0) {
+    return;
+  }
+
+  const toTRLower = (s: string) => (s || '').trim().toLocaleLowerCase('tr-TR');
+
+  const category = input.category;
+  const subType = (input.sub_type || '').trim();
+  const subTypeLower = toTRLower(subType);
+
+  // 1. Aşı Kodu ve Doz Kontrolü (category === 'asi')
+  if (category === 'asi') {
+    const vaccineCode = input.extra_data?.vaccine_code || input.extra_data?.vaccine?.code;
+    const doseNumber = input.extra_data?.dose_number;
+
+    for (const p of existingPlans) {
+      if (p.is_active === false || p.category !== 'asi') continue;
+      const pCode = p.extra_data?.vaccine_code || p.extra_data?.vaccine?.code;
+      const pDose = p.extra_data?.dose_number;
+
+      if (vaccineCode && pCode && vaccineCode.toUpperCase() === pCode.toUpperCase()) {
+        if (doseNumber !== undefined && doseNumber !== null) {
+          if (pDose !== undefined && pDose !== null && String(pDose) === String(doseNumber)) {
+            throw new Error(`DUPLICATE_ACTIVE_VACCINE_PLAN:${p.id}`);
+          }
+        } else {
+          const scheduledDate = new Date(input.scheduled_at).toISOString().split('T')[0];
+          const dateStr = new Date(p.scheduled_at).toISOString().split('T')[0];
+          if (dateStr === scheduledDate) {
+            throw new Error(`DUPLICATE_ACTIVE_VACCINE_PLAN:${p.id}`);
+          }
+        }
+      }
+    }
+    return;
+  }
+
+  // 2. Parazit Kontrolü (category === 'parazit')
+  if (category === 'parazit') {
+    const normalizeParasiteSub = (s: string) => toTRLower(s).replace(/\s+/g, '');
+    const targetNorm = normalizeParasiteSub(subType);
+
+    for (const p of existingPlans) {
+      if (p.is_active === false || p.category !== 'parazit') continue;
+      const existNorm = normalizeParasiteSub(p.sub_type || '');
+      const isMatch = existNorm === targetNorm ||
+        (existNorm.includes('iç') && targetNorm.includes('iç')) ||
+        (existNorm.includes('dış') && targetNorm.includes('dış')) ||
+        (existNorm.includes('tasma') && targetNorm.includes('tasma')) ||
+        (existNorm.includes('birleşik') && targetNorm.includes('birleşik'));
+
+      if (isMatch) {
+        throw new Error(`DUPLICATE_ACTIVE_PLAN:${p.id}:parazit:${p.sub_type || subType}:${p.scheduled_at}`);
+      }
+    }
+    return;
+  }
+
+  // 3. İlaç Kontrolü (category === 'saglik' && sub_type === 'İlaç')
+  if (category === 'saglik' && subType === 'İlaç') {
+    const targetMedName = toTRLower(input.extra_data?.medication_name || input.extra_data?.title || '');
+    if (targetMedName) {
+      for (const p of existingPlans) {
+        if (p.is_active === false) continue;
+        if (p.category === 'saglik' && p.sub_type === 'İlaç') {
+          const existMedName = toTRLower(p.extra_data?.medication_name || p.extra_data?.title || '');
+          if (existMedName && existMedName === targetMedName) {
+            throw new Error(`DUPLICATE_ACTIVE_PLAN:${p.id}:saglik:İlaç:${p.scheduled_at}`);
+          }
+        }
+      }
+    }
+    return;
+  }
+
+  // 4. Standart Kategoriler (bakim, hijyen, aktivite, beslenme, kontrol, saglik diğerleri)
+  for (const p of existingPlans) {
+    if (p.is_active === false) continue;
+
+    const isCategoryMatch = p.category === category ||
+      (category === 'kontrol' && p.category === 'saglik' && (p.extra_data?.original_category === 'kontrol' || ['kontrol', 'acil', 'takip', 'genel kontrol'].includes(toTRLower(p.sub_type)))) ||
+      (category === 'saglik' && p.category === 'kontrol');
+
+    if (isCategoryMatch) {
+      if (subType === 'Diğer' && p.sub_type === 'Diğer') {
+        const targetText = toTRLower(input.extra_data?.custom_text || input.title || '');
+        const existText = toTRLower(p.extra_data?.custom_text || p.title || '');
+        if (targetText && existText && targetText === existText) {
+          throw new Error(`DUPLICATE_ACTIVE_PLAN:${p.id}:${category}:${subType}:${p.scheduled_at}`);
+        }
+      } else if (p.sub_type && toTRLower(p.sub_type) === subTypeLower) {
+        throw new Error(`DUPLICATE_ACTIVE_PLAN:${p.id}:${category}:${p.sub_type}:${p.scheduled_at}`);
+      }
+    }
+  }
+}
+
 export async function createPlan(userId: string, input: CreatePlanInput) {
   await verifyPetOwnership(userId, input.pet_id);
   const supabase = await createServerSupabaseClient();
 
-  // category='asi' duplicate checks
-  if (input.category === 'asi') {
-    const vaccineCode = input.extra_data?.vaccine_code || input.extra_data?.vaccine?.code;
-    const doseNumber = input.extra_data?.dose_number;
-
-    const { data: existingPlans } = await supabase
-      .from('plans')
-      .select('id, scheduled_at, extra_data')
-      .eq('pet_id', input.pet_id)
-      .eq('category', 'asi')
-      .eq('status', 'active');
-
-    if (existingPlans && existingPlans.length > 0) {
-      if (doseNumber !== undefined && doseNumber !== null) {
-        const match = existingPlans.find(p => {
-          const pCode = p.extra_data?.vaccine_code || p.extra_data?.vaccine?.code;
-          const pDose = p.extra_data?.dose_number;
-          return pCode === vaccineCode && String(pDose) === String(doseNumber);
-        });
-        if (match) {
-          throw new Error(`DUPLICATE_ACTIVE_VACCINE_PLAN:${match.id}`);
-        }
-      } else {
-        const scheduledDate = new Date(input.scheduled_at).toISOString().split('T')[0];
-        const match = existingPlans.find(p => {
-          const pCode = p.extra_data?.vaccine_code || p.extra_data?.vaccine?.code;
-          const dateStr = new Date(p.scheduled_at).toISOString().split('T')[0];
-          return pCode === vaccineCode && dateStr === scheduledDate;
-        });
-        if (match) {
-          throw new Error(`DUPLICATE_ACTIVE_VACCINE_PLAN:${match.id}`);
-        }
-      }
-    }
-  }
+  // Centralized duplicate active plan check across all categories
+  await checkDuplicateActivePlan(supabase, input);
 
   // Get pet info for species validation
   const { data: pet, error: petErr } = await supabase
@@ -204,8 +288,6 @@ export async function createPlan(userId: string, input: CreatePlanInput) {
     }
 
     // Parazit protokol kimliğini tek ve kanonik biçimde plana yaz.
-    // İstemciler tarihsel olarak yalnızca extra_data.product.id gönderiyordu;
-    // atomik tamamlama RPC'si ise üst seviye kimlik alanlarını doğruluyor.
     input.extra_data = {
       ...(input.extra_data || {}),
       parasite_protocol_id: proto.id,
@@ -213,7 +295,6 @@ export async function createPlan(userId: string, input: CreatePlanInput) {
       parasite_type: proto.parasite_type,
     };
 
-    // Validate sub_type matches protocol parasite_type
     const subCat = input.sub_type;
     const pType = proto.parasite_type;
 
@@ -244,44 +325,51 @@ export async function createPlan(userId: string, input: CreatePlanInput) {
 
   if (isPastDone) {
     if (isRecurring) {
-      // 1. Calculate the next occurrence date for the main recurring plan from completion date
       const nextScheduledAtStr = calculateNextOccurrenceDate(
         input.scheduled_at,
         input.repeat_rule || null,
         input.extra_data
-      ) || input.scheduled_at; // Safe fallback if no next date
+      ) || input.scheduled_at;
 
-      // 2. Create the main recurring plan FIRST (status: 'active')
-      const { data: mainPlan, error: mainPlanErr } = await supabase
-        .from('plans')
-        .insert({
-          user_id: userId,
-          pet_id: input.pet_id,
-          category: input.category,
-          sub_type: input.sub_type,
-          title: input.title || null,
-          scheduled_at: nextScheduledAtStr,
-          repeat_rule: input.repeat_rule || null,
-          ends_at: input.ends_at || null,
-          notif_before: input.notif_before,
-          notif_unit: input.notif_unit,
-          note: input.note || null,
-          extra_data: { ...(input.extra_data || {}), is_past_done: false },
-          status: 'active',
-          source: input.source || 'user',
-          policy: input.policy || 'optional',
-          assigned_to: input.assigned_to || null,
-        })
-        .select()
-        .single();
-
-      if (mainPlanErr) throw new Error(mainPlanErr.message);
-
-      // 3. Create static completed copy linked via parent_plan_id and occurrence_scheduled_at
-      const completedPlanData = {
+      let mainInsertPayload: any = {
         user_id: userId,
         pet_id: input.pet_id,
         category: input.category,
+        sub_type: input.sub_type,
+        title: input.title || null,
+        scheduled_at: nextScheduledAtStr,
+        repeat_rule: input.repeat_rule || null,
+        ends_at: input.ends_at || null,
+        notif_before: input.notif_before,
+        notif_unit: input.notif_unit,
+        note: input.note || null,
+        extra_data: { ...(input.extra_data || {}), is_past_done: false },
+        status: 'active',
+        source: input.source || 'user',
+        policy: input.policy || 'optional',
+        assigned_to: input.assigned_to || null,
+      };
+
+      let { data: mainPlan, error: mainPlanErr } = await supabase
+        .from('plans')
+        .insert(mainInsertPayload)
+        .select()
+        .single();
+
+      if (mainPlanErr && mainPlanErr.code === '23514' && input.category === 'kontrol') {
+        mainInsertPayload.category = 'saglik';
+        mainInsertPayload.extra_data.original_category = 'kontrol';
+        const retry = await supabase.from('plans').insert(mainInsertPayload).select().single();
+        mainPlan = retry.data;
+        mainPlanErr = retry.error;
+      }
+
+      if (mainPlanErr) throw new Error(mainPlanErr.message);
+
+      const completedPlanData = {
+        user_id: userId,
+        pet_id: input.pet_id,
+        category: mainInsertPayload.category,
         sub_type: input.sub_type,
         scheduled_at: input.scheduled_at,
         occurrence_scheduled_at: input.occurrence_scheduled_at || input.scheduled_at,
@@ -305,28 +393,32 @@ export async function createPlan(userId: string, input: CreatePlanInput) {
 
       if (input.category === 'asi') {
         const vaccineCode = input.extra_data?.vaccine_code || input.extra_data?.vaccine?.code || null;
-        await supabase.from('vaccine_records_v2').insert({
-          pet_id: input.pet_id,
-          vaccine_code: vaccineCode,
-          vaccine_name: input.sub_type || input.title || 'Aşı Kaydı',
-          dose_number: input.extra_data?.dose_number || 1,
-          administered_at: input.scheduled_at,
-          status: 'completed',
-          source: 'user_detailed',
-          plan_id: completedTargetPlanId,
-          notes: input.note || null
-        }).catch(() => {});
+        try {
+          await supabase.from('vaccine_records_v2').insert({
+            pet_id: input.pet_id,
+            vaccine_code: vaccineCode,
+            vaccine_name: input.sub_type || input.title || 'Aşı Kaydı',
+            dose_number: input.extra_data?.dose_number || 1,
+            administered_at: input.scheduled_at,
+            status: 'completed',
+            source: 'user_detailed',
+            plan_id: completedTargetPlanId,
+            notes: input.note || null
+          });
+        } catch {}
       } else if (input.category === 'parazit') {
         const parasiteType = input.extra_data?.parasite_type || 'internal';
-        await supabase.from('parasite_records').insert({
-          pet_id: input.pet_id,
-          parasite_type: parasiteType,
-          administered_at: input.scheduled_at ? input.scheduled_at.split('T')[0] : new Date().toISOString().split('T')[0],
-          brand_free_text: input.extra_data?.product?.brand_name || input.sub_type || null,
-          product_free_text: input.extra_data?.product?.product_name || null,
-          status: 'completed',
-          plan_id: completedTargetPlanId
-        }).catch(() => {});
+        try {
+          await supabase.from('parasite_records').insert({
+            pet_id: input.pet_id,
+            parasite_type: parasiteType,
+            administered_at: input.scheduled_at ? input.scheduled_at.split('T')[0] : new Date().toISOString().split('T')[0],
+            brand_free_text: input.extra_data?.product?.brand_name || input.sub_type || null,
+            product_free_text: input.extra_data?.product?.product_name || null,
+            status: 'completed',
+            plan_id: completedTargetPlanId
+          });
+        } catch {}
       }
 
       if (input.category === 'saglik' && input.sub_type === 'İlaç') {
@@ -351,34 +443,48 @@ export async function createPlan(userId: string, input: CreatePlanInput) {
 
       return mainPlan;
     } else {
-      // One-time plan: save with completed status directly
       initialStatus = 'completed';
     }
   }
   
-  const { data: plan, error: planError } = await supabase
+  let insertPayload: any = {
+    user_id: userId,
+    pet_id: input.pet_id,
+    category: input.category,
+    sub_type: input.sub_type,
+    title: input.title || null,
+    scheduled_at: scheduledAt,
+    occurrence_scheduled_at: input.occurrence_scheduled_at || null,
+    repeat_rule: input.repeat_rule || null,
+    ends_at: input.ends_at || null,
+    notif_before: input.notif_before,
+    notif_unit: input.notif_unit,
+    note: input.note || null,
+    extra_data: input.extra_data || {},
+    status: initialStatus,
+    source: input.source || 'user',
+    policy: input.policy || 'optional',
+    assigned_to: input.assigned_to || null,
+  };
+
+  let { data: plan, error: planError } = await supabase
     .from('plans')
-    .insert({
-      user_id: userId,
-      pet_id: input.pet_id,
-      category: input.category,
-      sub_type: input.sub_type,
-      title: input.title || null,
-      scheduled_at: scheduledAt,
-      occurrence_scheduled_at: input.occurrence_scheduled_at || null,
-      repeat_rule: input.repeat_rule || null,
-      ends_at: input.ends_at || null,
-      notif_before: input.notif_before,
-      notif_unit: input.notif_unit,
-      note: input.note || null,
-      extra_data: input.extra_data || {},
-      status: initialStatus,
-      source: input.source || 'user',
-      policy: input.policy || 'optional',
-      assigned_to: input.assigned_to || null,
-    })
+    .insert(insertPayload)
     .select()
     .single();
+
+  // Defensive fallback: DB constraint 'kontrol' içermiyorsa 'saglik' kategorisine yönlendir
+  if (planError && planError.code === '23514' && input.category === 'kontrol') {
+    insertPayload.category = 'saglik';
+    insertPayload.extra_data = { ...(insertPayload.extra_data || {}), original_category: 'kontrol' };
+    const retryRes = await supabase
+      .from('plans')
+      .insert(insertPayload)
+      .select()
+      .single();
+    plan = retryRes.data;
+    planError = retryRes.error;
+  }
 
   if (planError) throw new Error(planError.message);
 
@@ -405,28 +511,32 @@ export async function createPlan(userId: string, input: CreatePlanInput) {
   if (initialStatus === 'completed') {
     if (input.category === 'asi') {
       const vaccineCode = input.extra_data?.vaccine_code || input.extra_data?.vaccine?.code || null;
-      await supabase.from('vaccine_records_v2').insert({
-        pet_id: input.pet_id,
-        vaccine_code: vaccineCode,
-        vaccine_name: input.sub_type || input.title || 'Aşı Kaydı',
-        dose_number: input.extra_data?.dose_number || 1,
-        administered_at: input.scheduled_at,
-        status: 'completed',
-        source: 'user_detailed',
-        plan_id: plan.id,
-        notes: input.note || null
-      }).catch(() => {});
+      try {
+        await supabase.from('vaccine_records_v2').insert({
+          pet_id: input.pet_id,
+          vaccine_code: vaccineCode,
+          vaccine_name: input.sub_type || input.title || 'Aşı Kaydı',
+          dose_number: input.extra_data?.dose_number || 1,
+          administered_at: input.scheduled_at,
+          status: 'completed',
+          source: 'user_detailed',
+          plan_id: plan.id,
+          notes: input.note || null
+        });
+      } catch {}
     } else if (input.category === 'parazit') {
       const parasiteType = input.extra_data?.parasite_type || 'internal';
-      await supabase.from('parasite_records').insert({
-        pet_id: input.pet_id,
-        parasite_type: parasiteType,
-        administered_at: input.scheduled_at ? input.scheduled_at.split('T')[0] : new Date().toISOString().split('T')[0],
-        brand_free_text: input.extra_data?.product?.brand_name || input.sub_type || null,
-        product_free_text: input.extra_data?.product?.product_name || null,
-        status: 'completed',
-        plan_id: plan.id
-      }).catch(() => {});
+      try {
+        await supabase.from('parasite_records').insert({
+          pet_id: input.pet_id,
+          parasite_type: parasiteType,
+          administered_at: input.scheduled_at ? input.scheduled_at.split('T')[0] : new Date().toISOString().split('T')[0],
+          brand_free_text: input.extra_data?.product?.brand_name || input.sub_type || null,
+          product_free_text: input.extra_data?.product?.product_name || null,
+          status: 'completed',
+          plan_id: plan.id
+        });
+      } catch {}
     }
   }
 

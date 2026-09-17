@@ -204,4 +204,175 @@ describe('Plans Creation API - Duplicate Prevention Tests', () => {
     const res3 = await POST(req3)
     expect(res3.status).toBe(201)
   })
+
+  it('Bakım kategorisinde aktif Banyo planı varken ikinci Banyo planı 409 DUPLICATE_ACTIVE_PLAN dönmeli', async () => {
+    mockSessionUser({ id: testUserId } as any)
+
+    // First request: create Banyo plan
+    const req1 = new NextRequest('http://localhost:3000/api/plans', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pet_id: testPetIdOwned,
+        category: 'bakim',
+        sub_type: 'Banyo',
+        scheduled_at: '2026-08-01T10:00:00Z',
+        repeat_rule: null,
+      })
+    })
+
+    const res1 = await POST(req1)
+    expect(res1.status).toBe(201)
+    const body1 = await res1.json()
+    const banyoPlanId = body1.plan.id
+
+    // Second request: duplicate Banyo plan
+    const req2 = new NextRequest('http://localhost:3000/api/plans', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pet_id: testPetIdOwned,
+        category: 'bakim',
+        sub_type: 'Banyo',
+        scheduled_at: '2026-08-05T10:00:00Z',
+        repeat_rule: null,
+      })
+    })
+
+    const res2 = await POST(req2)
+    expect(res2.status).toBe(409)
+    const body2 = await res2.json()
+    expect(body2.error).toBe('DUPLICATE_ACTIVE_PLAN')
+    expect(body2.plan_id).toBe(banyoPlanId)
+    expect(body2.category).toBe('bakim')
+  })
+
+  it('İlaç alt kategorisinde aynı ilaç adı mükerrer sayılmalı, farklı ilaç adına izin verilmeli', async () => {
+    mockSessionUser({ id: testUserId } as any)
+
+    // First medication: Antibiyotik
+    const req1 = new NextRequest('http://localhost:3000/api/plans', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pet_id: testPetIdOwned,
+        category: 'saglik',
+        sub_type: 'İlaç',
+        scheduled_at: '2026-08-01T09:00:00Z',
+        repeat_rule: 'daily',
+        extra_data: {
+          medication_name: 'Antibiyotik X'
+        }
+      })
+    })
+
+    const res1 = await POST(req1)
+    expect(res1.status).toBe(201)
+
+    // Duplicate medication: same name
+    const req2 = new NextRequest('http://localhost:3000/api/plans', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pet_id: testPetIdOwned,
+        category: 'saglik',
+        sub_type: 'İlaç',
+        scheduled_at: '2026-08-02T09:00:00Z',
+        repeat_rule: null,
+        extra_data: {
+          medication_name: 'Antibiyotik X'
+        }
+      })
+    })
+
+    const res2 = await POST(req2)
+    expect(res2.status).toBe(409)
+    const body2 = await res2.json()
+    expect(body2.error).toBe('DUPLICATE_ACTIVE_PLAN')
+
+    // Different medication: Vitamin -> should succeed
+    const req3 = new NextRequest('http://localhost:3000/api/plans', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pet_id: testPetIdOwned,
+        category: 'saglik',
+        sub_type: 'İlaç',
+        scheduled_at: '2026-08-01T12:00:00Z',
+        repeat_rule: null,
+        extra_data: {
+          medication_name: 'Vitamin Paste'
+        }
+      })
+    })
+
+    const res3 = await POST(req3)
+    expect(res3.status).toBe(201)
+  })
+
+  it('Kontroller ve Beslenme alt kategorilerinde aktif plan varken 409 dönmeli', async () => {
+    mockSessionUser({ id: testUserId } as any)
+
+    // Kontrol planı
+    const req1 = new NextRequest('http://localhost:3000/api/plans', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pet_id: testPetIdOwned,
+        category: 'kontrol',
+        sub_type: 'Genel Kontrol',
+        scheduled_at: '2026-08-10T14:00:00Z',
+        repeat_rule: null,
+      })
+    })
+    const res1 = await POST(req1)
+    expect(res1.status).toBe(201)
+
+    // Duplicate Kontrol planı
+    const req2 = new NextRequest('http://localhost:3000/api/plans', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pet_id: testPetIdOwned,
+        category: 'kontrol',
+        sub_type: 'Genel Kontrol',
+        scheduled_at: '2026-08-15T14:00:00Z',
+        repeat_rule: null,
+      })
+    })
+    const res2 = await POST(req2)
+    expect(res2.status).toBe(409)
+    expect((await res2.json()).error).toBe('DUPLICATE_ACTIVE_PLAN')
+
+    // Mama Siparişi planı
+    const req3 = new NextRequest('http://localhost:3000/api/plans', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pet_id: testPetIdOwned,
+        category: 'beslenme',
+        sub_type: 'Mama Siparişi',
+        scheduled_at: '2026-08-20T10:00:00Z',
+        repeat_rule: null,
+      })
+    })
+    const res3 = await POST(req3)
+    expect(res3.status).toBe(201)
+
+    // Duplicate Mama Siparişi
+    const req4 = new NextRequest('http://localhost:3000/api/plans', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pet_id: testPetIdOwned,
+        category: 'beslenme',
+        sub_type: 'Mama Siparişi',
+        scheduled_at: '2026-08-25T10:00:00Z',
+        repeat_rule: null,
+      })
+    })
+    const res4 = await POST(req4)
+    expect(res4.status).toBe(409)
+    expect((await res4.json()).error).toBe('DUPLICATE_ACTIVE_PLAN')
+  })
 })

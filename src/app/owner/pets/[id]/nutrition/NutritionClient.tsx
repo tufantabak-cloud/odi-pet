@@ -146,7 +146,10 @@ export default function NutritionClient({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         })
-        if (!res.ok) throw new Error('Hatırlatıcı eklenemedi')
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.message || (res.status === 409 ? 'Bu evcil hayvan için aktif bir hatırlatıcı zaten mevcut.' : 'Hatırlatıcı eklenemedi'));
+        }
       }
 
       setShowReminderModal(false)

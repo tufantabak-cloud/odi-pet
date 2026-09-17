@@ -426,6 +426,33 @@ export async function scheduleNextParasiteDose(
     } satisfies Record<string, unknown>,
   };
 
+  // Check if an active parasite plan of the same type already exists to prevent duplicates
+  const { data: existingPlan } = await supabase
+    .from('plans')
+    .select('id')
+    .eq('pet_id', petId)
+    .eq('category', 'parazit')
+    .eq('sub_type', subType)
+    .in('status', ['active', 'overdue'])
+    .is('parent_plan_id', null)
+    .maybeSingle();
+
+  if (existingPlan) {
+    const { error: updateError } = await supabase
+      .from('plans')
+      .update({
+        scheduled_at: new Date(next.nextDueDate).toISOString(),
+        extra_data: payload.extra_data,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', existingPlan.id);
+
+    if (updateError) {
+      console.error('[P10] Mevcut parazit planı güncelleme hatası:', updateError);
+    }
+    return;
+  }
+
   const { error } = await supabase.from('plans').insert(payload);
 
   if (error) {

@@ -317,16 +317,38 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
       }
     }
 
-    // Görevleri plans tablosuna yaz
+    // Görevleri plans tablosuna yazmadan önce mevcut aktif planları kontrol et (mükerrer kayıt önleme)
     if (tasks.length > 0) {
-      const tasksWithUserId = tasks.map(t => ({
-        ...t,
-        user_id: profile.id,
-        source: (t as any).source || ((t as any).category === 'saglik' && (t as any).sub_type === 'Hatırlatma' ? 'user' : 'protocol'),
-        policy: (t as any).policy || 'recommended',
-      }))
-      const { error: insertError } = await supabase.from('plans').insert(tasksWithUserId)
-      if (insertError) throw insertError
+      const { data: currentActivePlans } = await supabase
+        .from('plans')
+        .select('category, sub_type, extra_data')
+        .eq('pet_id', id)
+        .in('status', ['active', 'overdue'])
+        .is('parent_plan_id', null);
+
+      const filteredTasks = tasks.filter(t => {
+        if (!currentActivePlans || currentActivePlans.length === 0) return true;
+        if (t.category === 'asi') {
+          const tCode = (t as any).extra_data?.vaccine_code;
+          return !currentActivePlans.some(p => {
+            if (p.category !== 'asi') return false;
+            const pCode = p.extra_data?.vaccine_code || p.extra_data?.vaccine?.code;
+            return pCode && tCode && pCode.toUpperCase() === tCode.toUpperCase();
+          });
+        }
+        return !currentActivePlans.some(p => p.category === t.category && p.sub_type === t.sub_type);
+      });
+
+      if (filteredTasks.length > 0) {
+        const tasksWithUserId = filteredTasks.map(t => ({
+          ...t,
+          user_id: profile.id,
+          source: (t as any).source || ((t as any).category === 'saglik' && (t as any).sub_type === 'Hatırlatma' ? 'user' : 'protocol'),
+          policy: (t as any).policy || 'recommended',
+        }));
+        const { error: insertError } = await supabase.from('plans').insert(tasksWithUserId);
+        if (insertError) throw insertError;
+      }
     }
 
     // Petin sağlık geçmişi durumunu güncelle
