@@ -165,6 +165,7 @@ export function CanonicalPlanActionModal({
             pet_id: petId,
             category: 'asi',
             input: {
+              pet_id: petId,
               vaccine_name: resolved.displayTitle,
               vaccine_code: context.plan?.sub_type || 'CUSTOM',
               administered_at: details.administered_at || new Date().toISOString().split('T')[0],
@@ -183,6 +184,9 @@ export function CanonicalPlanActionModal({
           if (agendaRes.ok) {
             handleCompleteSuccess();
             return;
+          } else {
+            const errData = await agendaRes.json().catch(() => ({}));
+            console.warn('[CanonicalPlanActionModal] Agenda write failed, falling back to plans PATCH:', errData);
           }
         } catch (agendaErr) {
           console.warn('[CanonicalPlanActionModal] Agenda write failed, falling back to plans PATCH:', agendaErr);
@@ -201,11 +205,15 @@ export function CanonicalPlanActionModal({
       if (details?.product_notes) {
         payload.notes = details.product_notes;
       }
-      if (details?.brand) {
-        payload.brand_free_text = details.brand;
-      }
-      if (details?.product_name) {
-        payload.product_free_text = details.product_name;
+      // brand_free_text ve product_free_text alanları API tarafından parazit protokolü anahtarı olarak
+      // değerlendirildiği için yalnızca kategori 'parazit' ise root payload'a eklenmelidir.
+      if (resolved.category === 'parazit') {
+        if (details?.brand) {
+          payload.brand_free_text = details.brand;
+        }
+        if (details?.product_name) {
+          payload.product_free_text = details.product_name;
+        }
       }
 
       const res = await fetch(`${getMutationRoute()}`, {
