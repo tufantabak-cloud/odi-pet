@@ -906,6 +906,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
       return null
     }
     if (item.id && isPlanSource(item.id)) return getRealPlanId(item.id)
+    if (item.plan_id) return item.plan_id
+    if (item.parent_plan_id) return item.parent_plan_id
     if ((item._source === 'plans' || item._source === 'health_schedules') && item._plan_id) return item._plan_id
     if (item._is_virtual && (item._source === 'plans' || item._source === 'health_schedules') && item._plan_id) return item._plan_id
     return null

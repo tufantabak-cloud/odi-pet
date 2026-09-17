@@ -141,8 +141,9 @@ export function resolvePlanActions(context: CanonicalPlanContext): ResolvedPlanA
   }
 
   // Edit route resolution
-  const realId = normalizePlanId(context.planId || plan.id);
-  const petId = context.petId || plan.pet_id;
+  const candidateId = plan.plan_id || occurrence.plan_id || plan._plan_id || plan.parent_plan_id || context.planId || plan.id;
+  const realId = normalizePlanId(candidateId);
+  const petId = context.petId || plan.pet_id || occurrence.pet_id;
   const editRoute = realId ? `/owner/plan-yap/edit/${realId}${petId ? `?pet_id=${petId}` : ''}` : null;
 
   // Display Date
