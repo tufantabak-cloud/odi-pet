@@ -485,6 +485,8 @@ export default function VaccineSelectorSheet({
           {showScanner && (
             <SmartScanner
               petId={undefined}
+              category={pickerType === 'vaccine' ? 'asi' : 'parazit'}
+              cropMode={pickerType === 'vaccine' ? 'vaccine_row' : 'standard'}
               onClose={() => setShowScanner(false)}
               onResult={handleScanResult}
             />

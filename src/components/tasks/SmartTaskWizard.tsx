@@ -729,6 +729,8 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
         {showScanner && (
           <SmartScanner
             petId={petId}
+            category="asi"
+            cropMode="vaccine_row"
             onClose={() => setShowScanner(false)}
             onResult={(data: any) => {
               if (data?.parsed?.title || data?.parsed?.vaccine_name) {

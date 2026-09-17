@@ -49,9 +49,26 @@ interface SmartScannerProps {
     metadata?: { recordType: string; documentStoragePath: string | null }
   ) => void;
   onClose: () => void;
+  cropMode?: 'standard' | 'vaccine_row';
+  category?: string;
 }
 
-export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerProps) {
+export function SmartScanner({ petId, onSave, onResult, onClose, cropMode, category }: SmartScannerProps) {
+  const isVaccineContext = Boolean(
+    cropMode === 'vaccine_row' ||
+    (category && /asi|aşı|vaccine/i.test(category))
+  );
+  const initialCropMode = cropMode || (isVaccineContext ? 'vaccine_row' : 'standard');
+  const [currentCropMode, setCurrentCropMode] = useState<'standard' | 'vaccine_row'>(initialCropMode);
+
+  useEffect(() => {
+    if (cropMode) {
+      setCurrentCropMode(cropMode);
+    } else if (category && /asi|aşı|vaccine/i.test(category)) {
+      setCurrentCropMode('vaccine_row');
+    }
+  }, [cropMode, category]);
+
   const [step, setStep] = useState<"ready" | "camera" | "adjust" | "processing" | "confirm" | "error" | "saving">("ready");
   const [parsedData, setParsedData] = useState<ParsedScannerData>({});
   const [recordType, setRecordType] = useState<string>("unknown");
@@ -71,6 +88,7 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
   const fileInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Feature guard for scan_document
   const [currentUserId, setCurrentUserId] = useState<string>('');
@@ -207,13 +225,28 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
-      const containerWidth = 300;
-      const containerHeight = 400;
+      const rect = containerRef.current?.getBoundingClientRect();
+      const containerWidth = rect?.width || 360;
+      const containerHeight = rect?.height || (currentCropMode === 'vaccine_row' ? 240 : 360);
 
-      canvas.width = 768; // High resolution crop output
-      canvas.height = 1024;
+      // Kırpma hedef kutusu boyutları (ekran pikselleri)
+      let cropBoxWidth = containerWidth * 0.85;
+      let cropBoxHeight = cropBoxWidth * (4 / 3);
 
-      const scaleFactor = canvas.width / containerWidth;
+      if (currentCropMode === 'vaccine_row') {
+        // Aşı karnesi tek satırı yatay dikdörtgen (etiket + tarih + kaşe/imza)
+        cropBoxWidth = Math.min(containerWidth * 0.92, 420);
+        cropBoxHeight = 86;
+
+        // HD yüksek çözünürlük tek aşı satırı çıktısı
+        canvas.width = 1352;
+        canvas.height = 280;
+      } else {
+        canvas.width = 768; // Standart belge çıktısı
+        canvas.height = 1024;
+      }
+
+      const scaleFactor = canvas.width / cropBoxWidth;
 
       // Draw background
       ctx.fillStyle = "#ffffff";
@@ -627,8 +660,29 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
             </div>
             
             <h1 className="text-[26px] font-extrabold text-text-primary mb-2 text-center">Akıllı Tarama</h1>
-            <p className="text-text-secondary font-normal text-[14px] leading-relaxed mb-6 px-2 text-center">
-              Aşı karnesi, mama, ilaç veya parazit ambalajlarını tarayarak bilgileri hızla kaydedin.
+
+            {/* Mod Seçimi */}
+            <div className="inline-flex p-1 bg-surface rounded-2xl border border-border-main mb-4 shadow-xs">
+              <button
+                type="button"
+                onClick={() => setCurrentCropMode('vaccine_row')}
+                className={`px-3.5 py-2 text-[12px] font-black rounded-xl transition-all flex items-center gap-1.5 ${currentCropMode === 'vaccine_row' ? 'bg-primary text-white shadow-sm scale-[1.02]' : 'text-text-secondary hover:text-text-primary'}`}
+              >
+                <span>💉</span> Tek Aşı Satırı (Yatay)
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrentCropMode('standard')}
+                className={`px-3.5 py-2 text-[12px] font-black rounded-xl transition-all flex items-center gap-1.5 ${currentCropMode === 'standard' ? 'bg-primary text-white shadow-sm scale-[1.02]' : 'text-text-secondary hover:text-text-primary'}`}
+              >
+                <span>📄</span> Tam Belge
+              </button>
+            </div>
+
+            <p className="text-text-secondary font-normal text-[13px] leading-relaxed mb-6 px-2 text-center">
+              {currentCropMode === 'vaccine_row'
+                ? "Aşı karnesindeki ilgili tek satırı (etiket, tarih ve kaşe) kadraja alarak kolayca tarayın. Eski kayıtlar taranmaz."
+                : "Aşı karnesi, mama, ilaç veya parazit ambalajlarını tarayarak bilgileri hızla kaydedin."}
             </p>
             
             <div className="w-full bg-white rounded-2xl p-6 shadow-sm border border-border-main flex flex-col gap-4 mb-8">
@@ -692,21 +746,69 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
             />
             
             {/* Visual Guide Overlay (Kadraj Kılavuzu) */}
-            <div className="absolute inset-0 flex flex-col justify-between pointer-events-none p-6 z-10">
-              <div className="text-center bg-black/60 backdrop-blur-xs text-white text-[11px] font-bold py-2 px-4 rounded-full self-center mt-2 shadow-sm">
-                Belgeyi düz ve aydınlık bir zemine yerleştirin
+            <div className="absolute inset-0 flex flex-col justify-between pointer-events-none p-4 z-10">
+              <div className="flex flex-col items-center gap-2 pointer-events-auto mt-2">
+                <div className="text-center bg-black/75 backdrop-blur-xs text-white text-[11px] font-bold py-1.5 px-3 rounded-full shadow-sm">
+                  {currentCropMode === 'vaccine_row' 
+                    ? "Aşı karnesindeki ilgili tek satırı (etiket, tarih ve kaşe) çerçeveye hizalayın"
+                    : "Belgeyi düz ve aydınlık bir zemine yerleştirin"}
+                </div>
+
+                {/* Mod Geçiş Rozeti */}
+                <div className="inline-flex p-1 bg-black/80 backdrop-blur-md rounded-2xl border border-white/30 shadow-lg">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentCropMode('vaccine_row')}
+                    className={`px-3 py-1.5 text-[11px] font-black rounded-xl transition-all flex items-center gap-1.5 ${currentCropMode === 'vaccine_row' ? 'bg-primary text-white shadow-md scale-[1.02]' : 'text-white/70 hover:text-white'}`}
+                  >
+                    <span>💉</span> Tek Aşı Satırı (Yatay)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentCropMode('standard')}
+                    className={`px-3 py-1.5 text-[11px] font-black rounded-xl transition-all flex items-center gap-1.5 ${currentCropMode === 'standard' ? 'bg-primary text-white shadow-md scale-[1.02]' : 'text-white/70 hover:text-white'}`}
+                  >
+                    <span>📄</span> Tam Belge
+                  </button>
+                </div>
               </div>
               
-              {/* Target Frame Box */}
-              <div className="w-[85%] aspect-[3/4] max-h-[280px] border-2 border-dashed border-white/80 rounded-sheet self-center relative shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]">
-                {/* L-corners for aesthetic camera overlay feel */}
-                <div className="absolute -top-1.5 -left-1.5 w-6 h-6 border-t-4 border-l-4 border-primary rounded-tl-lg" />
-                <div className="absolute -top-1.5 -right-1.5 w-6 h-6 border-t-4 border-r-4 border-primary rounded-tr-lg" />
-                <div className="absolute -bottom-1.5 -left-1.5 w-6 h-6 border-b-4 border-l-4 border-primary rounded-bl-lg" />
-                <div className="absolute -bottom-1.5 -right-1.5 w-6 h-6 border-b-4 border-r-4 border-primary rounded-br-lg" />
-              </div>
+              {/* Target Frame Box (Kamera Canlı Kadraj Kılavuzu) */}
+              {currentCropMode === 'vaccine_row' ? (
+                <div 
+                  style={{ width: '92%', maxWidth: '420px', height: '86px' }}
+                  className="border-2 border-dashed border-primary rounded-2xl self-center relative shadow-[0_0_0_9999px_rgba(0,0,0,0.72)] flex items-center justify-center my-auto transition-all"
+                >
+                  {/* L-corners */}
+                  <div className="absolute -top-1.5 -left-1.5 w-5 h-5 border-t-4 border-l-4 border-primary rounded-tl-lg" />
+                  <div className="absolute -top-1.5 -right-1.5 w-5 h-5 border-t-4 border-r-4 border-primary rounded-tr-lg" />
+                  <div className="absolute -bottom-1.5 -left-1.5 w-5 h-5 border-b-4 border-l-4 border-primary rounded-bl-lg" />
+                  <div className="absolute -bottom-1.5 -right-1.5 w-5 h-5 border-b-4 border-r-4 border-primary rounded-br-lg" />
 
-              <div className="h-10" /> {/* Spacer */}
+                  {/* Sütun kılavuzları */}
+                  <div className="absolute inset-0 flex divide-x divide-white/30 pointer-events-none text-[9.5px] text-white/90 font-black tracking-wide">
+                    <div className="w-[45%] flex items-center justify-center p-1 text-center truncate bg-white/5">
+                      Etiket / Lot No
+                    </div>
+                    <div className="w-[25%] flex items-center justify-center p-1 text-center truncate bg-white/5">
+                      Tarih
+                    </div>
+                    <div className="w-[30%] flex items-center justify-center p-1 text-center truncate bg-white/5">
+                      Kaşe / İmza
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="w-[85%] aspect-[3/4] max-h-[280px] border-2 border-dashed border-white/80 rounded-sheet self-center relative shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]">
+                  {/* L-corners for aesthetic camera overlay feel */}
+                  <div className="absolute -top-1.5 -left-1.5 w-6 h-6 border-t-4 border-l-4 border-primary rounded-tl-lg" />
+                  <div className="absolute -top-1.5 -right-1.5 w-6 h-6 border-t-4 border-r-4 border-primary rounded-tr-lg" />
+                  <div className="absolute -bottom-1.5 -left-1.5 w-6 h-6 border-b-4 border-l-4 border-primary rounded-bl-lg" />
+                  <div className="absolute -bottom-1.5 -right-1.5 w-6 h-6 border-b-4 border-r-4 border-primary rounded-br-lg" />
+                </div>
+              )}
+
+              <div className="h-6" /> {/* Spacer */}
             </div>
 
             {/* Controls Layer */}
@@ -746,12 +848,34 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
 
         {step === "adjust" && tempImageSrc && (
           <div className="flex flex-col items-center w-full animate-fadeIn select-none">
-            <h3 className="text-text-primary font-extrabold text-[18px] mb-3 text-center">Görseli Ayarlayın</h3>
-            <p className="text-text-secondary text-[13px] font-normal mb-4 text-center px-4">
-              Görseli sürükleyip yakınlaştırarak kılavuz çizgileri arasına hizalayın.
+            <h3 className="text-text-primary font-extrabold text-[18px] mb-2 text-center">Görseli Ayarlayın</h3>
+
+            {/* Mod Seçimi */}
+            <div className="inline-flex p-1 bg-surface rounded-xl border border-border-main mb-3">
+              <button
+                type="button"
+                onClick={() => setCurrentCropMode('vaccine_row')}
+                className={`px-3 py-1 text-[11px] font-extrabold rounded-lg transition-all ${currentCropMode === 'vaccine_row' ? 'bg-primary text-white shadow-xs' : 'text-text-secondary hover:text-text-primary'}`}
+              >
+                Tek Aşı Satırı (Önerilen)
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrentCropMode('standard')}
+                className={`px-3 py-1 text-[11px] font-extrabold rounded-lg transition-all ${currentCropMode === 'standard' ? 'bg-primary text-white shadow-xs' : 'text-text-secondary hover:text-text-primary'}`}
+              >
+                Tam Belge
+              </button>
+            </div>
+
+            <p className="text-text-secondary text-[12px] font-normal mb-3 text-center px-4">
+              {currentCropMode === 'vaccine_row' 
+                ? "Sadece kaydetmek istediğiniz aşı satırını çerçeveye oturtun. Eski kayıtlar elenecektir."
+                : "Görseli sürükleyip yakınlaştırarak kılavuz çizgileri arasına hizalayın."}
             </p>
             
             <div 
+              ref={containerRef}
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
@@ -760,7 +884,7 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
               onTouchMove={handleTouchMove}
               onTouchEnd={handleMouseUp}
               style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
-              className="w-full aspect-[3/4] max-h-[300px] overflow-hidden rounded-sheet border border-border-main bg-surface relative shadow-inner mb-4 select-none touch-none"
+              className="w-full aspect-[4/3] max-h-[320px] min-h-[220px] overflow-hidden rounded-sheet border border-border-main bg-slate-950 relative shadow-inner mb-4 select-none touch-none flex items-center justify-center"
             >
               {/* Image element with rotation, scale and translation applied */}
               <Image 
@@ -774,15 +898,35 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
                 className="object-contain pointer-events-none"
               />
               
-              {/* Outer Crop Indicator Guide (Yine 3:4 oranlı kadraj overlay'i) */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none p-4 z-10">
-                <div className="w-[85%] aspect-[3/4] border-2 border-dashed border-primary rounded-[20px] relative shadow-[0_0_0_9999px_rgba(0,0,0,0.4)]">
-                  {/* L Corners */}
-                  <div className="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-white rounded-tl-md" />
-                  <div className="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-white rounded-tr-md" />
-                  <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-white rounded-bl-md" />
-                  <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-white rounded-br-md" />
-                </div>
+              {/* Target Frame Box Overlay */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none p-3 z-10">
+                {currentCropMode === 'vaccine_row' ? (
+                  <div 
+                    style={{ width: '92%', maxWidth: '420px', height: '86px' }}
+                    className="border-2 border-dashed border-primary rounded-2xl relative shadow-[0_0_0_9999px_rgba(0,0,0,0.72)] flex items-center justify-center my-auto transition-all"
+                  >
+                    {/* L Corners */}
+                    <div className="absolute -top-1.5 -left-1.5 w-5 h-5 border-t-4 border-l-4 border-primary rounded-tl-lg" />
+                    <div className="absolute -top-1.5 -right-1.5 w-5 h-5 border-t-4 border-r-4 border-primary rounded-tr-lg" />
+                    <div className="absolute -bottom-1.5 -left-1.5 w-5 h-5 border-b-4 border-l-4 border-primary rounded-bl-lg" />
+                    <div className="absolute -bottom-1.5 -right-1.5 w-5 h-5 border-b-4 border-r-4 border-primary rounded-br-lg" />
+
+                    {/* Sütun Kılavuzları */}
+                    <div className="absolute inset-0 flex divide-x divide-white/30 pointer-events-none text-[9.5px] text-white/90 font-black tracking-wide">
+                      <div className="w-[45%] flex items-center justify-center px-1 text-center bg-white/5 truncate">Etiket / Lot No</div>
+                      <div className="w-[25%] flex items-center justify-center px-1 text-center bg-white/5 truncate">Tarih</div>
+                      <div className="w-[30%] flex items-center justify-center px-1 text-center bg-white/5 truncate">Kaşe / İmza</div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-[85%] aspect-[3/4] border-2 border-dashed border-primary rounded-[20px] relative shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]">
+                    {/* L Corners */}
+                    <div className="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-white rounded-tl-md" />
+                    <div className="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-white rounded-tr-md" />
+                    <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-white rounded-bl-md" />
+                    <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-white rounded-br-md" />
+                  </div>
+                )}
               </div>
             </div>
 

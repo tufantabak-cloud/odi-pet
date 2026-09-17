@@ -35,7 +35,6 @@ export interface CanonicalPlanActionModalProps {
   onClose: () => void;
   context: CanonicalPlanContext | null;
   onSuccess?: () => void;
-  petId?: string;
 }
 
 export function CanonicalPlanActionModal({
@@ -43,7 +42,6 @@ export function CanonicalPlanActionModal({
   onClose,
   context,
   onSuccess,
-  petId: propsPetId,
 }: CanonicalPlanActionModalProps) {
   const router = useRouter();
 
@@ -81,7 +79,7 @@ export function CanonicalPlanActionModal({
 
   const resolved = resolvePlanActions(context);
   const realPlanId = normalizePlanId(context.planId || context.plan?.id);
-  const petId = propsPetId || context.petId || context.plan?.pet_id || (context.plan as any)?.pets?.id || '';
+  const petId = context.petId || context.plan?.pet_id || '';
 
   const handleActionClick = (actionId: CanonicalPlanActionType) => {
     setErrorMsg(null);
@@ -155,7 +153,7 @@ export function CanonicalPlanActionModal({
             input: {
               vaccine_name: resolved.displayTitle,
               vaccine_code: context.plan?.sub_type || 'CUSTOM',
-              administered_at: details.administered_at || new Date().toISOString().split('T')[0],
+              administered_at: details.product_expiry_at || new Date().toISOString().split('T')[0],
               notes: details.product_notes || undefined,
               brand_name: details.brand || undefined,
             },
@@ -441,14 +439,9 @@ export function CanonicalPlanActionModal({
         <CompletionDetailsModal
           isOpen={true}
           taskTitle={resolved.displayTitle}
-          category={resolved.category as any}
+          category={(resolved.isVaccine ? 'asi' : resolved.category) as any}
           onClose={() => setShowDetailsModal(false)}
-          onNavigateAway={() => {
-            setShowDetailsModal(false);
-            onClose();
-          }}
           onComplete={handleCompleteWithDetails}
-          petId={petId}
         />
       )}
 

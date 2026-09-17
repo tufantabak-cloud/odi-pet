@@ -2306,7 +2306,6 @@ export default function WizardOrchestrator() {
               value={applicationDetails}
               onChange={(nextValue) => setStepData({ applicationDetails: nextValue })}
               onScan={() => setShowScanner(true)}
-              petId={wizardData.pet_id}
             />
           )}
           </div>
@@ -2372,7 +2371,6 @@ export default function WizardOrchestrator() {
               value={applicationDetails}
               onChange={(nextValue) => setStepData({ applicationDetails: nextValue })}
               onScan={() => setShowScanner(true)}
-              petId={wizardData.pet_id}
             />
           )}
           {logMode && (
@@ -2620,6 +2618,8 @@ export default function WizardOrchestrator() {
       {showScanner && (
         <SmartScanner 
           petId={wizardData.pet_id} 
+          category={healthCategory || undefined}
+          cropMode={healthCategory === 'asi' ? 'vaccine_row' : 'standard'}
           onClose={() => setShowScanner(false)}
           onResult={(parsed: ParsedScannerData, metadata) => {
             const nextDetails: ApplicationDetails = {
