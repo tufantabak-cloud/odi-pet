@@ -96,7 +96,7 @@ const BUCKET_META: Record<BucketKey, { label: string; overdue?: boolean; isCompl
   geciken:       { label: 'Geciken', overdue: true },
   bugun:         { label: 'Bugün' },
   buHafta:       { label: 'Bu hafta' },
-  sonraki:       { label: 'Sonraki 30 gün' },
+  sonraki:       { label: 'Gelecek Görevler' },
   sonYapilanlar: { label: 'SON YAPILANLAR', isCompleted: true },
 }
 
@@ -147,11 +147,13 @@ export default function TakvimClient({ pets, initialEvents = [] }: { pets: Pet[]
       const isCompleted = ev.status === 'completed' || ev.status === 'done'
       if (isCompleted) {
         out.sonYapilanlar.push(ev)
+      } else if (ev.status === 'overdue') {
+        out.geciken.push(ev)
+      } else if (ev.status === 'today') {
+        out.bugun.push(ev)
       } else {
         const diff = dayDiff(ev.date)
-        if (diff < 0) out.geciken.push(ev)
-        else if (diff === 0) out.bugun.push(ev)
-        else if (diff <= 7) out.buHafta.push(ev)
+        if (diff <= 7 && diff > 0) out.buHafta.push(ev)
         else out.sonraki.push(ev)
       }
     }
@@ -440,7 +442,8 @@ function EventRow({
   const style = CATEGORY_STYLE[cat]
   const diff = dayDiff(event.date)
   const isCompleted = event.status === 'done' || event.status === 'completed'
-  const isOverdue = diff < 0 && !isCompleted
+  const isOverdue = !isCompleted && (event.status === 'overdue' || diff < 0)
+  const isToday = !isCompleted && !isOverdue && (event.status === 'today' || diff === 0)
 
   const href = event.pet_id ? `/owner/pets/${event.pet_id}` : '/owner/dashboard'
 
@@ -448,10 +451,10 @@ function EventRow({
   if (isCompleted) {
     badge = { text: 'Yapıldı', cls: 'bg-[#F0FDF4] text-[#166534]' }
   } else if (isOverdue) {
-    badge = { text: `${Math.abs(diff)} gün`, cls: 'bg-error/10 text-error' }
-  } else if (diff === 0) {
+    badge = { text: diff < 0 ? `${Math.abs(diff)} gün` : 'Gecikti', cls: 'bg-error/10 text-error' }
+  } else if (isToday) {
     badge = { text: 'Bugün', cls: 'bg-primary-soft text-primary' }
-  } else if (diff <= 7) {
+  } else if (diff <= 7 && diff > 0) {
     badge = { text: 'Yaklaşan', cls: 'bg-warning/10 text-warning' }
   } else {
     badge = { text: 'Planlı', cls: 'bg-surface-secondary text-text-secondary' }

@@ -131,8 +131,8 @@ export function HealthTracker({ petId, onEditTask, onMarkDone, onPostpone, onSel
   const cardProps = {
     onMarkDone: onMarkDone || ((id: string) => markEventStatus(id, 'done')),
     onPostpone: onPostpone || ((id: string) => postponeEvent(id, 1)),
-    onEdit: onEditTask || (() => {}),
-    onSelectTask: onSelectTask || undefined,
+    onEdit: onSelectTask || onEditTask || (() => {}),
+    onSelectTask: onSelectTask || onEditTask || undefined,
     onDelete: (id: string, event?: FlowEvent) => {
       // KURAL 3: Plan ayrımı için öncelikli olarak event._source === 'plans' veya 'health_schedules' kullanılır.
       // Belirsiz kaynak veya gerçekleşmiş tıbbi kayıtlar (vaccine_records_v2, parasite_records, growth_records, weight_logs vb.)
@@ -515,10 +515,10 @@ function TimelineRow({
                   <div key={key} className="flex items-center justify-center min-h-[64px]">
                     <button
                       type="button"
-                      onClick={() => onEdit(coveringInterval.sourceEvent)}
+                      onClick={() => (onSelectTask || onEdit)(coveringInterval.sourceEvent)}
                       aria-label={`${formatShortDate(key)} — ${statusLabel}`}
                       title={`${formatShortDate(key)} — ${statusLabel}`}
-                      className={`w-[100px] h-[64px] min-h-[64px] shrink-0 rounded-2xl border ${colors} ${isToday ? 'ring-2 ring-[#3b82f6] shadow-sm shadow-blue-500/20' : 'hover:scale-[1.05] active:scale-95'} flex flex-col items-start text-left overflow-hidden p-2.5 transition-all duration-200`}
+                      className={`w-[100px] h-[64px] min-h-[64px] shrink-0 rounded-2xl border ${colors} ${isToday ? 'ring-2 ring-[#3b82f6] shadow-sm shadow-blue-500/20' : 'hover:scale-[1.05] active:scale-95'} flex flex-col items-start text-left overflow-hidden p-2.5 transition-all duration-200 cursor-pointer`}
                     >
                       <div className="w-full flex items-center justify-between">
                         <div className={`w-5 h-5 shrink-0 rounded-full flex items-center justify-center ${iconBg}`}>
@@ -543,10 +543,10 @@ function TimelineRow({
                   <div key={key} className="flex items-center justify-center min-h-[64px]">
                     <button
                       type="button"
-                      onClick={() => onEdit(coveringMissedInterval.sourceEvent)}
+                      onClick={() => (onSelectTask || onEdit)(coveringMissedInterval.sourceEvent)}
                       aria-label={`${formatShortDate(key)} — ${statusLabel}`}
                       title={`${formatShortDate(key)} — ${statusLabel}`}
-                      className="w-[100px] h-[64px] min-h-[64px] shrink-0 rounded-2xl border border-[#fca5a5] bg-[#fef2f2] text-[#b91c1c] hover:bg-[#fee2e2] hover:scale-[1.05] active:scale-95 flex flex-col items-start text-left overflow-hidden p-2.5 transition-all duration-200"
+                      className="w-[100px] h-[64px] min-h-[64px] shrink-0 rounded-2xl border border-[#fca5a5] bg-[#fef2f2] text-[#b91c1c] hover:bg-[#fee2e2] hover:scale-[1.05] active:scale-95 flex flex-col items-start text-left overflow-hidden p-2.5 transition-all duration-200 cursor-pointer"
                     >
                       <div className="w-full flex items-center justify-between">
                         <div className="w-5 h-5 shrink-0 rounded-full flex items-center justify-center bg-[#ef4444] text-white">

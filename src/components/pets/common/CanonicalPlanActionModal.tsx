@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
-import { Modal } from '@/components/ui/Modal';
 import {
   CheckCircle2,
   Clock,
@@ -51,6 +51,29 @@ export function CanonicalPlanActionModal({
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showParasiteModal, setShowParasiteModal] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen || !context) return null;
 
@@ -271,123 +294,135 @@ export function CanonicalPlanActionModal({
     }
   };
 
-  return (
+  if (!mounted) return null;
+
+  const isSubModalOpen = showPostponeModal || showDetailsModal || showParasiteModal;
+
+  const modalContent = (
     <>
-      <Modal isOpen={isOpen && !showPostponeModal && !showDetailsModal && !showParasiteModal} onClose={onClose}>
-        <div className="flex flex-col w-full max-w-sm mx-auto bg-white rounded-[24px] overflow-hidden shadow-2xl animate-fade-in border border-slate-100">
-          
-          {/* Header */}
-          <div className="flex items-center justify-between px-6 pt-5 pb-3 border-b border-slate-100/80">
-            <div>
+      {isOpen && !isSubModalOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity animate-in fade-in duration-200"
+          onClick={onClose}
+        >
+          <div
+            className="w-full sm:max-w-md bg-white rounded-t-[28px] sm:rounded-[24px] shadow-2xl border border-slate-100 overflow-hidden flex flex-col animate-in slide-in-from-bottom-5 sm:zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Mobile Pull Handle */}
+            <div className="w-12 h-1.5 bg-slate-300 rounded-full mx-auto mt-3 mb-1 sm:hidden shrink-0" />
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 pt-3 sm:pt-5 pb-3 border-b border-slate-100/80">
               <span className="text-[11px] font-bold uppercase tracking-wider text-purple-600 bg-purple-50 px-2.5 py-1 rounded-full">
                 {resolved.category.toUpperCase()} GÖREVİ
               </span>
-            </div>
-            <button
-              onClick={onClose}
-              className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors active:scale-95"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* Title & Info */}
-          <div className="px-6 py-4 flex flex-col gap-1.5">
-            <h3 className="text-[18px] font-extrabold text-slate-900 leading-snug tracking-tight">
-              {resolved.displayTitle}
-            </h3>
-            {resolved.displayDate && (
-              <div className="flex items-center gap-1.5 text-slate-500 text-[13px] font-medium">
-                <CalendarDays className="w-4 h-4 text-purple-500" />
-                <span>{resolved.displayDate}</span>
-              </div>
-            )}
-            {resolved.isCompleted && (
-              <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200/60">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Bu görev zaten tamamlanmış</span>
-              </div>
-            )}
-            {errorMsg && (
-              <div className="mt-2 p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-semibold">
-                {errorMsg}
-              </div>
-            )}
-          </div>
-
-          {/* Delete Confirmation View */}
-          {showDeleteConfirm ? (
-            <div className="p-6 bg-rose-50/50 border-t border-rose-100 flex flex-col gap-4">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-rose-100 flex items-center justify-center text-rose-600 flex-shrink-0">
-                  <AlertTriangle className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="text-[15px] font-bold text-rose-950">Planı Silmek İstiyor musunuz?</h4>
-                  <p className="text-[12px] text-rose-800/80 mt-0.5">
-                    Bu plan takviminizden ve hatırlatıcılardan kaldırılacaktır.
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-2 pt-1">
-                <button
-                  onClick={() => setShowDeleteConfirm(false)}
-                  className="flex-1 py-3 px-4 bg-white border border-slate-200 rounded-2xl text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all active:scale-[0.98]"
-                >
-                  Vazgeç
-                </button>
-                <button
-                  onClick={handleDeleteSubmit}
-                  disabled={loadingAction === 'delete'}
-                  className="flex-1 py-3 px-4 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl text-xs font-extrabold shadow-sm transition-all active:scale-[0.98] flex items-center justify-center gap-1.5"
-                >
-                  {loadingAction === 'delete' ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Evet, Sil'}
-                </button>
-              </div>
-            </div>
-          ) : (
-            /* Action Buttons List */
-            <div className="p-4 pt-1 flex flex-col gap-2">
-              {resolved.actions.map((action) => {
-                const isLoading = loadingAction === action.id;
-                let btnStyle = 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200/70';
-                let iconColor = 'text-slate-600';
-
-                if (action.variant === 'primary') {
-                  btnStyle = 'bg-emerald-600 hover:bg-emerald-700 text-white border-transparent shadow-[0_4px_16px_-2px_rgba(5,150,105,0.3)]';
-                  iconColor = 'text-white';
-                } else if (action.variant === 'danger') {
-                  btnStyle = 'bg-rose-50/60 hover:bg-rose-100/80 text-rose-700 border-rose-200/60';
-                  iconColor = 'text-rose-600';
-                }
-
-                return (
-                  <button
-                    key={action.id}
-                    onClick={() => handleActionClick(action.id)}
-                    disabled={action.disabled || !!loadingAction}
-                    className={`w-full py-3 px-4 rounded-[18px] border font-bold text-[14px] flex items-center justify-between transition-all duration-200 active:scale-[0.98] disabled:opacity-50 ${btnStyle}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      {renderIcon(action.icon, `w-4 h-4 ${iconColor}`)}
-                      <span>{action.label}</span>
-                    </div>
-                    {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-                  </button>
-                );
-              })}
-
               <button
                 onClick={onClose}
-                className="w-full mt-2 py-2.5 text-center text-[13px] font-bold text-slate-400 hover:text-slate-600 transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors active:scale-95"
+                aria-label="Kapat"
               >
-                Kapat
+                <X className="w-4 h-4" />
               </button>
             </div>
-          )}
 
+            {/* Title & Info */}
+            <div className="px-6 py-4 flex flex-col gap-1.5">
+              <h3 className="text-[18px] font-extrabold text-slate-900 leading-snug tracking-tight">
+                {resolved.displayTitle}
+              </h3>
+              {resolved.displayDate && (
+                <div className="flex items-center gap-1.5 text-slate-500 text-[13px] font-medium">
+                  <CalendarDays className="w-4 h-4 text-purple-500" />
+                  <span>{resolved.displayDate}</span>
+                </div>
+              )}
+              {resolved.isCompleted && (
+                <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200/60">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Bu görev zaten tamamlanmış</span>
+                </div>
+              )}
+              {errorMsg && (
+                <div className="mt-2 p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-semibold">
+                  {errorMsg}
+                </div>
+              )}
+            </div>
+
+            {/* Delete Confirmation View */}
+            {showDeleteConfirm ? (
+              <div className="p-6 bg-rose-50/50 border-t border-rose-100 flex flex-col gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-rose-100 flex items-center justify-center text-rose-600 flex-shrink-0">
+                    <AlertTriangle className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-[15px] font-bold text-rose-950">Planı Silmek İstiyor musunuz?</h4>
+                    <p className="text-[12px] text-rose-800/80 mt-0.5">
+                      Bu plan takviminizden ve hatırlatıcılardan kaldırılacaktır.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    className="flex-1 min-h-[48px] py-3 px-4 bg-white border border-slate-200 rounded-2xl text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all active:scale-[0.98]"
+                  >
+                    Vazgeç
+                  </button>
+                  <button
+                    onClick={handleDeleteSubmit}
+                    disabled={loadingAction === 'delete'}
+                    className="flex-1 min-h-[48px] py-3 px-4 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl text-xs font-extrabold shadow-sm transition-all active:scale-[0.98] flex items-center justify-center gap-1.5"
+                  >
+                    {loadingAction === 'delete' ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Evet, Sil'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* Action Buttons List */
+              <div className="p-4 pt-1 flex flex-col gap-2 pb-6 sm:pb-4">
+                {resolved.actions.map((action) => {
+                  const isLoading = loadingAction === action.id;
+                  let btnStyle = 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200/70';
+                  let iconColor = 'text-slate-600';
+
+                  if (action.variant === 'primary') {
+                    btnStyle = 'bg-emerald-600 hover:bg-emerald-700 text-white border-transparent shadow-[0_4px_16px_-2px_rgba(5,150,105,0.3)]';
+                    iconColor = 'text-white';
+                  } else if (action.variant === 'danger') {
+                    btnStyle = 'bg-rose-50/60 hover:bg-rose-100/80 text-rose-700 border-rose-200/60';
+                    iconColor = 'text-rose-600';
+                  }
+
+                  return (
+                    <button
+                      key={action.id}
+                      onClick={() => handleActionClick(action.id)}
+                      disabled={action.disabled || !!loadingAction}
+                      className={`w-full min-h-[48px] py-3 px-4 rounded-[18px] border font-bold text-[14px] flex items-center justify-between transition-all duration-200 active:scale-[0.98] disabled:opacity-50 ${btnStyle}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        {renderIcon(action.icon, `w-5 h-5 ${iconColor}`)}
+                        <span>{action.label}</span>
+                      </div>
+                      {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                    </button>
+                  );
+                })}
+
+                <button
+                  onClick={onClose}
+                  className="w-full min-h-[44px] mt-1 py-2.5 text-center text-[13px] font-bold text-slate-400 hover:text-slate-600 transition-colors active:scale-95"
+                >
+                  Kapat
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      </Modal>
+      )}
 
       {/* Domain-specific sub modals */}
       {showPostponeModal && (
@@ -404,8 +439,9 @@ export function CanonicalPlanActionModal({
         <CompletionDetailsModal
           isOpen={true}
           taskTitle={resolved.displayTitle}
-          category={resolved.category as any}
-          onClose={() => setShowDetailsModal(false)}          onComplete={handleCompleteWithDetails}
+          category={(resolved.isVaccine ? 'asi' : resolved.category) as any}
+          onClose={() => setShowDetailsModal(false)}
+          onComplete={handleCompleteWithDetails}
         />
       )}
 
@@ -420,4 +456,6 @@ export function CanonicalPlanActionModal({
       )}
     </>
   );
+
+  return createPortal(modalContent, document.body);
 }

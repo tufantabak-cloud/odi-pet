@@ -37,6 +37,7 @@ export class GenericReadHandler implements AgendaReadHandler {
       eventId: `plan_${plan.id}`,
       source: 'plans',
       sourceRecordId: plan.id,
+      petId: plan.pet_id || null,
       category: (plan.category as string) || this.category as string,
       subCategory: (plan.sub_type || "") as any || 'Görev',
       stableIdentity: baseIdentity,

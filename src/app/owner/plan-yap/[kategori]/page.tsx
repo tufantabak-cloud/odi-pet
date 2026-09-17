@@ -2618,6 +2618,8 @@ export default function WizardOrchestrator() {
       {showScanner && (
         <SmartScanner 
           petId={wizardData.pet_id} 
+          category={healthCategory || undefined}
+          cropMode={healthCategory === 'asi' ? 'vaccine_row' : 'standard'}
           onClose={() => setShowScanner(false)}
           onResult={(parsed: ParsedScannerData, metadata) => {
             const nextDetails: ApplicationDetails = {

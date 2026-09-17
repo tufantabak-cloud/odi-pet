@@ -9,6 +9,8 @@ interface VaccineScannerProps {
 export function VaccineScanner({ onSave, onClose }: VaccineScannerProps) {
   return (
     <SmartScanner
+      category="asi"
+      cropMode="vaccine_row"
       onSave={onSave}
       onClose={onClose}
     />

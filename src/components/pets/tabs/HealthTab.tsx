@@ -467,6 +467,8 @@ export default function HealthTab({ petId, petName, onMarkDone, onPostpone, onEd
       {isScannerOpen && (
         <SmartScanner
           petId={petId}
+          category="asi"
+          cropMode="vaccine_row"
           onClose={() => setIsScannerOpen(false)}
           onSave={() => {
             setIsScannerOpen(false);
