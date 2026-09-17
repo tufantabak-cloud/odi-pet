@@ -375,4 +375,68 @@ describe('Plans Creation API - Duplicate Prevention Tests', () => {
     expect(res4.status).toBe(409)
     expect((await res4.json()).error).toBe('DUPLICATE_ACTIVE_PLAN')
   })
+
+  it('Aynı güne aynı görev için iki kez yapıldı (is_past_done) kaydı girilirse ikincisi 409 dönmeli, farklı güne izin verilmeli', async () => {
+    mockSessionUser({ id: testUserId } as any)
+
+    // 1. İlk yapıldı kaydı: 17 Eylül Diş Fırçalama (is_past_done = true)
+    const req1 = new NextRequest('http://localhost:3000/api/plans', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pet_id: testPetIdOwned,
+        category: 'bakim',
+        sub_type: 'Diş Fırçalama',
+        scheduled_at: '2026-09-17T10:00:00Z',
+        repeat_rule: null,
+        extra_data: {
+          is_past_done: true
+        }
+      })
+    })
+    const res1 = await POST(req1)
+    expect(res1.status).toBe(201)
+    const data1 = await res1.json()
+    expect(data1.plan.status).toBe('completed')
+
+    // 2. İkinci yapıldı kaydı: AYNI GÜN (17 Eylül) tekrar Diş Fırçalama girilmek istenirse 409 dönmeli
+    const req2 = new NextRequest('http://localhost:3000/api/plans', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pet_id: testPetIdOwned,
+        category: 'bakim',
+        sub_type: 'Diş Fırçalama',
+        scheduled_at: '2026-09-17T18:00:00Z',
+        repeat_rule: null,
+        extra_data: {
+          is_past_done: true
+        }
+      })
+    })
+    const res2 = await POST(req2)
+    expect(res2.status).toBe(409)
+    const data2 = await res2.json()
+    expect(data2.error).toBe('DUPLICATE_COMPLETED_PLAN_SAME_DAY')
+
+    // 3. Farklı gün (16 Eylül) yapıldı kaydına izin verilmeli
+    const req3 = new NextRequest('http://localhost:3000/api/plans', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pet_id: testPetIdOwned,
+        category: 'bakim',
+        sub_type: 'Diş Fırçalama',
+        scheduled_at: '2026-09-16T10:00:00Z',
+        repeat_rule: null,
+        extra_data: {
+          is_past_done: true
+        }
+      })
+    })
+    const res3 = await POST(req3)
+    expect(res3.status).toBe(201)
+    const data3 = await res3.json()
+    expect(data3.plan.status).toBe('completed')
+  })
 })

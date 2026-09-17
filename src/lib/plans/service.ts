@@ -77,6 +77,102 @@ export async function verifyPetOwnership(userId: string, petId: string) {
   return true;
 }
 
+export async function checkDuplicateCompletedPlanSameDay(
+  supabase: any,
+  input: CreatePlanInput
+): Promise<void> {
+  if (!input.scheduled_at) return;
+
+  const targetDateStr = input.scheduled_at.includes('T')
+    ? input.scheduled_at.split('T')[0]
+    : input.scheduled_at;
+
+  const { data: completedPlans, error: completedError } = await supabase
+    .from('plans')
+    .select('id, category, sub_type, title, scheduled_at, extra_data, is_active')
+    .eq('pet_id', input.pet_id)
+    .eq('status', 'completed')
+    .gte('scheduled_at', `${targetDateStr}T00:00:00.000Z`)
+    .lte('scheduled_at', `${targetDateStr}T23:59:59.999Z`);
+
+  if (completedError) {
+    console.error('[checkDuplicateCompletedPlanSameDay] Supabase error:', completedError);
+  }
+
+  if (!completedPlans || completedPlans.length === 0) return;
+
+  const toTRLower = (s: string) => (s || '').trim().toLocaleLowerCase('tr-TR');
+  const category = input.category;
+  const subType = (input.sub_type || '').trim();
+  const subTypeLower = toTRLower(subType);
+
+  for (const p of completedPlans) {
+    // Aşı kontrolü
+    if (category === 'asi' && p.category === 'asi') {
+      const vaccineCode = input.extra_data?.vaccine_code || input.extra_data?.vaccine?.code;
+      const pCode = p.extra_data?.vaccine_code || p.extra_data?.vaccine?.code;
+      if (vaccineCode && pCode && vaccineCode.toUpperCase() === pCode.toUpperCase()) {
+        const doseNumber = input.extra_data?.dose_number;
+        const pDose = p.extra_data?.dose_number;
+        if (doseNumber !== undefined && doseNumber !== null && pDose !== undefined && pDose !== null) {
+          if (String(doseNumber) === String(pDose)) {
+            throw new Error(`DUPLICATE_COMPLETED_PLAN_SAME_DAY:${p.id}:asi:${p.sub_type || subType}:${p.scheduled_at}`);
+          }
+        } else {
+          throw new Error(`DUPLICATE_COMPLETED_PLAN_SAME_DAY:${p.id}:asi:${p.sub_type || subType}:${p.scheduled_at}`);
+        }
+      } else if (toTRLower(p.sub_type) === subTypeLower) {
+        throw new Error(`DUPLICATE_COMPLETED_PLAN_SAME_DAY:${p.id}:asi:${p.sub_type || subType}:${p.scheduled_at}`);
+      }
+      continue;
+    }
+
+    // Parazit kontrolü
+    if (category === 'parazit' && p.category === 'parazit') {
+      const normalizeParasiteSub = (s: string) => toTRLower(s).replace(/\s+/g, '');
+      const targetNorm = normalizeParasiteSub(subType);
+      const existNorm = normalizeParasiteSub(p.sub_type || '');
+      const isMatch = existNorm === targetNorm ||
+        (existNorm.includes('iç') && targetNorm.includes('iç')) ||
+        (existNorm.includes('dış') && targetNorm.includes('dış')) ||
+        (existNorm.includes('tasma') && targetNorm.includes('tasma')) ||
+        (existNorm.includes('birleşik') && targetNorm.includes('birleşik'));
+
+      if (isMatch) {
+        throw new Error(`DUPLICATE_COMPLETED_PLAN_SAME_DAY:${p.id}:parazit:${p.sub_type || subType}:${p.scheduled_at}`);
+      }
+      continue;
+    }
+
+    // İlaç kontrolü
+    if (category === 'saglik' && subType === 'İlaç' && p.category === 'saglik' && p.sub_type === 'İlaç') {
+      const targetMedName = toTRLower(input.extra_data?.medication_name || input.extra_data?.title || '');
+      const existMedName = toTRLower(p.extra_data?.medication_name || p.extra_data?.title || '');
+      if (targetMedName && existMedName && targetMedName === existMedName) {
+        throw new Error(`DUPLICATE_COMPLETED_PLAN_SAME_DAY:${p.id}:saglik:İlaç:${p.scheduled_at}`);
+      }
+      continue;
+    }
+
+    // Standart Kategoriler (bakim, hijyen, aktivite, beslenme, kontrol, saglik)
+    const isCategoryMatch = p.category === category ||
+      (category === 'kontrol' && p.category === 'saglik' && (p.extra_data?.original_category === 'kontrol' || ['kontrol', 'acil', 'takip', 'genel kontrol'].includes(toTRLower(p.sub_type)))) ||
+      (category === 'saglik' && p.category === 'kontrol');
+
+    if (isCategoryMatch) {
+      if (subType === 'Diğer' && p.sub_type === 'Diğer') {
+        const targetText = toTRLower(input.extra_data?.custom_text || input.title || '');
+        const existText = toTRLower(p.extra_data?.custom_text || p.title || '');
+        if (targetText && existText && targetText === existText) {
+          throw new Error(`DUPLICATE_COMPLETED_PLAN_SAME_DAY:${p.id}:${category}:${subType}:${p.scheduled_at}`);
+        }
+      } else if (p.sub_type && toTRLower(p.sub_type) === subTypeLower) {
+        throw new Error(`DUPLICATE_COMPLETED_PLAN_SAME_DAY:${p.id}:${category}:${p.sub_type}:${p.scheduled_at}`);
+      }
+    }
+  }
+}
+
 export async function checkDuplicateActivePlan(
   supabase: any,
   input: CreatePlanInput
@@ -84,9 +180,13 @@ export async function checkDuplicateActivePlan(
   const isPastDone = !!input.extra_data?.is_past_done;
   const isRecurring = !!input.repeat_rule && input.repeat_rule !== 'none';
 
-  // Geçmişte uygulanmış tek seferlik bir kayıt giriliyorsa aktif plan açılmadığı için kontrolü atla
-  if (isPastDone && !isRecurring) {
-    return;
+  // 0. Geçmişte veya o an uygulanmış (is_past_done = true) bir kayıt ekleniyorsa,
+  // aynı gün için aynı alt türde zaten bir "yapıldı" kaydı var mı denetle!
+  if (isPastDone) {
+    await checkDuplicateCompletedPlanSameDay(supabase, input);
+    if (!isRecurring) {
+      return;
+    }
   }
 
   // Pet'in mevcut aktif veya gecikmiş ana planlarını sorgula

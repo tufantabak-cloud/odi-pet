@@ -113,6 +113,7 @@ export default function WizardOrchestrator() {
     category: string;
     subType: string;
     scheduledAt: string;
+    isCompleted?: boolean;
   } | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -427,10 +428,37 @@ export default function WizardOrchestrator() {
       .eq('pet_id', wizardData.pet_id)
       .in('status', ['active', 'overdue'])
       .is('parent_plan_id', null)
-      .neq('is_active', false)
       .then(({ data }: { data: any[] | null; error: unknown }) => {
         if (!cancelled && data) {
           setExistingActivePlans(data.filter((p: any) => p.is_active !== false));
+        }
+      });
+    return () => { cancelled = true; };
+  }, [wizardData.pet_id]);
+
+  // Evcil hayvanın son 30 güne ait tamamlanmış planlarını çek (aynı güne mükerrer yapıldı kontrolü için)
+  const [existingCompletedPlans, setExistingCompletedPlans] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!wizardData.pet_id) {
+      setExistingCompletedPlans([]);
+      return;
+    }
+    const supabase = createBrowserSupabaseClient();
+    let cancelled = false;
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
+
+    supabase
+      .from('plans')
+      .select('*')
+      .eq('pet_id', wizardData.pet_id)
+      .eq('status', 'completed')
+      .gte('scheduled_at', `${thirtyDaysAgoStr}T00:00:00`)
+      .then(({ data }: { data: any[] | null; error: unknown }) => {
+        if (!cancelled && data) {
+          setExistingCompletedPlans(data.filter((p: any) => p.is_active !== false));
         }
       });
     return () => { cancelled = true; };
@@ -1120,7 +1148,8 @@ export default function WizardOrchestrator() {
               id: errData.plan_id,
               category: errData.category || categoryKey,
               subType: errData.sub_type || wizardData.subCategory || 'Görev',
-              scheduledAt: errData.scheduled_at || ''
+              scheduledAt: errData.scheduled_at || '',
+              isCompleted: errData.error === 'DUPLICATE_COMPLETED_PLAN_SAME_DAY'
             });
             return;
           }
@@ -1247,10 +1276,41 @@ export default function WizardOrchestrator() {
               return p.sub_type && p.sub_type.trim().toLocaleLowerCase('tr-TR') === sub.id.trim().toLocaleLowerCase('tr-TR');
             });
 
+            // Log modu veya Yapıldı modunda: o gün için zaten tamamlanmış bir kayıt var mı?
+            const completedPlanSameDay = (!logMode && !wizardData.markAsDone) ? null : existingCompletedPlans.find(p => {
+              const pCat = p.extra_data?.original_category || p.category;
+              if (pCat !== categoryKey) return false;
+              const pDate = (p.scheduled_at || '').split('T')[0];
+              const curDate = wizardData.date || new Date().toISOString().split('T')[0];
+              if (pDate !== curDate) return false;
+              if (categoryKey === 'parazit') {
+                const pNorm = (p.sub_type || '').toLocaleLowerCase('tr-TR').replace(/\s+/g, '');
+                const sNorm = sub.id.toLocaleLowerCase('tr-TR').replace(/\s+/g, '');
+                return pNorm === sNorm ||
+                  (pNorm.includes('iç') && sNorm.includes('iç')) ||
+                  (pNorm.includes('dış') && sNorm.includes('dış')) ||
+                  (pNorm.includes('tasma') && sNorm.includes('tasma'));
+              }
+              return p.sub_type && p.sub_type.trim().toLocaleLowerCase('tr-TR') === sub.id.trim().toLocaleLowerCase('tr-TR');
+            });
+
+            const isCompletedBadge = !!completedPlanSameDay && (logMode || !!wizardData.markAsDone);
+            const isPlanliBadge = activePlan && !logMode;
+
             return (
               <button
                 key={sub.id}
                 onClick={() => {
+                  if (completedPlanSameDay && (logMode || wizardData.markAsDone)) {
+                    setSelectedDuplicatePlan({
+                      id: completedPlanSameDay.id,
+                      category: completedPlanSameDay.category,
+                      subType: sub.label || sub.id,
+                      scheduledAt: completedPlanSameDay.scheduled_at,
+                      isCompleted: true
+                    });
+                    return;
+                  }
                   if (activePlan && !logMode) {
                     setSelectedDuplicatePlan({
                       id: activePlan.id,
@@ -1264,19 +1324,25 @@ export default function WizardOrchestrator() {
                   nextStep();
                 }}
                 className={`px-4 py-3 min-h-[50px] rounded-xl text-[13px] font-bold flex items-center justify-between gap-3 transition-all border text-left ${
-                  activePlan && !logMode
-                    ? 'bg-amber-50/70 text-slate-800 border-amber-200 hover:border-amber-300'
-                    : isSelected
-                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-md scale-[1.02]'
-                      : 'bg-white text-slate-700 border-slate-200 hover:border-indigo-300'
+                  isCompletedBadge
+                    ? 'bg-emerald-50/70 text-slate-800 border-emerald-200 hover:border-emerald-300'
+                    : isPlanliBadge
+                      ? 'bg-amber-50/70 text-slate-800 border-amber-200 hover:border-amber-300'
+                      : isSelected
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-md scale-[1.02]'
+                        : 'bg-white text-slate-700 border-slate-200 hover:border-indigo-300'
                 }`}
               >
                 <span>{sub.label}</span>
-                {activePlan && !logMode && (
+                {isCompletedBadge ? (
+                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 shrink-0 border border-emerald-200/60">
+                    Yapıldı
+                  </span>
+                ) : isPlanliBadge ? (
                   <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 shrink-0 border border-amber-200/60">
                     Planlı
                   </span>
-                )}
+                ) : null}
               </button>
             );
           })}
@@ -2736,17 +2802,28 @@ export default function WizardOrchestrator() {
       {selectedDuplicatePlan && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white rounded-[24px] max-w-sm w-full p-6 shadow-[0_12px_32px_-4px_rgba(15,23,42,0.12)] border border-slate-100 flex flex-col items-center text-center animate-in zoom-in-95 duration-200">
-            <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4 border border-amber-100">
+            <div className={`w-14 h-14 rounded-2xl ${selectedDuplicatePlan.isCompleted ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100'} flex items-center justify-center mb-4 border`}>
               <Calendar size={28} />
             </div>
             <h3 className="text-lg font-bold text-slate-800 mb-2">
-              Aktif Planlama Mevcut
+              {selectedDuplicatePlan.isCompleted ? 'Tamamlanmış Kayıt Mevcut' : 'Aktif Planlama Mevcut'}
             </h3>
             <p className="text-sm text-slate-600 leading-relaxed mb-6">
-              Bu dostunuz için <b>{selectedDuplicatePlan.subType}</b> konusunda
-              {selectedDuplicatePlan.scheduledAt ? (
-                <> <b>{new Date(selectedDuplicatePlan.scheduledAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}</b> tarihli</>
-              ) : ''} aktif bir planlama zaten bulunmaktadır. Mükerrer kayıt açmak yerine mevcut planı düzenlemek ister misiniz?
+              {selectedDuplicatePlan.isCompleted ? (
+                <>
+                  Bu dostunuz için <b>{selectedDuplicatePlan.subType}</b> konusunda
+                  {selectedDuplicatePlan.scheduledAt ? (
+                    <> <b>{new Date(selectedDuplicatePlan.scheduledAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}</b> tarihinde</>
+                  ) : ''} zaten bir yapıldı kaydı bulunmaktadır. Aynı güne mükerrer kayıt eklenemez. Mevcut kaydı incelemek veya düzenlemek ister misiniz?
+                </>
+              ) : (
+                <>
+                  Bu dostunuz için <b>{selectedDuplicatePlan.subType}</b> konusunda
+                  {selectedDuplicatePlan.scheduledAt ? (
+                    <> <b>{new Date(selectedDuplicatePlan.scheduledAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}</b> tarihli</>
+                  ) : ''} aktif bir planlama zaten bulunmaktadır. Mükerrer kayıt açmak yerine mevcut planı düzenlemek ister misiniz?
+                </>
+              )}
             </p>
             <div className="flex flex-col w-full gap-2.5">
               <button
@@ -2754,9 +2831,9 @@ export default function WizardOrchestrator() {
                 onClick={() => {
                   router.push(`/owner/plan-yap/edit/${selectedDuplicatePlan.id}`);
                 }}
-                className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl transition-all shadow-md shadow-indigo-200 active:scale-[0.98]"
+                className={`w-full py-3 px-4 ${selectedDuplicatePlan.isCompleted ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200' : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200'} text-white font-bold rounded-2xl transition-all shadow-md active:scale-[0.98]`}
               >
-                Mevcut Planı Düzenle
+                {selectedDuplicatePlan.isCompleted ? 'Mevcut Kaydı İncele / Düzenle' : 'Mevcut Planı Düzenle'}
               </button>
               <button
                 type="button"

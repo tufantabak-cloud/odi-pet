@@ -29,14 +29,28 @@ function formatShortDate(dateKey: string): string {
   return `${d.getDate()} ${formattedMonth}`;
 }
 
-/** Görünür aralıktaki event'leri tarih anahtarına göre gruplar */
+/** Görünür aralıktaki event'leri tarih anahtarına göre gruplar ve aynı güne ait mükerrer yapıldı event'lerini tekilleştirir */
 function groupEventsByDate(events: FlowEvent[], visibleKeys: string[]): Map<string, FlowEvent[]> {
   const map = new Map<string, FlowEvent[]>();
   visibleKeys.forEach(k => map.set(k, []));
   events.forEach(e => {
     const raw = (e as any).due_date || e.scheduled_at || '';
     const key = raw.includes('T') ? raw.split('T')[0] : raw;
-    if (map.has(key)) map.get(key)!.push(e);
+    if (map.has(key)) {
+      const list = map.get(key)!;
+      // Aynı tarih hücresinde birden fazla tamamlandı (done/completed) kartı basılmasını önle
+      const isCurrentDone = e.status === 'done' || e.status === 'completed' || e.computedStatus === 'done';
+      if (isCurrentDone) {
+        const existingDoneIndex = list.findIndex(
+          existing => existing.status === 'done' || existing.status === 'completed' || existing.computedStatus === 'done'
+        );
+        if (existingDoneIndex >= 0) {
+          // Zaten bir yapıldı kaydı var; çift kart basılıp hücrenin taşmasını engelle
+          return;
+        }
+      }
+      list.push(e);
+    }
   });
   return map;
 }

@@ -105,6 +105,22 @@ export async function POST(req: NextRequest) {
       }, { status: 409 });
     }
 
+    if (message.startsWith('DUPLICATE_COMPLETED_PLAN_SAME_DAY:')) {
+      const parts = message.split(':');
+      const existingId = parts[1];
+      const cat = parts[2];
+      const sub = parts[3];
+      const scheduledAt = parts.slice(4).join(':');
+      return NextResponse.json({
+        error: 'DUPLICATE_COMPLETED_PLAN_SAME_DAY',
+        message: `Bu evcil hayvan için seçilen tarihte zaten yapıldı olarak kaydedilmiş bir ${sub || cat} kaydı bulunmaktadır.`,
+        plan_id: existingId,
+        category: cat,
+        sub_type: sub,
+        scheduled_at: scheduledAt
+      }, { status: 409 });
+    }
+
     const knownErrors = [
       'VACCINE_PREFERENCE_DISABLED',
       'PARASITE_PREFERENCE_DISABLED',
