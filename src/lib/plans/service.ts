@@ -295,7 +295,39 @@ export async function createPlan(userId: string, input: CreatePlanInput) {
         parent_plan_id: mainPlan.id,
       };
 
-      await supabase.from('plans').insert(completedPlanData);
+      const { data: insertedCompletedPlan } = await supabase
+        .from('plans')
+        .insert(completedPlanData)
+        .select('id')
+        .single();
+
+      const completedTargetPlanId = insertedCompletedPlan?.id || mainPlan.id;
+
+      if (input.category === 'asi') {
+        const vaccineCode = input.extra_data?.vaccine_code || input.extra_data?.vaccine?.code || null;
+        await supabase.from('vaccine_records_v2').insert({
+          pet_id: input.pet_id,
+          vaccine_code: vaccineCode,
+          vaccine_name: input.sub_type || input.title || 'Aşı Kaydı',
+          dose_number: input.extra_data?.dose_number || 1,
+          administered_at: input.scheduled_at,
+          status: 'completed',
+          source: 'user_detailed',
+          plan_id: completedTargetPlanId,
+          notes: input.note || null
+        }).catch(() => {});
+      } else if (input.category === 'parazit') {
+        const parasiteType = input.extra_data?.parasite_type || 'internal';
+        await supabase.from('parasite_records').insert({
+          pet_id: input.pet_id,
+          parasite_type: parasiteType,
+          administered_at: input.scheduled_at ? input.scheduled_at.split('T')[0] : new Date().toISOString().split('T')[0],
+          brand_free_text: input.extra_data?.product?.brand_name || input.sub_type || null,
+          product_free_text: input.extra_data?.product?.product_name || null,
+          status: 'completed',
+          plan_id: completedTargetPlanId
+        }).catch(() => {});
+      }
 
       if (input.category === 'saglik' && input.sub_type === 'İlaç') {
         const startDate = input.scheduled_at.split('T')[0];
@@ -368,6 +400,34 @@ export async function createPlan(userId: string, input: CreatePlanInput) {
       dose_per_administration: input.extra_data?.medication_dose || 1,
       main_plan_id: plan.id
     });
+  }
+
+  if (initialStatus === 'completed') {
+    if (input.category === 'asi') {
+      const vaccineCode = input.extra_data?.vaccine_code || input.extra_data?.vaccine?.code || null;
+      await supabase.from('vaccine_records_v2').insert({
+        pet_id: input.pet_id,
+        vaccine_code: vaccineCode,
+        vaccine_name: input.sub_type || input.title || 'Aşı Kaydı',
+        dose_number: input.extra_data?.dose_number || 1,
+        administered_at: input.scheduled_at,
+        status: 'completed',
+        source: 'user_detailed',
+        plan_id: plan.id,
+        notes: input.note || null
+      }).catch(() => {});
+    } else if (input.category === 'parazit') {
+      const parasiteType = input.extra_data?.parasite_type || 'internal';
+      await supabase.from('parasite_records').insert({
+        pet_id: input.pet_id,
+        parasite_type: parasiteType,
+        administered_at: input.scheduled_at ? input.scheduled_at.split('T')[0] : new Date().toISOString().split('T')[0],
+        brand_free_text: input.extra_data?.product?.brand_name || input.sub_type || null,
+        product_free_text: input.extra_data?.product?.product_name || null,
+        status: 'completed',
+        plan_id: plan.id
+      }).catch(() => {});
+    }
   }
 
   return plan;

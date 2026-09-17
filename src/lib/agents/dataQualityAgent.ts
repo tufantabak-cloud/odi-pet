@@ -176,6 +176,7 @@ export async function runDatabaseIntegrityCheck(
       await supabase
         .from('plans')
         .update({
+          parent_plan_id: null,
           status: g.targetStatus,
           is_active: true,
           completed_at: null,
@@ -190,6 +191,7 @@ export async function runDatabaseIntegrityCheck(
       await supabase
         .from('plans')
         .update({
+          parent_plan_id: null,
           status: 'cancelled',
           is_active: false,
           updated_at: new Date().toISOString()
