@@ -247,6 +247,7 @@ export interface PetDetailProps {
   initialVaccines?: any[];
   initialParasites?: any[];
   initialVets?: any[];
+  agendaEvents?: any[];
 }
 
 export function getTaskCardStyle(isOverdue: boolean, isCompleted: boolean) {
@@ -291,7 +292,7 @@ export function getTaskCardStyle(isOverdue: boolean, isCompleted: boolean) {
   };
 }
 
-export default function PetDetailClient({ pet, age, score, overdue, schedules, diseases, allergies, medications, growthRecords, appointments, nutritionLogs, inventory, feedingLogs, weightLogs, assignments, payments, subscription, activeLostReport, hasPasskey = false, isAdminView = false, lastVaccineRecord, initialVaccines, initialParasites, initialVets }: PetDetailProps) {
+export default function PetDetailClient({ pet, age, score, overdue, schedules, agendaEvents, diseases, allergies, medications, growthRecords, appointments, nutritionLogs, inventory, feedingLogs, weightLogs, assignments, payments, subscription, activeLostReport, hasPasskey = false, isAdminView = false, lastVaccineRecord, initialVaccines, initialParasites, initialVets }: PetDetailProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
