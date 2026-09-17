@@ -199,10 +199,18 @@ export function CanonicalPlanActionModal({
             return;
           } else {
             const errData = await agendaRes.json().catch(() => ({}));
-            console.warn('[CanonicalPlanActionModal] Agenda write failed, falling back to plans PATCH:', errData);
+            console.error('[CanonicalPlanActionModal] Agenda write failed:', errData);
+            const isMedical = resolved.isVaccine || resolved.isParasite;
+            if (isMedical) {
+              throw new Error(errData.error || `${resolved.category === 'asi' ? 'Aşı' : 'Parazit'} kaydı oluşturulamadı. Lütfen tekrar deneyiniz.`);
+            }
           }
-        } catch (agendaErr) {
-          console.warn('[CanonicalPlanActionModal] Agenda write failed, falling back to plans PATCH:', agendaErr);
+        } catch (agendaErr: any) {
+          console.error('[CanonicalPlanActionModal] Agenda write error:', agendaErr);
+          const isMedical = resolved.isVaccine || resolved.isParasite;
+          if (isMedical) {
+            throw agendaErr;
+          }
         }
       }
 

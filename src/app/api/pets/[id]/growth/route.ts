@@ -70,30 +70,45 @@ export async function POST(req: NextRequest, context: RouteContext) {
   if (error) return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
 
   // ─── Otomatik Kilo & Boy Hatırlatıcısı Güncelleme ──────────────
+  // Sadece vadesi geçmiş veya bugünkü hatırlatıcıları tamamlandı olarak işaretle (gelecekteki planlara dokunma)
   await supabase
     .from('plans')
-    .update({ status: 'completed' })
+    .update({ status: 'completed', completed_at: measuredAtIso })
     .eq('pet_id', id)
     .eq('category', 'saglik')
     .eq('sub_type', 'Kilo & Boy Ölçümü')
-    .eq('status', 'active');
+    .lte('scheduled_at', measuredAtIso)
+    .in('status', ['active', 'overdue', 'pending', 'upcoming']);
     
   const logDate = new Date(measuredAtIso);
   logDate.setMonth(logDate.getMonth() + 1);
   
-  await supabase
+  // Zaten gelecekte aktif bir hatırlatıcı planı varsa mükerrer oluşturma
+  const { data: existingFuturePlan } = await supabase
     .from('plans')
-    .insert({
-      user_id: user.id,
-      pet_id: id,
-      category: 'saglik',
-      sub_type: 'Kilo & Boy Ölçümü',
-      scheduled_at: logDate.toISOString(),
-      status: 'active',
-      source: 'system',
-      policy: 'required',
-      extra_data: { source: 'system', auto_generated: true }
-    });
+    .select('id')
+    .eq('pet_id', id)
+    .eq('category', 'saglik')
+    .eq('sub_type', 'Kilo & Boy Ölçümü')
+    .eq('status', 'active')
+    .gt('scheduled_at', measuredAtIso)
+    .limit(1);
+
+  if (!existingFuturePlan || existingFuturePlan.length === 0) {
+    await supabase
+      .from('plans')
+      .insert({
+        user_id: user.id,
+        pet_id: id,
+        category: 'saglik',
+        sub_type: 'Kilo & Boy Ölçümü',
+        scheduled_at: logDate.toISOString(),
+        status: 'active',
+        source: 'system',
+        policy: 'required',
+        extra_data: { source: 'system', auto_generated: true }
+      });
+  }
 
   revalidatePath(`/owner/pets/${id}`)
   return NextResponse.json({ success: true })
