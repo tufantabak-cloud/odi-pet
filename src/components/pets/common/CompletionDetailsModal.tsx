@@ -21,7 +21,6 @@ export function CompletionDetailsModal({ isOpen, onClose, taskTitle, category = 
 
   const isVaccine = 
     category === 'asi' || 
-    category === 'vaccine' || 
     Boolean(typeof taskTitle === 'string' && /aşı|asi|vaccine|kuduz|karma|lösemi|leukemia|bronchine|nobivac|versican|felocell|rabies/i.test(taskTitle));
   const effectiveCategory = isVaccine ? 'asi' : category;
 

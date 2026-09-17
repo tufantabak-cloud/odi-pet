@@ -2604,7 +2604,6 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, a
         isOpen={!!canonicalActionPlan}
         onClose={() => setCanonicalActionPlan(null)}
         context={petCanonicalContext}
-        petId={pet.id}
         onSuccess={() => {
           setCanonicalActionPlan(null);
           router.refresh();
