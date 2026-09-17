@@ -15,6 +15,7 @@ interface OptionalApplicationDetailsProps {
   onScan: () => void
   petId?: string
   onNavigateAway?: () => void
+  variant?: 'card' | 'embedded'
 }
 
 const INPUT_CLASS =
@@ -29,6 +30,7 @@ export function OptionalApplicationDetails({
   onScan,
   petId,
   onNavigateAway,
+  variant = 'card',
 }: OptionalApplicationDetailsProps) {
   const router = useRouter()
   const [mode, setMode] = useState<'choice' | 'form'>('form')
@@ -58,9 +60,11 @@ export function OptionalApplicationDetails({
     onChange({ ...details, [key]: fieldValue })
   }
 
+  const isEmbedded = variant === 'embedded'
+
   if (mode === 'choice') {
     return (
-      <section className="rounded-2xl border border-sky-200 bg-gradient-to-br from-sky-50 to-indigo-50 p-4">
+      <section className={isEmbedded ? "space-y-4 w-full" : "rounded-2xl border border-sky-200 bg-gradient-to-br from-sky-50 to-indigo-50 p-4"}>
         <div className="flex items-start gap-3">
           <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-sm">
             {isVaccine ? <Syringe className="size-5" /> : <ScanLine className="size-5" />}
@@ -107,7 +111,7 @@ export function OptionalApplicationDetails({
   }
 
   return (
-    <section className="space-y-4 rounded-2xl border border-sky-200 bg-gradient-to-br from-white to-sky-50/70 p-4">
+    <section className={isEmbedded ? "space-y-4 w-full" : "space-y-4 rounded-2xl border border-sky-200 bg-gradient-to-br from-white to-sky-50/70 p-4"}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[14px] font-extrabold text-slate-900">
