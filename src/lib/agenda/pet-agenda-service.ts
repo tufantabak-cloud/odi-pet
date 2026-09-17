@@ -105,7 +105,8 @@ export function buildPetAgendaEvents(
         ...baseEvt,
         eventId: `schedule_${s.id}`,
         source: 'health_schedules',
-        sourceRecordId: s.id
+        sourceRecordId: s.id,
+        petId: s.pet_id || null
       });
     }
   });

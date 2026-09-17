@@ -11,6 +11,8 @@ import { getPlanDisplayTitle } from '@/lib/plans/utils'
 import { hasPetCapability } from '@/lib/pets/access'
 import { defaultRepository } from '@/lib/features/entitlement/repository'
 import OnboardingGate from '@/components/onboarding/OnboardingGate'
+import { buildPetAgendaEvents } from '@/lib/agenda/pet-agenda-service'
+import { selectTimelineEvents } from '@/lib/agenda/selectors'
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -216,6 +218,21 @@ export default async function PetDetailPage(props: PageProps) {
   ])
   const sub = { plan: tier }
 
+  const past30Str = new Date(now.getTime() - 30 * 86400000).toISOString().split('T')[0]
+  const future365Str = new Date(now.getTime() + 365 * 86400000).toISOString().split('T')[0]
+
+  const rawAgendaEvents = buildPetAgendaEvents(
+    plans ?? [],
+    initialVaccinesRaw ?? [],
+    initialParasites ?? [],
+    schedules ?? [],
+    growthRecords ?? [],
+    appointments ?? [],
+    medications ?? [],
+    feedingLogs ?? []
+  )
+  const canonicalAgendaEvents = selectTimelineEvents(rawAgendaEvents, past30Str, future365Str)
+
   return (
     <OnboardingGate>
       <PetDetailClient
@@ -224,6 +241,7 @@ export default async function PetDetailPage(props: PageProps) {
         score={score}
         overdue={overdue}
         schedules={allSchedules}
+        agendaEvents={canonicalAgendaEvents}
         diseases={diseases ?? []}
         allergies={allergies ?? []}
         medications={allMedications}

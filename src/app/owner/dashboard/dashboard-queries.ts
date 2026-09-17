@@ -104,10 +104,8 @@ export interface DashboardData {
  * - schedules → sessiz geç (boş array)
  * - logs      → sessiz geç (boş array)
  */
-export async function getCachedDashboardData(userId: string): Promise<DashboardData> {
-  const fetchDashboardData = unstable_cache(
-    async (uid: string): Promise<DashboardData> => {
-      const supabase = createAdminSupabaseClient()
+async function fetchDashboardData(uid: string): Promise<DashboardData> {
+  const supabase = createAdminSupabaseClient()
 
       try {
         /* ── Profile (sessiz) ────────────────────────────── */
@@ -220,7 +218,28 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
           const combinedPlans = [...(plansRes || [])]
 
           if (combinedPlans.length > 0) {
-            userPlans = combinedPlans as DashboardPlan[]
+            const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
+            userPlans = combinedPlans.map((p: any) => {
+              let dueDate = (p.scheduled_at || p.next_run)?.split('T')[0]
+              if (p.scheduled_at) {
+                try {
+                  const d = new Date(p.scheduled_at)
+                  dueDate = d.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
+                } catch (e) {}
+              }
+
+              const isDone = p.status === 'completed' || p.status === 'cancelled'
+              let planStatus = p.status || 'active'
+              if (!isDone && dueDate && dueDate < todayStr) {
+                planStatus = 'overdue'
+              }
+
+              return {
+                ...p,
+                status: planStatus,
+                displayStatus: planStatus,
+              }
+            }) as DashboardPlan[]
             
             // Plans'ı health_schedules formatına dönüştür ve merge et
             const PLAN_CAT_MAP: Record<string, string> = {
@@ -259,6 +278,12 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
                 } catch(e) {}
               }
 
+              const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
+              const isDone = p.status === 'completed' || p.status === 'cancelled'
+              let planStatus = 'upcoming'
+              if (isDone) planStatus = 'done'
+              else if (dueDate && dueDate < todayStr) planStatus = 'overdue'
+
               const asSchedule = {
                 id: `plan_${p.id}`,
                 _plan_id: p.id,
@@ -268,7 +293,8 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
                 title: getPlanDisplayTitle(p),
                 due_date: dueDate,
                 due_time: dueTime,
-                status: p.status === 'completed' ? 'done' : p.status === 'cancelled' ? 'done' : 'upcoming',
+                status: planStatus,
+                displayStatus: planStatus,
                 category: PLAN_CAT_MAP[p.category] || p.category,
                 sub_category: p.sub_type,
                 vaccines: p.extra_data?.vaccine ? { name: p.extra_data.vaccine.name } : null,
@@ -367,8 +393,16 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
           activeQuestion: null,
           activeInsight: null,
         }
-      }
-    },
+  }
+}
+
+export async function getCachedDashboardData(userId: string): Promise<DashboardData> {
+  if (process.env.PLAYWRIGHT_TEST === 'true') {
+    return fetchDashboardData(userId)
+  }
+
+  const getCached = unstable_cache(
+    fetchDashboardData,
     [`dashboard-${userId}`],
     {
       tags: [`dashboard-${userId}`, 'dashboard'],
@@ -376,5 +410,5 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
     }
   )
 
-  return fetchDashboardData(userId)
+  return getCached(userId)
 }

@@ -71,16 +71,32 @@ export default async function OwnerDashboard() {
     .in('pet_id', (pets || []).map((p: any) => p.id))
     .gte('created_at', today.toISOString())
 
-  // Yaklaşan Etkinlikler (Planlar hariç, aşı vb. - sadece gelecek)
+  const nowStr = now.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
+  // Etkinlikler: Gecikenler en başta, ardından yaklaşanlar
+  const in30Str = in30.toISOString().split('T')[0]
   const upcomingEvents = upcomingSchedules
-    .filter((s: any) => s._source !== 'plans' && new Date(s.due_date) > today && new Date(s.due_date) <= in30)
-    .sort((a: any, b: any) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
-    .slice(0, 3)
+    .filter((s: any) => s._source !== 'plans' && s.status !== 'done' && (s.due_date ? s.due_date <= in30Str : true))
+    .sort((a: any, b: any) => {
+      const aOverdue = a.status === 'overdue' || (a.due_date && a.due_date < nowStr)
+      const bOverdue = b.status === 'overdue' || (b.due_date && b.due_date < nowStr)
+      if (aOverdue && !bOverdue) return -1
+      if (!aOverdue && bOverdue) return 1
+      return new Date(a.due_date || 0).getTime() - new Date(b.due_date || 0).getTime()
+    })
+    .slice(0, 5)
 
-  // Aktif Planlar
+  // Aktif Planlar (Geciken planlar en başta olmak üzere)
   const activePlans = (plans || [])
-    .filter((p: any) => (p.status === 'active' || !p.status) && (p.scheduled_at || p.next_run) && new Date(p.scheduled_at || p.next_run) >= today)
-    .sort((a: any, b: any) => new Date(a.scheduled_at || a.next_run).getTime() - new Date(b.scheduled_at || b.next_run).getTime())
+    .filter((p: any) => (p.status === 'active' || p.status === 'overdue' || !p.status) && (p.scheduled_at || p.next_run))
+    .sort((a: any, b: any) => {
+      const aDate = (a.scheduled_at || a.next_run || '').split('T')[0]
+      const bDate = (b.scheduled_at || b.next_run || '').split('T')[0]
+      const aOverdue = aDate && aDate < nowStr
+      const bOverdue = bDate && bDate < nowStr
+      if (aOverdue && !bOverdue) return -1
+      if (!aOverdue && bOverdue) return 1
+      return new Date(a.scheduled_at || a.next_run).getTime() - new Date(b.scheduled_at || b.next_run).getTime()
+    })
 
   const petsWithStats = (pets || []).map((pet: any) => {
     let lastFeedingDate = ''
