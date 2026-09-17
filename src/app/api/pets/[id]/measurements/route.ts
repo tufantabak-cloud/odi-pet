@@ -110,30 +110,45 @@ export async function POST(
   }
 
   // ─── Otomatik Kilo & Boy Hatırlatıcısı Güncelleme ──────────────
+  // Sadece vadesi geçmiş veya bugünkü hatırlatıcıları tamamlandı olarak işaretle (gelecekteki planlara dokunma)
   await supabase
     .from('plans')
-    .update({ status: 'completed' })
+    .update({ status: 'completed', completed_at: measuredAt })
     .eq('pet_id', id)
     .eq('category', 'saglik')
     .eq('sub_type', 'Kilo & Boy Ölçümü')
-    .eq('status', 'active');
+    .lte('scheduled_at', measuredAt)
+    .in('status', ['active', 'overdue', 'pending', 'upcoming']);
 
   const logDate = new Date(measuredAt);
   logDate.setMonth(logDate.getMonth() + 1);
 
-  await supabase
+  // Zaten gelecekte aktif bir hatırlatıcı planı varsa mükerrer oluşturma
+  const { data: existingFuturePlan } = await supabase
     .from('plans')
-    .insert({
-      user_id: user.id,
-      pet_id: id,
-      category: 'saglik',
-      sub_type: 'Kilo & Boy Ölçümü',
-      scheduled_at: logDate.toISOString(),
-      status: 'active',
-      source: 'system',
-      policy: 'required',
-      extra_data: { source: 'system', auto_generated: true }
-    });
+    .select('id')
+    .eq('pet_id', id)
+    .eq('category', 'saglik')
+    .eq('sub_type', 'Kilo & Boy Ölçümü')
+    .eq('status', 'active')
+    .gt('scheduled_at', measuredAt)
+    .limit(1);
+
+  if (!existingFuturePlan || existingFuturePlan.length === 0) {
+    await supabase
+      .from('plans')
+      .insert({
+        user_id: user.id,
+        pet_id: id,
+        category: 'saglik',
+        sub_type: 'Kilo & Boy Ölçümü',
+        scheduled_at: logDate.toISOString(),
+        status: 'active',
+        source: 'system',
+        policy: 'required',
+        extra_data: { source: 'system', auto_generated: true }
+      });
+  }
 
   return NextResponse.json({ success: true, measurement: {
     id: measurement.id,

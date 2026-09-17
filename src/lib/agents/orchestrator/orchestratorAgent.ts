@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { runBatchQualityScan } from '@/lib/agents/dataQualityAgent'
+import { runBatchQualityScan, runDatabaseIntegrityCheck } from '@/lib/agents/dataQualityAgent'
 import { emitVaccineDueEvents } from '@/lib/agents/petProfileAgent'
 import { runUserHealthScan } from '@/lib/agents/userHealthAgent'
 import { markOverduePlans } from '@/lib/plans/mark-overdue-plans'
@@ -55,10 +55,11 @@ export async function runOrchestratedPipeline(
     agents_planned: ['data_quality', 'vaccine_check', 'user_health', 'overdue_plans', 'estrus_notifications', 'expire_cards', 'content_review_watch'],
   })
 
-  // ADIM 1 — Data Quality
+  // ADIM 1 — Data Quality & Integrity
   try {
     const adminSupabase = createAdminSupabaseClient()
     const dqResult = await runBatchQualityScan(adminSupabase)
+    await runDatabaseIntegrityCheck(adminSupabase, { dryRun, autoHeal: !dryRun })
     total_users_processed = dqResult.processed
     agents_succeeded.push('data_quality')
   } catch (err) {
