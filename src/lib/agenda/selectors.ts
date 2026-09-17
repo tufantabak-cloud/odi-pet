@@ -53,7 +53,21 @@ export function selectSummaryEvents(events: PetAgendaEvent[], todayStr: string):
 
 export function selectTimelineEvents(events: PetAgendaEvent[], rangeStartStr: string, rangeEndStr: string): PetAgendaEvent[] {
   return events.filter(e => {
+    // 1. İptal edilmiş görevler elenir
     if (e.displayStatus === 'cancelled' || e.sourceStatus === 'cancelled') return false;
+
+    // 2. Tamamlanmış geçmiş kayıtlar: geçmiş penceresi ile sınırlanır
+    if (e.displayStatus === 'completed') {
+      return e.dateKey >= rangeStartStr && e.dateKey <= rangeEndStr;
+    }
+
+    // 3. Aktif ve gecikmiş (overdue) görevler: ALT TARİH SINIRI YOKTUR
+    // Kullanıcı aksiyon alana kadar sonsuz olarak kalır
+    if (e.displayStatus === 'overdue') {
+      return e.dateKey <= rangeEndStr;
+    }
+
+    // 4. Bugün ve gelecek planlanmış görevler
     return e.dateKey >= rangeStartStr && e.dateKey <= rangeEndStr;
   }).sort((a, b) => new Date(a.scheduledAt || a.dateKey).getTime() - new Date(b.scheduledAt || b.dateKey).getTime());
 }

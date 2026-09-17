@@ -42,6 +42,7 @@ export class RoutineReadHandler implements AgendaReadHandler {
       eventId: `plan_${plan.id}`,
       source: 'plans',
       sourceRecordId: plan.id,
+      petId: plan.pet_id || null,
       category: this.category as string,
       subCategory: (plan.sub_type || "") as any || 'Görevi',
       stableIdentity: baseIdentity,
