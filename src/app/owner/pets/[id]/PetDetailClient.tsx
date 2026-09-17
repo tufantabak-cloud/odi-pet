@@ -343,6 +343,22 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     petId: canonicalActionPlan.pet_id || pet.id
   } : null;
   const [activeTab, setActiveTab] = useState<'ozet'|'saglik'|'bakim'|'takvim'|'beslenme'|'veteriner'|'ekstra'>(initialTab)
+
+  useEffect(() => {
+    if (tabParam) {
+      const targetTab = (tabParam === 'saglik' || tabParam === 'asi' || tabParam === 'parazit' || tabParam === 'vaccines' || tabParam === 'parasite')
+        ? 'saglik'
+        : (tabParam === 'bakim' || tabParam === 'hijyen' || tabParam === 'aktivite' || tabParam === 'diger')
+          ? 'bakim'
+          : (tabParam === 'takvim' || tabParam === 'ekstra' || tabParam === 'beslenme' || tabParam === 'veteriner')
+            ? tabParam
+            : null;
+      if (targetTab) {
+        setActiveTab(targetTab as any);
+      }
+    }
+  }, [tabParam]);
+
   const [isSmartScannerOpen, setIsSmartScannerOpen] = useState(false)
   const { filterVisibleTasks, dismissTask } = useDismissedMicroTasks()
 
@@ -2587,6 +2603,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         isOpen={!!canonicalActionPlan}
         onClose={() => setCanonicalActionPlan(null)}
         context={petCanonicalContext}
+        petId={pet.id}
         onSuccess={() => {
           setCanonicalActionPlan(null);
           router.refresh();

@@ -2306,6 +2306,7 @@ export default function WizardOrchestrator() {
               value={applicationDetails}
               onChange={(nextValue) => setStepData({ applicationDetails: nextValue })}
               onScan={() => setShowScanner(true)}
+              petId={wizardData.pet_id}
             />
           )}
           </div>
@@ -2371,6 +2372,7 @@ export default function WizardOrchestrator() {
               value={applicationDetails}
               onChange={(nextValue) => setStepData({ applicationDetails: nextValue })}
               onScan={() => setShowScanner(true)}
+              petId={wizardData.pet_id}
             />
           )}
           {logMode && (
