@@ -18,8 +18,8 @@ export default async function TakvimPage() {
 
   const supabase = await createServerSupabaseClient()
 
-  // Sahip olunan + üyesi olunan petler
-  const [ownedPetsRes, memberPetsRes] = await Promise.all([
+  // Sahip olunan + üyesi olunan petler (Kanonik pet_memberships + legacy pet_members)
+  const [ownedPetsRes, memberPetsRes, membershipPetsRes] = await Promise.all([
     supabase
       .from('pets')
       .select('id, name, species, avatar_url')
@@ -29,10 +29,16 @@ export default async function TakvimPage() {
       .from('pet_members')
       .select('pet_id, pets(id, name, species, avatar_url)')
       .eq('profile_id', user.id),
+    supabase
+      .from('pet_memberships')
+      .select('pet_id, pets(id, name, species, avatar_url)')
+      .eq('profile_id', user.id)
+      .eq('status', 'active'),
   ])
 
   if (ownedPetsRes.error) console.error('[takvim] pets fetch failed:', ownedPetsRes.error.message)
   if (memberPetsRes.error) console.error('[takvim] pet_members fetch failed:', memberPetsRes.error.message)
+  if (membershipPetsRes.error) console.error('[takvim] pet_memberships fetch failed:', membershipPetsRes.error.message)
 
   const petMap = new Map<string, { id: string; name: string; species: string | null; avatar_url: string | null }>()
   for (const p of ownedPetsRes.data ?? []) {
@@ -42,19 +48,23 @@ export default async function TakvimPage() {
     const p = (m as unknown as { pets: { id: string; name: string; species: string | null; avatar_url: string | null } | null }).pets
     if (p?.id) petMap.set(p.id, p)
   }
+  for (const m of membershipPetsRes.data ?? []) {
+    const p = (m as unknown as { pets: { id: string; name: string; species: string | null; avatar_url: string | null } | null }).pets
+    if (p?.id) petMap.set(p.id, p)
+  }
 
   const pets = Array.from(petMap.values())
   if (pets.length === 0) redirect('/owner/dashboard')
 
   const allPetIds = pets.map(p => p.id)
 
-  // Tarih penceresi: son 30 gün ve sonraki 30 gün (-30 / +30)
+  // Tarih penceresi: son 30 gün (tamamlanan geçmiş kayıtlar için) ve sonraki 365 gün (gelecekteki tüm planlar için)
   const now = new Date()
   const past30 = new Date(now.getTime() - 30 * 86400000)
-  const future30 = new Date(now.getTime() + 30 * 86400000)
+  const future365 = new Date(now.getTime() + 365 * 86400000)
 
   const past30Str = past30.toISOString().split('T')[0]
-  const future30Str = future30.toISOString().split('T')[0]
+  const future365Str = future365.toISOString().split('T')[0]
 
   // 8 paralel sorgu + error loglaması
   const [
@@ -109,13 +119,13 @@ export default async function TakvimPage() {
     nutritionRes.data || []
   )
 
-  // Tarih süzgeci (-30 / +30 gün) — completed kayıtlar elenmez!
-  const timelineEvents = selectTimelineEvents(rawAgendaEvents, past30Str, future30Str)
+  // Tarih süzgeci (geçmiş -30 gün completed sınırı, overdue için alt sınır yok, gelecek +365 gün)
+  const timelineEvents = selectTimelineEvents(rawAgendaEvents, past30Str, future365Str)
 
   const petNameMap = new Map(pets.map(p => [p.id, p]))
 
   const initialEvents = timelineEvents.map(evt => {
-    const targetPetId = evt.displayMetadata?.extraData?.pet_id || (evt as any).pet_id || (
+    const targetPetId = evt.petId || evt.displayMetadata?.extraData?.pet_id || (evt as any).pet_id || (
       plansRes.data?.find(p => p.id === evt.sourceRecordId)?.pet_id ||
       vacsRes.data?.find(v => v.id === evt.sourceRecordId)?.pet_id ||
       parasitesRes.data?.find(p => p.id === evt.sourceRecordId)?.pet_id ||

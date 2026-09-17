@@ -227,6 +227,7 @@ export interface PetDetailProps {
   score: number;
   overdue: number;
   schedules: any[];
+  agendaEvents?: any[];
   diseases: any[];
   allergies: any[];
   medications: any[];
@@ -291,7 +292,7 @@ export function getTaskCardStyle(isOverdue: boolean, isCompleted: boolean) {
   };
 }
 
-export default function PetDetailClient({ pet, age, score, overdue, schedules, diseases, allergies, medications, growthRecords, appointments, nutritionLogs, inventory, feedingLogs, weightLogs, assignments, payments, subscription, activeLostReport, hasPasskey = false, isAdminView = false, lastVaccineRecord, initialVaccines, initialParasites, initialVets }: PetDetailProps) {
+export default function PetDetailClient({ pet, age, score, overdue, schedules, agendaEvents = [], diseases, allergies, medications, growthRecords, appointments, nutritionLogs, inventory, feedingLogs, weightLogs, assignments, payments, subscription, activeLostReport, hasPasskey = false, isAdminView = false, lastVaccineRecord, initialVaccines, initialParasites, initialVets }: PetDetailProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -1963,7 +1964,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         <EstrusTracker petId={pet.id} petSpecies={pet.species} />
       )}
 
-      <HealthTimeline schedules={localSchedules} />
+      <HealthTimeline events={agendaEvents} schedules={localSchedules} />
 
       </div>
       )}
@@ -2603,7 +2604,6 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         isOpen={!!canonicalActionPlan}
         onClose={() => setCanonicalActionPlan(null)}
         context={petCanonicalContext}
-        petId={pet.id}
         onSuccess={() => {
           setCanonicalActionPlan(null);
           router.refresh();

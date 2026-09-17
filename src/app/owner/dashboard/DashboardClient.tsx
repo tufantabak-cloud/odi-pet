@@ -239,7 +239,9 @@ export default function DashboardClient({
                   </div>
                   <div className="text-right shrink-0">
                     <span className="text-xs font-semibold text-text-primary">{eventDate}</span>
-                    {event.due_time ? (
+                    {event.status === 'overdue' ? (
+                      <p className="text-2xs text-error font-bold mt-0.5">Gecikti</p>
+                    ) : event.due_time ? (
                       <p className="text-2xs text-text-tertiary mt-0.5">{event.due_time.substring(0, 5)}</p>
                     ) : (
                       <p className="text-2xs text-emerald-600 font-semibold mt-0.5">Yaklaşıyor</p>
@@ -284,7 +286,11 @@ export default function DashboardClient({
                   </div>
                   <div className="text-right shrink-0">
                     <span className="text-xs font-semibold text-text-primary">{planDate}</span>
-                    <p className="text-2xs text-primary font-semibold mt-0.5">Sıradaki Rutin</p>
+                    {plan.status === 'overdue' ? (
+                      <p className="text-2xs text-error font-bold mt-0.5">Gecikti</p>
+                    ) : (
+                      <p className="text-2xs text-primary font-semibold mt-0.5">Sıradaki Rutin</p>
+                    )}
                   </div>
                 </button>
               )

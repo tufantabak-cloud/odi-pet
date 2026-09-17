@@ -259,6 +259,12 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
                 } catch(e) {}
               }
 
+              const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
+              const isDone = p.status === 'completed' || p.status === 'cancelled'
+              let planStatus = 'upcoming'
+              if (isDone) planStatus = 'done'
+              else if (dueDate && dueDate < todayStr) planStatus = 'overdue'
+
               const asSchedule = {
                 id: `plan_${p.id}`,
                 _plan_id: p.id,
@@ -268,7 +274,8 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
                 title: getPlanDisplayTitle(p),
                 due_date: dueDate,
                 due_time: dueTime,
-                status: p.status === 'completed' ? 'done' : p.status === 'cancelled' ? 'done' : 'upcoming',
+                status: planStatus,
+                displayStatus: planStatus,
                 category: PLAN_CAT_MAP[p.category] || p.category,
                 sub_category: p.sub_type,
                 vaccines: p.extra_data?.vaccine ? { name: p.extra_data.vaccine.name } : null,
