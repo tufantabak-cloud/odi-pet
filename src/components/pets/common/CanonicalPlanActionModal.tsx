@@ -161,13 +161,19 @@ export function CanonicalPlanActionModal({
       // 1. If it's a vaccine plan and we have petId, attempt agenda write to create canonical record
       if (resolved.isVaccine && petId && details) {
         try {
+          const detectedVaccineCode =
+            context.plan?.extra_data?.vaccine_code ||
+            context.plan?.extra_data?.vaccine?.code ||
+            ((resolved.displayTitle || '').toLowerCase().includes('kuduz') ? 'DOG_RABIES' : context.plan?.sub_type) ||
+            'CUSTOM';
+
           const agendaPayload = {
             pet_id: petId,
             category: 'asi',
             input: {
               pet_id: petId,
               vaccine_name: resolved.displayTitle,
-              vaccine_code: context.plan?.sub_type || 'CUSTOM',
+              vaccine_code: detectedVaccineCode,
               administered_at: details.administered_at || new Date().toISOString().split('T')[0],
               notes: details.product_notes || undefined,
               brand_name: details.brand || undefined,
@@ -182,6 +188,13 @@ export function CanonicalPlanActionModal({
             body: JSON.stringify(agendaPayload),
           });
           if (agendaRes.ok) {
+            // Planın statusunu da tamamlandı olarak kesinleştir
+            await fetch(`${getMutationRoute()}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ status: 'completed' }),
+            }).catch(() => {});
+
             handleCompleteSuccess();
             return;
           } else {

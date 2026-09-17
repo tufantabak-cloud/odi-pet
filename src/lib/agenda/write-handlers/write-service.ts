@@ -10,12 +10,12 @@ export async function processRecordCreation(
   const handler = agendaWriteRegistry.getHandler(category);
   await handler.validateInput(input);
 
-  // Fetch active plans for this pet
+  // Fetch active and overdue plans for this pet
   const { data: plans, error } = await context.supabase
     .from('plans')
     .select('*')
     .eq('pet_id', context.petId)
-    .eq('status', 'active');
+    .in('status', ['active', 'overdue', 'pending', 'upcoming']);
 
   if (error) throw error;
 
@@ -24,7 +24,18 @@ export async function processRecordCreation(
   let matchResult: PlanMatchResult;
 
   if (selectedPlanId) {
-    const selectedPlan = activePlans.find(p => p.id === selectedPlanId);
+    let selectedPlan = activePlans.find(p => p.id === selectedPlanId);
+    if (!selectedPlan) {
+      const { data: directPlan } = await context.supabase
+        .from('plans')
+        .select('*')
+        .eq('id', selectedPlanId)
+        .maybeSingle();
+      if (directPlan && directPlan.status !== 'completed' && directPlan.status !== 'cancelled') {
+        selectedPlan = directPlan;
+      }
+    }
+
     if (selectedPlan) {
       matchResult = {
         status: 'exact',

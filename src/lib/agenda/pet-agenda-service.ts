@@ -95,7 +95,7 @@ export function buildPetAgendaEvents(
       category: s.schedule_type || 'saglik',
       sub_type: s.title || 'Görev',
       scheduled_at: s.due_date,
-      status: s.completed ? 'completed' : 'active',
+      status: (s.status === 'completed' || s.status === 'done' || s.completed) ? 'completed' : 'active',
       extra_data: s.metadata,
       note: s.notes
     }, context);

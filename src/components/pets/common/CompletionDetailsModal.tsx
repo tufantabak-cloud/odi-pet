@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Modal } from '@/components/ui/Modal';
-import { CheckCircle2, X } from 'lucide-react';
+import { CheckCircle2, Loader2, X } from 'lucide-react';
 import { OptionalApplicationDetails } from '@/components/health-records/OptionalApplicationDetails';
 import type { ApplicationDetails } from '@/lib/health-records/application-details';
 import { SmartScanner } from '@/components/ui/SmartScanner';
@@ -36,6 +36,7 @@ export function CompletionDetailsModal({
 }: CompletionDetailsModalProps) {
   const [applicationDetails, setApplicationDetails] = useState<ApplicationDetails | null>(initialDetails || null);
   const [showScanner, setShowScanner] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   React.useEffect(() => {
     if (initialDetails) {
@@ -43,9 +44,15 @@ export function CompletionDetailsModal({
     }
   }, [initialDetails]);
 
-  const handleSubmit = () => {
-    onComplete(applicationDetails);
-    onClose();
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    try {
+      await onComplete(applicationDetails);
+    } catch (e) {
+      console.error('[CompletionDetailsModal] submit error:', e);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -122,9 +129,18 @@ export function CompletionDetailsModal({
           </button>
           <button
             onClick={handleSubmit}
-            className="flex-1 py-3.5 px-4 rounded-[16px] text-[15px] font-extrabold text-white bg-emerald-600 hover:bg-emerald-700 shadow-[0_4px_20px_-2px_rgba(5,150,105,0.3)] transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+            disabled={submitting}
+            className="flex-1 py-3.5 px-4 rounded-[16px] text-[15px] font-extrabold text-white bg-emerald-600 hover:bg-emerald-700 shadow-[0_4px_20px_-2px_rgba(5,150,105,0.3)] transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50"
           >
-            Tamamla ve Kaydet <CheckCircle2 className="w-4 h-4" />
+            {submitting ? (
+              <>
+                Kaydediliyor... <Loader2 className="w-4 h-4 animate-spin" />
+              </>
+            ) : (
+              <>
+                Tamamla ve Kaydet <CheckCircle2 className="w-4 h-4" />
+              </>
+            )}
           </button>
         </div>
 
