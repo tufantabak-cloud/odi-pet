@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Modal } from '@/components/ui/Modal';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { CheckCircle2, X } from 'lucide-react';
 import { OptionalApplicationDetails } from '@/components/health-records/OptionalApplicationDetails';
 import type { ApplicationDetails } from '@/lib/health-records/application-details';
@@ -18,6 +18,31 @@ interface CompletionDetailsModalProps {
 export function CompletionDetailsModal({ isOpen, onClose, taskTitle, category = 'saglik', onComplete }: CompletionDetailsModalProps) {
   const [applicationDetails, setApplicationDetails] = useState<ApplicationDetails | null>(null);
   const [showScanner, setShowScanner] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Lock body scroll while open
+  useEffect(() => {
+    if (!isOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [isOpen]);
+
+  // Close on Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   const isVaccine = 
     category === 'asi' || 
@@ -29,35 +54,44 @@ export function CompletionDetailsModal({ isOpen, onClose, taskTitle, category = 
     onClose();
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
-  return (
-    <Modal isOpen={isOpen} onClose={onClose}>
-      <div className="flex flex-col max-h-[85vh] sm:max-h-[800px] w-full max-w-md mx-auto bg-white sm:rounded-[24px] overflow-hidden flex-shrink-0 flex-grow-0 relative shadow-2xl">
-        
-        {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-4 border-b border-border-main/50 bg-white/80 backdrop-blur-xl">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-100/50 flex items-center justify-center border border-emerald-200/50">
+  const modalContent = (
+    <div
+      className="fixed inset-0 z-[9999] bg-slate-950/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity animate-in fade-in duration-200"
+      onClick={onClose}
+    >
+      <div
+        className="w-full sm:max-w-lg bg-white rounded-t-[28px] sm:rounded-[24px] shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[85vh] animate-in slide-in-from-bottom-5 sm:zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Mobile Pull Handle */}
+        <div className="w-12 h-1.5 bg-slate-300 rounded-full mx-auto mt-3 mb-1 sm:hidden shrink-0" />
+
+        {/* Single Header */}
+        <div className="sticky top-0 z-10 flex items-center justify-between px-5 sm:px-6 py-4 border-b border-border-main/50 bg-white/95 backdrop-blur-xl shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-100/50 flex items-center justify-center border border-emerald-200/50 shrink-0">
               <CheckCircle2 className="w-5 h-5 text-emerald-600" />
             </div>
-            <div>
+            <div className="min-w-0">
               <h2 className="text-[16px] font-extrabold text-text-primary tracking-tight">İşlem Tamamlandı</h2>
-              <p className="text-[12px] text-text-secondary font-medium truncate max-w-[200px]">{taskTitle}</p>
+              <p className="text-[12px] text-text-secondary font-medium truncate max-w-[220px] sm:max-w-xs">{taskTitle}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full bg-bg-main text-text-secondary hover:text-text-primary hover:bg-slate-200 transition-colors active:scale-95"
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-bg-main text-text-secondary hover:text-text-primary hover:bg-slate-200 transition-colors active:scale-95 shrink-0 ml-2"
+            aria-label="Kapat"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Content */}
-        <div className="p-5 overflow-y-auto custom-scrollbar flex flex-col gap-5">
-          <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl flex items-start gap-3">
-            <span className="text-blue-500 text-lg">ⓘ</span>
+        {/* Single Scrollable Content */}
+        <div className="px-4 sm:px-6 py-4 overflow-y-auto custom-scrollbar flex flex-col gap-4 flex-1">
+          <div className="p-3.5 sm:p-4 bg-blue-50/80 border border-blue-100 rounded-2xl flex items-start gap-3 shrink-0">
+            <span className="text-blue-500 text-base sm:text-lg shrink-0 mt-0.5">ⓘ</span>
             <p className="text-[12.5px] font-medium text-blue-900 leading-snug">
               Uygulama detaylarını dilerseniz şimdi girebilir veya daha sonra güncelleyebilirsiniz.
             </p>
@@ -68,6 +102,7 @@ export function CompletionDetailsModal({ isOpen, onClose, taskTitle, category = 
             value={applicationDetails}
             onChange={(nextValue) => setApplicationDetails(nextValue)}
             onScan={() => setShowScanner(true)}
+            variant="embedded"
           />
 
           {showScanner && (
@@ -105,8 +140,8 @@ export function CompletionDetailsModal({ isOpen, onClose, taskTitle, category = 
           )}
         </div>
 
-        {/* Footer */}
-        <div className="p-5 border-t border-border-main/50 bg-bg-main/30 flex items-center gap-3">
+        {/* Single Footer */}
+        <div className="sticky bottom-0 z-10 p-4 sm:p-5 border-t border-border-main/50 bg-white/95 backdrop-blur-md flex items-center gap-3 shrink-0">
           <button
             onClick={onClose}
             className="flex-1 py-3.5 px-4 rounded-[16px] text-[15px] font-extrabold text-text-secondary bg-white border border-border-main hover:bg-slate-50 transition-all active:scale-[0.98]"
@@ -122,6 +157,8 @@ export function CompletionDetailsModal({ isOpen, onClose, taskTitle, category = 
         </div>
 
       </div>
-    </Modal>
+    </div>
   );
+
+  return createPortal(modalContent, document.body);
 }

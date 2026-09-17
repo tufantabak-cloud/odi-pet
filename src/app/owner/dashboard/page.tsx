@@ -87,7 +87,7 @@ export default async function OwnerDashboard() {
 
   // Aktif Planlar (Geciken planlar en başta olmak üzere)
   const activePlans = (plans || [])
-    .filter((p: any) => (p.status === 'active' || !p.status) && (p.scheduled_at || p.next_run))
+    .filter((p: any) => (p.status === 'active' || p.status === 'overdue' || !p.status) && (p.scheduled_at || p.next_run))
     .sort((a: any, b: any) => {
       const aDate = (a.scheduled_at || a.next_run || '').split('T')[0]
       const bDate = (b.scheduled_at || b.next_run || '').split('T')[0]
