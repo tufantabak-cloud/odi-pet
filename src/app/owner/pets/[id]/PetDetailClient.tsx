@@ -1883,6 +1883,9 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, a
                   </div>
                 )}
 
+                {/* ── Irka Özel Sağlık Rehberi ── */}
+                <BreedHealthCard breed={pet.breed} />
+
               </div>
             )}
           </div>
@@ -2230,19 +2233,16 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, a
           )}
         </div>
         {activeTab === 'saglik' && (
-          <>
-            <HealthTab 
-              petId={pet.id} 
-              petName={pet.name}
-              onMarkDone={setCanonicalActionPlan}
-              onPostpone={setCanonicalActionPlan}
-              onEdit={handleEditTask}
-              initialVaccines={initialVaccines}
-              initialParasites={initialParasites}
-              initialVetRecords={appointments}
-            />
-            <BreedHealthCard breed={pet.breed} />
-          </>
+          <HealthTab 
+            petId={pet.id} 
+            petName={pet.name}
+            onMarkDone={setCanonicalActionPlan}
+            onPostpone={setCanonicalActionPlan}
+            onEdit={handleEditTask}
+            initialVaccines={initialVaccines}
+            initialParasites={initialParasites}
+            initialVetRecords={appointments}
+          />
         )}
       </div>
       )}
