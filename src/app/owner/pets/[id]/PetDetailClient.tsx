@@ -471,6 +471,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, a
   const [parasiteCompletionTask, setParasiteCompletionTask] = useState<any>(null)
   const [enrichOpen, setEnrichOpen] = useState(false)
   const [trackerRefreshKey, setTrackerRefreshKey] = useState(0)
+  const [trackerResetToken, setTrackerResetToken] = useState(0)
   const coverInputRef = useRef<HTMLInputElement>(null)
   const avatarInputRef = useRef<HTMLInputElement>(null)
 
@@ -2011,11 +2012,21 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, a
       <div className="p-4 flex flex-col gap-3">
       {/* Timeline - Görev Takibi */}
       <div className="mt-4">
-        <h3 className="text-base font-bold text-text-primary mb-3">
-          Görev Takibi
-        </h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-base font-bold text-text-primary">
+            Görev Takibi
+          </h3>
+          <button
+            type="button"
+            onClick={() => setTrackerResetToken(t => t + 1)}
+            className="px-3 py-1.5 rounded-full text-[11px] font-black border bg-[#eef3ff] border-[#5b86ff]/40 text-[#3358e0] transition-all active:scale-95 hover:bg-[#e0eaff]"
+          >
+            Bugüne Dön
+          </button>
+        </div>
         <HealthTracker
           refreshTrigger={trackerRefreshKey}
+          resetTodayTrigger={trackerResetToken}
           petId={pet.id}
           onEditTask={(t) => setCanonicalActionPlan(t)}
           onSelectTask={(t) => setCanonicalActionPlan(t)}
