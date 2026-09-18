@@ -986,7 +986,7 @@ export default function NutritionClient({
   }
 
   return (
-    <div className={`flex flex-col gap-6 w-full mx-auto ${embedded ? 'max-w-none pb-4 px-0' : 'max-w-2xl pb-32 pb-safe px-3 sm:px-0'}`}>
+    <div className={`flex flex-col gap-6 w-full mx-auto ${embedded ? 'max-w-none pb-4 px-0' : 'max-w-2xl pb-32 pb-safe px-0'}`}>
       {/* Header */}
       {!embedded && (
         <>

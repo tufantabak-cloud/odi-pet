@@ -44,7 +44,7 @@ export default async function MatchPage(props: PageProps) {
   return (
     <div className="bg-bg-main min-h-screen pb-30">
       <PageHeader title="Eşleştirme" backHref={`/owner/pets/${id}`} />
-      <div className="p-4 pt-6 max-w-lg mx-auto">
+      <div className="py-6 max-w-lg mx-auto">
         <BreedingListingManager pet={pet} initialListing={initialListing !== undefined ? initialListing : null} />
         
         <div className="mt-4 rounded-2xl border-2 border-dashed border-violet-200 bg-violet-50/50 p-6 text-center animate-fadeInUp">

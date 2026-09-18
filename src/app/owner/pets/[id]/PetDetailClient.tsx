@@ -1482,7 +1482,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, a
             </div>
 
             {activeTab === 'ozet' && (
-              <div className="p-4 flex flex-col gap-6">
+              <div className="py-4 flex flex-col gap-6">
 
                 <div className="lg:grid lg:grid-cols-12 lg:gap-6 lg:items-start flex flex-col gap-4">
                   
@@ -2012,7 +2012,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, a
       )}
 
       {activeTab === 'takvim' && (
-      <div className="p-4 flex flex-col gap-3">
+      <div className="py-4 flex flex-col gap-3">
       {/* Timeline - Görev Takibi */}
       <div className="mt-4">
         <div className="flex items-center justify-between mb-3">
@@ -2044,7 +2044,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, a
       )}
 
       {activeTab === 'beslenme' && (
-        <div className="flex flex-col gap-3 p-4">
+        <div className="flex flex-col gap-3 py-4">
           {showFoodBanner && (
             <SmartCardBanner
               title="Beslenme Profili Eksik"
@@ -2088,7 +2088,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, a
 
       {/* ── Sağlık & Bakım Accordion (Tab Filtrelemeli) ── */}
       {(activeTab === 'saglik' || activeTab === 'bakim') && (
-      <div className="p-4 flex flex-col gap-3">
+      <div className="py-4 flex flex-col gap-3">
         {activeTab === 'saglik' && showNeuterBanner && (
           <SmartCardBanner
             title="Sağlık Profili Eksik"
@@ -2249,7 +2249,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, a
 
       {/* ── Ekstra Sekmesi ── */}
       {activeTab === 'ekstra' && (
-      <div className="p-4 flex flex-col gap-3">
+      <div className="py-4 flex flex-col gap-3">
       {/* ── Ek Bilgiler ve Araçlar ── */}
       <div className="flex flex-col gap-3">
         <h2 className="text-base font-semibold text-text-primary px-1">Ek Bilgiler ve Araçlar</h2>
@@ -2328,7 +2328,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, a
 
       {/* ── Veteriner Sekmesi ── */}
       {activeTab === 'veteriner' && (
-        <div className="p-4">
+        <div className="py-4">
           <VeterinerTab 
             petId={pet.id} 
             petName={pet.name} 

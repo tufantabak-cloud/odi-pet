@@ -35,7 +35,7 @@ export default async function AdoptionPage(props: PageProps) {
   return (
     <div className="bg-bg-main min-h-screen pb-30">
       <PageHeader title="Sahiplendir" backHref={`/owner/pets/${id}`} />
-      <div className="p-4 pt-6 max-w-lg mx-auto">
+      <div className="py-6 max-w-lg mx-auto">
         <AdoptionTab pet={pet} />
       </div>
     </div>
