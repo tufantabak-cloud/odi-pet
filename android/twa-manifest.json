@@ -1,0 +1,54 @@
+{
+  "packageId": "pet.odi.twa",
+  "host": "odi.pet",
+  "name": "Odi.Pet",
+  "launcherName": "Odi.Pet",
+  "display": "standalone",
+  "themeColor": "#3B0764",
+  "themeColorDark": "#000000",
+  "navigationColor": "#3B0764",
+  "navigationColorDark": "#000000",
+  "navigationDividerColor": "#000000",
+  "navigationDividerColorDark": "#000000",
+  "backgroundColor": "#3B0764",
+  "enableNotifications": true,
+  "startUrl": "/",
+  "iconUrl": "https://odi.pet/brand/app-icons/odi-icon-512.png",
+  "maskableIconUrl": "https://odi.pet/brand/app-icons/odi-icon-512-maskable.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./keystore/odi-pet-release.keystore",
+    "alias": "odi-pet-key"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://odi.pet/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {
+    "locationDelegation": {
+      "enabled": true
+    },
+    "playBilling": {
+      "enabled": false
+    }
+  },
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "minSdkVersion": 21,
+  "orientation": "default",
+  "fingerprints": [
+    {
+      "value": "79:E9:1B:08:9A:1C:9C:CB:72:3B:E2:79:3A:79:11:EF:71:9B:D8:B0:23:11:37:D2:FF:33:54:3E:38:06:53:BC"
+    }
+  ],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "displayOverride": [],
+  "appVersion": "1.0.0"
+}

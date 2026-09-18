@@ -1,0 +1,14 @@
+﻿[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "pet.odi.twa",
+      "sha256_cert_fingerprints": [
+        "79:E9:1B:08:9A:1C:9C:CB:72:3B:E2:79:3A:79:11:EF:71:9B:D8:B0:23:11:37:D2:FF:33:54:3E:38:06:53:BC"
+      ]
+    }
+  }
+]
