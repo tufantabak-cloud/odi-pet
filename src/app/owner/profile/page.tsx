@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { MembershipCalculator } from '@/lib/membership/MembershipCalculator'
 import { defaultRepository } from '@/lib/features/entitlement/repository'
 import LogoutButton from './LogoutButton'
+import DeleteAccountRow from './DeleteAccountRow'
 import Link from 'next/link'
 import PetCardActions from './PetCardActions'
 import NotificationSettings from './NotificationSettings'
@@ -618,10 +619,7 @@ export default async function ProfileMenuPage({
               Tüm Verilerimi İndir
               <Download className="w-4 h-4 text-text-secondary" />
             </div>
-            <div className="p-4 hover:bg-rose-50/50 transition-all cursor-pointer text-error flex justify-between items-center active:scale-[0.99]">
-              Hesabı Sil
-              <Trash2 className="w-4 h-4 text-error" />
-            </div>
+            <DeleteAccountRow />
           </div>
         </section>
 

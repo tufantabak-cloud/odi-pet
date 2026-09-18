@@ -35,10 +35,27 @@ const nextConfig: NextConfig = {
         destination: '/legal/kvkk',
         permanent: false,
       },
+      {
+        source: '/privacy',
+        destination: '/legal/kvkk',
+        permanent: false,
+      },
+      {
+        source: '/privacy-policy',
+        destination: '/legal/kvkk',
+        permanent: false,
+      },
     ];
   },
   async headers() {
     return [
+      {
+        source: '/.well-known/assetlinks.json',
+        headers: [
+          { key: 'Content-Type', value: 'application/json' },
+          { key: 'Cache-Control', value: 'public, max-age=3600, must-revalidate' },
+        ],
+      },
       {
         source: '/sw.js',
         headers: [
