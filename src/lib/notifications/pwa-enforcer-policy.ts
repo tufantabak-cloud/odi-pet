@@ -16,7 +16,7 @@ export function shouldShowGlobalNotificationGate({
   if (!pathname.startsWith('/owner')) return false
   if (pathname.startsWith('/owner/pets/add')) return false
   if (isInitializing) return false
-  if (permission === 'default' || permission === 'unsupported') return false
+  if (permission === 'default' || permission === 'unsupported' || permission === 'denied') return false
 
-  return permission !== 'granted' || !isSubscribed
+  return permission === 'granted' && !isSubscribed
 }

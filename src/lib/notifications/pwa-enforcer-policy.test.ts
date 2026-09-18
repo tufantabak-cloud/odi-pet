@@ -37,4 +37,13 @@ describe('global bildirim kapısı politikası', () => {
       isInitializing: false,
     })).toBe(false)
   })
+
+  it('izin reddedildiğinde (denied) kullanıcıyı kilitlemez', () => {
+    expect(shouldShowGlobalNotificationGate({
+      pathname: '/owner/dashboard',
+      permission: 'denied',
+      isSubscribed: false,
+      isInitializing: false,
+    })).toBe(false)
+  })
 })

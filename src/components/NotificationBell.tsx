@@ -45,7 +45,7 @@ export default function NotificationBell({ initialCount }: { initialCount: numbe
 
   // Poll every 60s for new notifications + update relative timestamps every minute
   useEffect(() => {
-    fetchNotifications()
+    // initialCount is already provided by SSR; only poll every 60s or on user interaction
     const notifInterval = setInterval(fetchNotifications, 60_000)
     const tickInterval = setInterval(() => setNow(Date.now()), 60_000)
     return () => {

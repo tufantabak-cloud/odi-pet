@@ -28,7 +28,6 @@ export default function FloatingLostPets({ userCities }: { userCities: string[] 
   const [mounted, setMounted] = useState(false)
   const [lostReports, setLostReports] = useState<LostReport[]>([])
   const [loaded, setLoaded] = useState(false)
-  const [hasMyActiveReport, setHasMyActiveReport] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -40,31 +39,30 @@ export default function FloatingLostPets({ userCities }: { userCities: string[] 
       return
     }
 
-    const supabase = createBrowserSupabaseClient()
-
-    Promise.all([
-      supabase.auth.getUser(),
+    const loadLostReports = () => {
+      const supabase = createBrowserSupabaseClient()
       supabase
         .from('lost_reports')
         .select('*, pets!inner(name, avatar_url, species, breed, city, owner_id)')
         .eq('status', 'active')
         .in('pets.city', userCities)
         .order('created_at', { ascending: false })
-        .limit(10)
-    ]).then(([userRes, reportsRes]) => {
-      const currentUser = userRes.data?.user
-      const data = reportsRes.data
-      const error = reportsRes.error
+        .then((res: any) => {
+          if (!res.error && res.data) {
+            setLostReports(res.data as any)
+          }
+          setLoaded(true)
+        })
+    }
 
-      if (!error && data) {
-        setLostReports(data as any)
-        if (currentUser) {
-          const hasOwn = data.some((r: any) => r.pets?.owner_id === currentUser.id && r.status === 'active')
-          setHasMyActiveReport(hasOwn)
-        }
-      }
-      setLoaded(true)
-    })
+    // Run during idle time so critical page rendering is never blocked
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      const handle = (window as any).requestIdleCallback(loadLostReports, { timeout: 2500 })
+      return () => (window as any).cancelIdleCallback(handle)
+    } else {
+      const timer = setTimeout(loadLostReports, 1500)
+      return () => clearTimeout(timer)
+    }
   }, [userCities])
 
   if (!loaded || lostReports.length === 0) return null

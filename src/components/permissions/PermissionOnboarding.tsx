@@ -185,52 +185,7 @@ export default function PermissionOnboarding() {
 
         <div className="p-6 flex flex-col gap-5">
           
-          {/* Location Section */}
-          <div className="flex flex-col gap-3">
-            <div className="flex gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-orange-500/10 text-orange-600 flex items-center justify-center shrink-0">
-                <MapPin className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="font-extrabold text-[15px] text-text-primary">Konum</h3>
-                  {locSuccess && (
-                    <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
-                      <Check className="w-3 h-3" /> İzin Verildi
-                    </span>
-                  )}
-                </div>
-                <p className="text-[12px] text-text-secondary mt-0.5">Yakınındaki veterinerleri, hizmetleri ve konum tabanlı özellikleri göstermek için.</p>
-              </div>
-            </div>
-
-            {locSuccess ? (
-              <div className="h-11 w-full bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl font-bold text-[14px] flex items-center justify-center gap-2 shadow-sm">
-                <Check className="w-4 h-4 text-emerald-600" />
-                Konum İzni Açık
-              </div>
-            ) : (
-              <button 
-                onClick={handleLocation}
-                disabled={isLocLoading}
-                className="h-11 w-full bg-surface border border-border-main rounded-xl font-bold text-[14px] text-text-primary hover:bg-bg-main active:scale-[0.98] transition-all shadow-sm disabled:opacity-60 flex items-center justify-center gap-2"
-              >
-                {isLocLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                    <span>Konum İsteniyor...</span>
-                  </>
-                ) : (
-                  'Konumumu Kullan'
-                )}
-              </button>
-            )}
-          </div>
-
-          {/* Divider */}
-          <div className="h-px w-full bg-border-main/50" />
-
-          {/* Notification Section */}
+          {/* 1. Notification Section */}
           <div className="flex flex-col gap-3">
             <div className="flex gap-3">
               <div className="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-600 flex items-center justify-center shrink-0">
@@ -272,6 +227,51 @@ export default function PermissionOnboarding() {
             )}
           </div>
 
+          {/* Divider */}
+          <div className="h-px w-full bg-border-main/50" />
+
+          {/* 2. Location Section */}
+          <div className="flex flex-col gap-3">
+            <div className="flex gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-orange-500/10 text-orange-600 flex items-center justify-center shrink-0">
+                <MapPin className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-extrabold text-[15px] text-text-primary">Konum</h3>
+                  {locSuccess && (
+                    <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                      <Check className="w-3 h-3" /> İzin Verildi
+                    </span>
+                  )}
+                </div>
+                <p className="text-[12px] text-text-secondary mt-0.5">Yakınındaki veterinerleri, hizmetleri ve konum tabanlı özellikleri göstermek için.</p>
+              </div>
+            </div>
+
+            {locSuccess ? (
+              <div className="h-11 w-full bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl font-bold text-[14px] flex items-center justify-center gap-2 shadow-sm">
+                <Check className="w-4 h-4 text-emerald-600" />
+                Konum İzni Açık
+              </div>
+            ) : (
+              <button 
+                onClick={handleLocation}
+                disabled={isLocLoading}
+                className="h-11 w-full bg-surface border border-border-main rounded-xl font-bold text-[14px] text-text-primary hover:bg-bg-main active:scale-[0.98] transition-all shadow-sm disabled:opacity-60 flex items-center justify-center gap-2"
+              >
+                {isLocLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                    <span>Konum İsteniyor...</span>
+                  </>
+                ) : (
+                  'Konuma İzin Ver'
+                )}
+              </button>
+            )}
+          </div>
+
         </div>
 
         <div className="p-4 bg-bg-main border-t border-border-main/50 flex flex-col gap-2.5">
@@ -283,7 +283,7 @@ export default function PermissionOnboarding() {
                 : 'bg-primary hover:bg-primary/90 text-white shadow-primary/20'
             }`}
           >
-            {isAllGranted ? 'Harika, Devam Et!' : 'Şimdi Değil'}
+            {isAllGranted ? "Odi.Pet'e Başla" : 'Şimdi Değil'}
           </button>
 
           {/* Test & iOS Manual Guide Trigger */}
