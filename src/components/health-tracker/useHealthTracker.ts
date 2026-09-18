@@ -211,14 +211,18 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
           .filter(Boolean)
       );
 
+      const existingPlanIds = new Set((plansRes.data || []).map((p: any) => p.id));
+
       const mergedEvents = [
-        ...(schedulesRes.data || []).map((s: any) => ({
-          ...s,
-          _source: 'health_schedules',
-          _plan_id: s.plan_id,
-        })),
+        ...(schedulesRes.data || [])
+          .filter((s: any) => !s.plan_id || !existingPlanIds.has(s.plan_id))
+          .map((s: any) => ({
+            ...s,
+            _source: 'health_schedules',
+            _plan_id: s.plan_id,
+          })),
         ...(plansRes.data || [])
-          .filter((p: any) => p.status !== 'cancelled')
+          .filter((p: any) => p.status !== 'cancelled' && !p.is_archived && p.is_active !== false)
           .filter((p: any) => !(p.category === 'parazit' && p.status === 'completed' && completedPlanIdsInParasiteRecords.has(p.id)))
           .filter((p: any) => !(p.category === 'asi' && p.status === 'completed' && completedPlanIdsInVaccineRecords.has(p.id)))
           .filter((p: any) => {

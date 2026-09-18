@@ -15,6 +15,7 @@ interface HealthTrackerProps {
   onPostpone?: (task: any) => void;
   onSelectTask?: (task: any) => void;
   refreshTrigger?: number;
+  resetTodayTrigger?: number;
 }
 
 /** Tarih kolonlarının ortak genişliği — her satırın kendi grid'i aynı ölçüyü kullanır */
@@ -29,14 +30,28 @@ function formatShortDate(dateKey: string): string {
   return `${d.getDate()} ${formattedMonth}`;
 }
 
-/** Görünür aralıktaki event'leri tarih anahtarına göre gruplar */
+/** Görünür aralıktaki event'leri tarih anahtarına göre gruplar ve aynı güne ait mükerrer yapıldı event'lerini tekilleştirir */
 function groupEventsByDate(events: FlowEvent[], visibleKeys: string[]): Map<string, FlowEvent[]> {
   const map = new Map<string, FlowEvent[]>();
   visibleKeys.forEach(k => map.set(k, []));
   events.forEach(e => {
     const raw = (e as any).due_date || e.scheduled_at || '';
     const key = raw.includes('T') ? raw.split('T')[0] : raw;
-    if (map.has(key)) map.get(key)!.push(e);
+    if (map.has(key)) {
+      const list = map.get(key)!;
+      // Aynı tarih hücresinde birden fazla tamamlandı (done/completed) kartı basılmasını önle
+      const isCurrentDone = e.status === 'done' || e.status === 'completed' || e.computedStatus === 'done';
+      if (isCurrentDone) {
+        const existingDoneIndex = list.findIndex(
+          existing => existing.status === 'done' || existing.status === 'completed' || existing.computedStatus === 'done'
+        );
+        if (existingDoneIndex >= 0) {
+          // Zaten bir yapıldı kaydı var; çift kart basılıp hücrenin taşmasını engelle
+          return;
+        }
+      }
+      list.push(e);
+    }
   });
   return map;
 }
@@ -89,7 +104,7 @@ function useDragScroll(ref: React.RefObject<HTMLDivElement | null>) {
   }, [ref]);
 }
 
-export function HealthTracker({ petId, onEditTask, onMarkDone, onPostpone, onSelectTask, refreshTrigger }: HealthTrackerProps) {
+export function HealthTracker({ petId, onEditTask, onMarkDone, onPostpone, onSelectTask, refreshTrigger, resetTodayTrigger }: HealthTrackerProps) {
   const {
     categoryGroups, loading, markEventStatus, postponeEvent, deleteEvent,
     visibleDates,
@@ -97,6 +112,12 @@ export function HealthTracker({ petId, onEditTask, onMarkDone, onPostpone, onSel
   const [onlyShowMissed, setOnlyShowMissed] = useState(false);
   // Artırıldığında tüm satırlar bağımsız olarak "bugün"e geri kayar
   const [resetToken, setResetToken] = useState(0);
+
+  useEffect(() => {
+    if (resetTodayTrigger !== undefined && resetTodayTrigger > 0) {
+      setResetToken(t => t + 1);
+    }
+  }, [resetTodayTrigger]);
   const [deletingPlan, setDeletingPlan] = useState<{ id: string; title?: string; category?: string } | null>(null);
   const [isDeletingPlanProcessing, setIsDeletingPlanProcessing] = useState(false);
 
@@ -232,33 +253,6 @@ export function HealthTracker({ petId, onEditTask, onMarkDone, onPostpone, onSel
 
   return (
     <div className="py-2 bg-white flex flex-col gap-1">
-      {/* Mini Filter Toolbar */}
-      <div className="flex items-center justify-between gap-2 px-4 pb-2 border-b border-border-main/30 flex-wrap">
-        <span className="text-[12px] font-bold text-text-secondary">Ajanda Akışı</span>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setResetToken(t => t + 1)}
-            className="px-3 py-1.5 rounded-full text-[11px] font-black border bg-[#eef3ff] border-[#5b86ff]/40 text-[#3358e0] transition-all active:scale-95"
-          >
-            Bugüne Dön
-          </button>
-          <button
-            onClick={() => setOnlyShowMissed(!onlyShowMissed)}
-            className={`px-3 py-1.5 rounded-full text-[11px] font-black border transition-all active:scale-95 ${
-              onlyShowMissed
-                ? 'bg-[#e25353] border-[#e25353] text-white shadow-xs'
-                : 'bg-white border-border-main text-text-secondary hover:text-primary hover:border-primary/40'
-            }`}
-          >
-            {onlyShowMissed ? '🚨 Gecikenleri Gizle' : '🚨 Gecikenleri Filtrele'}
-          </button>
-        </div>
-      </div>
-
-      <p className="px-4 text-[10px] text-text-secondary/60 font-semibold -mt-0.5">
-        Her satırı geçmiş veya ileri tarihlere sürükleyerek gezinebilirsiniz
-      </p>
-
       {!anyMissed ? (
         <div className="py-8 px-4 text-center text-text-secondary bg-[#fdfaf5] rounded-3xl m-4 border border-dashed border-[#e69b24]/40">
           <p className="text-[13px] font-bold">Filtreye uygun gecikmiş görev bulunmuyor.</p>

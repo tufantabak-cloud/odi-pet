@@ -249,6 +249,47 @@ export default function VeterinerTab({
     }
   };
 
+  const handleVetAddedSuccess = (createdVet: any) => {
+    let pendingData: any = null;
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = sessionStorage.getItem('pending_plan_completion');
+        if (stored) {
+          pendingData = JSON.parse(stored);
+        }
+      } catch (e) {
+        console.warn('Error reading pending_plan_completion', e);
+      }
+    }
+
+    const sp = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    const returnTab = pendingData?.sourceTab || sp?.get('return_tab');
+    const returnPlanId = pendingData?.planId || sp?.get('return_plan_id');
+
+    if (returnTab || returnPlanId) {
+      if (pendingData && createdVet) {
+        pendingData.applicationDetails = {
+          ...(pendingData.applicationDetails || {}),
+          selected_vet_id: createdVet.id,
+          administration_place: 'veterinary_clinic',
+          institution_name: createdVet.clinic_name || pendingData.applicationDetails?.institution_name || '',
+          provider_name: createdVet.doctor_name || pendingData.applicationDetails?.provider_name || '',
+        };
+        try {
+          sessionStorage.setItem('pending_plan_completion', JSON.stringify(pendingData));
+        } catch {}
+      }
+
+      const newVetParam = createdVet?.id ? `&new_vet_id=${encodeURIComponent(createdVet.id)}` : '';
+      const planParam = returnPlanId ? `&complete_plan_id=${encodeURIComponent(returnPlanId)}` : '';
+      const targetTab = returnTab || 'saglik';
+
+      router.push(`/owner/pets/${petId}?tab=${targetTab}${planParam}${newVetParam}`);
+      return true;
+    }
+    return false;
+  };
+
   useEffect(() => {
     const isAddVet =
       searchParams?.get('action') === 'add_vet' ||
@@ -265,7 +306,24 @@ export default function VeterinerTab({
   const handleCloseAddVetModal = () => {
     setShowAddVetModal(false);
     resetVetForm();
-    cleanupAddVetParam();
+
+    let pendingData: any = null;
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = sessionStorage.getItem('pending_plan_completion');
+        if (stored) pendingData = JSON.parse(stored);
+      } catch {}
+    }
+    const sp = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    const returnTab = pendingData?.sourceTab || sp?.get('return_tab');
+    const returnPlanId = pendingData?.planId || sp?.get('return_plan_id');
+
+    if (returnTab && returnTab !== 'veteriner') {
+      const planParam = returnPlanId ? `&complete_plan_id=${encodeURIComponent(returnPlanId)}` : '';
+      router.push(`/owner/pets/${petId}?tab=${returnTab}${planParam}`);
+    } else {
+      cleanupAddVetParam();
+    }
   };
 
   // Form State - Yeni Veteriner
@@ -425,16 +483,21 @@ export default function VeterinerTab({
         setShowOldVetConflictModal(true);
         setShowAddVetModal(false);
       } else {
-        await fetch(`/api/pets/${petId}/vets`, {
+        const res = await fetch(`/api/pets/${petId}/vets`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ...payload, is_primary: true })
         });
+        if (!res.ok) throw new Error('Yeni veteriner eklenemedi');
+        const createdVet = await res.json();
         toast.success('Yeni klinik eklendi');
         mutateVets();
         setShowAddVetModal(false);
         resetVetForm();
-        cleanupAddVetParam();
+        const redirected = handleVetAddedSuccess(createdVet);
+        if (!redirected) {
+          cleanupAddVetParam();
+        }
       }
     } catch (error) {
       toast.error('Bir hata oluştu');
@@ -1496,7 +1559,7 @@ export default function VeterinerTab({
                       ));
 
                       // Yeni kliniği ekle
-                      await fetch(`/api/pets/${petId}/vets`, {
+                      const res = await fetch(`/api/pets/${petId}/vets`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ 
@@ -1508,13 +1571,18 @@ export default function VeterinerTab({
                           is_primary: true 
                         })
                       });
+                      if (!res.ok) throw new Error('Yeni veteriner eklenemedi');
+                      const createdVet = await res.json();
                       
                       toast.success('Eski kayıt pasife alındı, yeni klinik eklendi');
                       mutateVets();
                       setShowOldVetConflictModal(false);
                       setPendingNewVet(null);
                       resetVetForm();
-                      cleanupAddVetParam();
+                      const redirected = handleVetAddedSuccess(createdVet);
+                      if (!redirected) {
+                        cleanupAddVetParam();
+                      }
                     } catch (error) {
                       toast.error('İşlem sırasında hata oluştu');
                     }
@@ -1527,7 +1595,7 @@ export default function VeterinerTab({
                   onClick={async () => {
                     if (!pendingNewVet) return;
                     try {
-                      await fetch(`/api/pets/${petId}/vets`, {
+                      const res = await fetch(`/api/pets/${petId}/vets`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ 
@@ -1539,13 +1607,18 @@ export default function VeterinerTab({
                           is_primary: false 
                         })
                       });
+                      if (!res.ok) throw new Error('Yeni veteriner eklenemedi');
+                      const createdVet = await res.json();
                       
                       toast.success('Yeni klinik eklendi');
                       mutateVets();
                       setShowOldVetConflictModal(false);
                       setPendingNewVet(null);
                       resetVetForm();
-                      cleanupAddVetParam();
+                      const redirected = handleVetAddedSuccess(createdVet);
+                      if (!redirected) {
+                        cleanupAddVetParam();
+                      }
                     } catch (error) {
                       toast.error('Hata oluştu');
                     }

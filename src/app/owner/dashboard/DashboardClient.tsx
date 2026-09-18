@@ -127,7 +127,7 @@ export default function DashboardClient({
       <PendingInviteModal pendingInvites={pendingUserInvites} />
       <PermissionOnboarding />
       {/* 1. Üst Header / Karşılama */}
-      <div className="px-[var(--space-4)] pt-6 pb-1 flex items-center justify-between gap-4">
+      <div className="pt-6 pb-1 flex items-center justify-between gap-4">
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-bold text-text-primary leading-tight tracking-tight">
             {firstName ? `${greeting}, ${firstName}` : greeting}
@@ -146,7 +146,7 @@ export default function DashboardClient({
       {/* 2. Petlerim Slider */}
       {petsWithStats && petsWithStats.length > 0 && (
         <div className="flex flex-col gap-3 pt-2">
-          <div className="flex items-center justify-between px-[var(--space-4)]">
+          <div className="flex items-center justify-between">
             <h2 className="text-xs font-bold text-text-primary uppercase tracking-wider">Petlerim</h2>
             <Link
               id="onb-pet-add"
@@ -163,7 +163,7 @@ export default function DashboardClient({
 
       {/* 3. Bugünkü Odak / Smart Cards */}
       {pets && pets.length > 0 && (
-        <div className="px-[var(--space-4)] pt-2 flex flex-col gap-2">
+        <div className="pt-2 flex flex-col gap-2">
           {activePet && <WeatherPawAlert key={activePetId} activePet={activePet} />}
           {activePet && (
             <OdiNoticedWeightCard
@@ -184,7 +184,7 @@ export default function DashboardClient({
       )}
 
       {/* 4. Ajanda (Yaklaşan Etkinlikler & Aktif Planlar Birleşimi) */}
-      <div className="flex flex-col gap-2.5 px-[var(--space-4)] pt-2" id="section-ajanda">
+      <div className="flex flex-col gap-2.5 pt-2" id="section-ajanda">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h2 className="text-xs font-bold text-text-primary uppercase tracking-wider">Ajanda</h2>
@@ -313,7 +313,7 @@ export default function DashboardClient({
 
       {/* 4.5. {PetAdı} İçin Öneriler */}
       {activePet && (
-        <div className="px-[var(--space-4)] pt-2">
+        <div className="pt-2">
           <PetRecommendationsCard activePet={activePet} />
         </div>
       )}
@@ -321,10 +321,10 @@ export default function DashboardClient({
       {/* 5. Hızlı Erişim (Mobilde 2 sütun · 4 işlem görünür) */}
       {pets && pets.length > 0 && (
         <div className="flex flex-col gap-2 pt-2">
-          <h2 className="text-xs font-bold text-text-primary uppercase tracking-wider px-[var(--space-4)]">
+          <h2 className="text-xs font-bold text-text-primary uppercase tracking-wider">
             Hızlı Erişim
           </h2>
-          <div className="grid grid-cols-2 gap-2 px-[var(--space-4)]">
+          <div className="grid grid-cols-2 gap-2">
 
             {/* AI Vet — Primary */}
             <Link href="/owner/ai-vet" prefetch={false}
@@ -380,7 +380,7 @@ export default function DashboardClient({
 
       {/* 6. Kurulum Rehberi */}
       {activePetId && (
-        <div className="px-[var(--space-4)] pt-1">
+        <div className="pt-1">
           <OnboardingProgressCard
             petId={activePetId}
             petName={activePet?.name || ''}
@@ -391,7 +391,7 @@ export default function DashboardClient({
 
       {/* 7. Profiling Engine Questions & Insights */}
       {((activeQuestion && activeQuestion.type !== 'weight') || activeInsight) && (
-        <div className="px-[var(--space-4)] flex flex-col gap-3 animate-in fade-in slide-in-from-top-4 duration-500">
+        <div className="flex flex-col gap-3 animate-in fade-in slide-in-from-top-4 duration-500">
           {activeInsight && <SmartInsightCard insight={activeInsight} />}
           {activeQuestion && activeQuestion.type !== 'weight' && <SmartQuestionCard question={activeQuestion} />}
         </div>
@@ -399,7 +399,7 @@ export default function DashboardClient({
 
       {/* 8. Sağlık Geçmişi Sihirbazı Hatırlatıcısı */}
       {showHealthWizardForActivePet && activePet && (
-        <div key={`health-wizard-${activePet.id}`} className="px-[var(--space-4)] pt-3 pb-1">
+        <div key={`health-wizard-${activePet.id}`} className="pt-3 pb-1">
           <Link href={`/owner/plan-yap/asi?pet_id=${activePet.id}&mode=log`} className="block w-full bg-white border border-slate-100 rounded-[24px] p-4 text-left shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(15,23,42,0.08)] hover:border-slate-200 transition-all duration-200 active:scale-[0.98]">
             <div className="flex items-start gap-3">
               <i className="ti ti-clock text-xl text-primary mt-0.5 shrink-0" />
@@ -422,7 +422,7 @@ export default function DashboardClient({
 
       {/* 10. Davet Et (Mini Banner) */}
       {pets && pets.length > 0 && (
-        <div className="px-[var(--space-4)] pt-2">
+        <div className="pt-2">
           <Link href="/owner/referral" className="rounded-[24px] border border-slate-100 bg-white px-4 py-3 flex items-center gap-3 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(15,23,42,0.08)] hover:border-slate-200 transition-all duration-200 active:scale-[0.98]">
             <div className="w-10 h-10 bg-primary/10 rounded-2xl flex items-center justify-center flex-shrink-0">
               <Gift className="w-5 h-5 stroke-[2] text-primary" />

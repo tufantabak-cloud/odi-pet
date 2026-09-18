@@ -143,6 +143,21 @@ describe('Agenda Write Handlers & Auto-Matching (ADIM 4B)', () => {
                 }
               ],
               error: null
+            }),
+            in: vi.fn().mockResolvedValue({
+              data: [
+                {
+                  id: 'plan_rabies',
+                  pet_id: 'pet_123',
+                  category: 'asi',
+                  sub_type: 'Kuduz Aşısı Protokolü',
+                  scheduled_at: '2026-07-23T10:00:00Z',
+                  repeat_rule: 'yearly',
+                  status: 'active',
+                  extra_data: { vaccine_code: 'DOG_RABIES' }
+                }
+              ],
+              error: null
             })
           })
         }),

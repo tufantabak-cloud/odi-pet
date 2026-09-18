@@ -57,10 +57,14 @@ export async function POST(request: Request) {
     // mevcut RLS politikalarıyla çalışmaya devam eder.
     const rpcSupabase = createAdminSupabaseClient();
 
+    const normalizedInput = typeof input === 'object' && input !== null
+      ? { ...input, pet_id: input.pet_id || pet_id }
+      : input;
+
     // Process record creation via atomic write service
     const { result, matchResult } = await processRecordCreation(
       category,
-      input,
+      normalizedInput,
       {
         supabase,
         petId: pet_id,

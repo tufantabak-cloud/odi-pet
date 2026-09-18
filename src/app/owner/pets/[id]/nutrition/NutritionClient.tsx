@@ -9,14 +9,13 @@ import ConfirmModal from '@/components/ui/ConfirmModal'
 import CoachMark from '@/components/ui/CoachMark'
 import { SmartScanner } from '@/components/ui/SmartScanner'
 import { BarcodeScanner } from '@/components/ui/BarcodeScanner'
-import SmartCardBanner from '@/components/profiling/SmartCardBanner'
 import { StepperInput } from '@/components/ui/StepperInput'
 import { RulerPicker } from '@/components/ui/RulerPicker'
 import { Modal } from '@/components/ui/Modal'
 import WeightChangeChart from '@/components/pets/WeightChangeChart'
 import WeightGoalBand from '@/components/pets/WeightGoalBand'
 import { assessWeight } from '@/lib/vetStandards/weightStandards'
-import { ScaleIcon, UtensilsIcon, BowlIcon, RulerIcon } from '@/components/icons/PetIcons'
+import { ScaleIcon, UtensilsIcon, RulerIcon } from '@/components/icons/PetIcons'
 import { Pencil, AlertTriangle, Plus, Package, Trash2, Camera, Check, Clock, Scale, Search, QrCode, Edit3, Tag, ArrowRight, CheckCircle2 } from 'lucide-react'
 import StockTimeline from '@/components/nutrition/StockTimeline'
 import { CanonicalPlanActionModal } from '@/components/pets/common/CanonicalPlanActionModal'
@@ -146,7 +145,10 @@ export default function NutritionClient({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         })
-        if (!res.ok) throw new Error('Hatırlatıcı eklenemedi')
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.message || (res.status === 409 ? 'Bu evcil hayvan için aktif bir hatırlatıcı zaten mevcut.' : 'Hatırlatıcı eklenemedi'));
+        }
       }
 
       setShowReminderModal(false)
@@ -300,28 +302,6 @@ export default function NutritionClient({
     : { daysLeft: null, risk: 'OK', shouldNotify: false, shouldSuggestRefill: false, shouldUrgentRefill: false }
 
   const showBanner = hasInventory && dailyUsage > 0 && stockStatus === 'available' && (refillStatus.risk === 'WARNING' || refillStatus.risk === 'CRITICAL')
-  
-  const badgeClass = stockStatus === 'unknown'
-    ? 'text-text-secondary font-bold'
-    : stockStatus === 'depleted'
-      ? 'text-red-500 font-extrabold'
-      : stockStatus === 'paused'
-        ? 'text-amber-500 font-bold'
-        : refillStatus.risk === 'CRITICAL'
-          ? 'text-red-500 font-extrabold'
-          : refillStatus.risk === 'WARNING'
-            ? 'text-orange-500 font-extrabold'
-            : 'text-green-500 font-extrabold'
-
-  const riskLabel = stockStatus === 'unknown'
-    ? 'Stok bilgisi girilmedi'
-    : stockStatus === 'depleted'
-      ? 'Mama bitti'
-      : stockStatus === 'paused'
-        ? 'Stok takibi duraklatıldı (Aktif mama yok)'
-        : refillStatus.daysLeft !== null
-          ? `${refillStatus.daysLeft} gün kaldı`
-          : 'Kullanım belirtilmedi'
 
   // Calculated per meal and total daily grams
   const computedDailyGrams = portionMode === 'meal' ? gramsInput * mealsInput : gramsInput
@@ -983,7 +963,7 @@ export default function NutritionClient({
   }
 
   return (
-    <div className={`flex flex-col gap-6 w-full mx-auto ${embedded ? 'max-w-none pb-4 px-0' : 'max-w-2xl pb-32 pb-safe px-3 sm:px-0'}`}>
+    <div className={`flex flex-col gap-6 w-full mx-auto ${embedded ? 'max-w-none pb-4 px-0' : 'max-w-2xl pb-32 pb-safe px-0'}`}>
       {/* Header */}
       {!embedded && (
         <>

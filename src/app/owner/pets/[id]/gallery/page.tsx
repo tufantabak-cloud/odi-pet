@@ -35,7 +35,7 @@ export default async function GalleryPage(props: PageProps) {
   return (
     <div className="bg-bg-main min-h-screen pb-30">
       <PageHeader title="Galeri" backHref={`/owner/pets/${id}`} />
-      <div className="p-4 pt-6 max-w-lg mx-auto">
+      <div className="py-6 max-w-lg mx-auto">
         <GalleryTab pet={pet} />
       </div>
     </div>

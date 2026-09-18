@@ -31,7 +31,7 @@ export default async function BudgetPage(props: PageProps) {
   return (
     <div className="bg-bg-main min-h-screen pb-30">
       <PageHeader title="Bütçe Yönetimi" backHref={`/owner/pets/${id}`} />
-      <div className="p-4 pt-6 max-w-lg mx-auto">
+      <div className="py-6 max-w-lg mx-auto">
         <BudgetTab pet={pet} />
       </div>
     </div>

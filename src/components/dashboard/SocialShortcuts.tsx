@@ -84,7 +84,7 @@ export default function SocialShortcuts({ lostReportsCount = 0 }: { lostReportsC
   ]
 
   return (
-    <div className="px-[var(--space-4)]">
+    <div>
       <div className="grid grid-cols-3 gap-3">
         {shortcuts.map((s) => {
           const Icon = s.icon

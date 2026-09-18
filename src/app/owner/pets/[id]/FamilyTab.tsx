@@ -3,9 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { QRCodeSVG } from 'qrcode.react'
-import { LogOut, Users, Crown, Mail, QrCode, X, Check, Link as LinkIcon } from 'lucide-react'
+import { LogOut, Users, Crown, Mail, QrCode, X } from 'lucide-react'
 import ConfirmModal from '@/components/ui/ConfirmModal'
-import CoachMark from '@/components/ui/CoachMark'
 import TransferPrimaryOwnerModal from '@/components/pets/family/TransferPrimaryOwnerModal'
 
 const ROLE_LABELS: Record<string, { label: string; color: string; desc: string }> = {
@@ -17,7 +16,7 @@ const ROLE_LABELS: Record<string, { label: string; color: string; desc: string }
   viewer:        { label: 'Görüntüleyici', color: 'bg-gray-100 text-gray-600', desc: 'Salt okunur' },
 }
 
-export default function FamilyTab({ petId, petName, plan, initialSos }: { petId: string; petName: string; plan: string; initialSos?: any[] }) {
+export default function FamilyTab({ petId, petName, plan: _plan, initialSos: _initialSos }: { petId: string; petName: string; plan?: string; initialSos?: any[] }) {
   const router = useRouter()
   const [members, setMembers] = useState<any[]>([])
   const [invites, setInvites] = useState<any[]>([])

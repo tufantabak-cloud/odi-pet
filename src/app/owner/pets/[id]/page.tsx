@@ -142,7 +142,7 @@ export default async function PetDetailPage(props: PageProps) {
       title: getPlanDisplayTitle(p),
       due_date: dueDate,
       due_time: dueTime,
-      status: p.status === 'completed' ? 'done' : p.status === 'cancelled' ? 'done' : 'upcoming',
+      status: p.status === 'completed' ? 'done' : p.status === 'cancelled' ? 'done' : p.status === 'overdue' ? 'overdue' : 'upcoming',
       category: PLAN_CATEGORY_MAP[p.category] || p.category,
       sub_category: p.extra_data?.record_type === 'medication' ? 'İlaç Kullanımı' : p.sub_type,
       plan_type: p.repeat_rule || 'once',

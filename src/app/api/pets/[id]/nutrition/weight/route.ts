@@ -99,32 +99,45 @@ export async function POST(req: NextRequest, { params }: Params) {
   if (error) return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
 
   // ─── Otomatik Kilo & Boy Hatırlatıcısı Güncelleme ──────────────
-  // 1. Varsa eski hatırlatıcıyı tamamlandı olarak işaretle
+  // 1. Sadece vadesi geçmiş veya bugünkü hatırlatıcıları tamamlandı olarak işaretle (gelecekteki planlara dokunma)
   await supabase
     .from('plans')
-    .update({ status: 'completed' })
+    .update({ status: 'completed', completed_at: measuredAtIso })
     .eq('pet_id', id)
     .eq('category', 'saglik')
     .eq('sub_type', 'Kilo & Boy Ölçümü')
-    .eq('status', 'active');
+    .lte('scheduled_at', measuredAtIso)
+    .in('status', ['active', 'overdue', 'pending', 'upcoming']);
     
-  // 2. Yeni ölçüm tarihi + 1 ay sonrasına yeni hatırlatıcı kur
+  // 2. Yeni ölçüm tarihi + 1 ay sonrasına yeni hatırlatıcı kur (zaten yoksa)
   const logDate = body.measured_at ? new Date(body.measured_at) : new Date();
   logDate.setMonth(logDate.getMonth() + 1);
-  
-  await supabase
+
+  const { data: existingFuturePlan } = await supabase
     .from('plans')
-    .insert({
-      user_id: user.id,
-      pet_id: id,
-      category: 'saglik',
-      sub_type: 'Kilo & Boy Ölçümü',
-      scheduled_at: logDate.toISOString(),
-      status: 'active',
-      source: 'system',
-      policy: 'required',
-      extra_data: { source: 'system', auto_generated: true }
-    });
+    .select('id')
+    .eq('pet_id', id)
+    .eq('category', 'saglik')
+    .eq('sub_type', 'Kilo & Boy Ölçümü')
+    .eq('status', 'active')
+    .gt('scheduled_at', measuredAtIso)
+    .limit(1);
+
+  if (!existingFuturePlan || existingFuturePlan.length === 0) {
+    await supabase
+      .from('plans')
+      .insert({
+        user_id: user.id,
+        pet_id: id,
+        category: 'saglik',
+        sub_type: 'Kilo & Boy Ölçümü',
+        scheduled_at: logDate.toISOString(),
+        status: 'active',
+        source: 'system',
+        policy: 'required',
+        extra_data: { source: 'system', auto_generated: true }
+      });
+  }
 
   // Track event
   await fetch(`${process.env.NEXT_PUBLIC_APP_URL ?? ''}/api/analytics/onboarding`, {

@@ -95,13 +95,13 @@ test('Comprehensive Verification of All 12 Acceptance Criteria (Calendar, Timeli
   await page.goto(`/owner/pets/${petId}?tab=takvim`);
   await page.waitForLoadState('networkidle');
 
-  const overdueSection = page.locator('text=Geciken Görevler').first();
-  await expect(overdueSection).toBeVisible({ timeout: 10000 });
+  const trackerSection = page.locator('text=Görev Takibi').first();
+  await expect(trackerSection).toBeVisible({ timeout: 10000 });
 
   const overdue45Plan = page.locator('text=Kuduz Aşısı (-45 Gün Overdue)').first();
   await expect(overdue45Plan).toBeVisible({ timeout: 10000 });
 
-  const badgeText = page.locator('text=Gecikti').first();
+  const badgeText = page.locator('text=/Gecikti|Kaçırıldı/').first();
   await expect(badgeText).toBeVisible();
   console.log('✅ Criteria 1, 2, 10 VERIFIED: Overdue section, unbounded -45d plan, and category normalization active.');
 

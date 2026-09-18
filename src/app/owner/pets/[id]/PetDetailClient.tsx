@@ -1,9 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import dynamic from 'next/dynamic'
-import { Share2, Phone, Camera, ImageIcon, FileImage, Wallet, Home, FileText, AlertTriangle, Heart, ShieldCheck, Pencil, Inbox, Key, Scale, Move, Users, Bell, X, Lock, Check, Calendar, Plus, Eye } from 'lucide-react'
+import { Share2, Camera, ImageIcon, FileImage, Wallet, Home, FileText, AlertTriangle, Heart, ShieldCheck, Pencil, Inbox, Key, Scale, Users, X, Check, Calendar, Eye } from 'lucide-react'
 
 const DynamicExperienceEngine = dynamic(() => import('@/components/orchestrator/DynamicExperienceEngine'), { ssr: false })
 const FamilyTab = dynamic(() => import('./FamilyTab'), { loading: () => <div className='animate-pulse bg-gray-100 rounded-2xl w-full h-12' /> });
@@ -13,7 +12,7 @@ const VeterinerTab = dynamic(() => import('@/components/pets/tabs/VeterinerTab')
 
 
 import { TaskCategory } from '@/lib/tasks/taskDefaults'
-import { AlertCircleIcon, CalendarClockIcon, CheckCircle2Icon, CheckCircleIcon, ChevronRightIcon, HeartPulseIcon, ShieldAlertIcon, SmileIcon, StarIcon, TrophyIcon, ActivityIcon, PlusIcon, FileTextIcon, HistoryIcon, MapPinIcon, BabyIcon, FileLineChartIcon, HelpCircleIcon, DownloadIcon, PillIcon, DogIcon, CatIcon, IdCardIcon, TargetIcon, DropletsIcon } from 'lucide-react'
+import { CheckCircle2Icon, ChevronRightIcon, HeartPulseIcon, PlusIcon, DogIcon, CatIcon, TargetIcon } from 'lucide-react'
 import { VaccineIcon, ParasiteIcon, ShampooIcon, BowlIcon, CarrierIcon, BoneIcon, ScoopIcon, FirstAidIcon, StethoscopeIcon, ShieldCheckIcon } from '@/components/icons/PetIcons'
 const NutritionClient = dynamic(() => import('./nutrition/NutritionClient'), { loading: () => <div className='animate-pulse bg-gray-100 rounded-2xl w-full h-12' /> });
 import { useState, useEffect, useRef } from 'react'
@@ -22,7 +21,6 @@ import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 const HumanAgeCalculator = dynamic(() => import('@/components/pets/HumanAgeCalculator'), { loading: () => <div className='animate-pulse bg-gray-100 rounded-2xl w-full h-12' /> });
 const BreedHealthCard = dynamic(() => import('@/components/pets/BreedHealthCard'));
 const LostPetWizard = dynamic(() => import('@/components/pets/LostPetWizard'), { ssr: false });
-const MinimalGrowthChart = dynamic(() => import('@/components/pets/MinimalGrowthChart'));
 const SmartScanner = dynamic(() => import('@/components/ui/SmartScanner').then(mod => mod.SmartScanner), { ssr: false })
 const HealthTracker = dynamic(() => import('@/components/health-tracker/HealthTracker').then(mod => mod.HealthTracker), { loading: () => <div className='animate-pulse bg-gray-100 rounded-2xl w-full h-12' /> })
 const EstrusTracker = dynamic(() => import('@/components/estrus-tracker/EstrusTracker').then(mod => mod.EstrusTracker))
@@ -30,7 +28,6 @@ const SmartCardBanner = dynamic(() => import('@/components/ui/SmartCardBanner'))
 import PetHeroCard from './PetHeroCard'
 const AllergyManager = dynamic(() => import('@/components/pets/AllergyManager'));
 const MedicationManager = dynamic(() => import('@/components/pets/MedicationManager'));
-const HealthTimeline = dynamic(() => import('@/components/pets/health/HealthTimeline'), { loading: () => <div className='animate-pulse bg-gray-100 rounded-2xl w-full h-12' /> });
 import { buildPetMicroTasks } from '@/lib/microTasks/petMicroTasks'
 import { PetMicroTaskCard } from '@/components/micro-tasks/PetMicroTaskCard'
 import { useDismissedMicroTasks } from '@/hooks/useDismissedMicroTasks'
@@ -38,8 +35,6 @@ import type { TaskModalType } from '@/components/pets/PetTaskModals';
 const PetTaskModals = dynamic(() => import('@/components/pets/PetTaskModals').then(mod => mod.PetTaskModals))
 const ParasitePlanCompletionModal = dynamic(() => import('@/components/pets/ParasitePlanCompletionModal'));
 const DeletePlanConfirmationModal = dynamic(() => import('@/components/ui/DeletePlanConfirmationModal').then(mod => mod.DeletePlanConfirmationModal))
-const PostponeModal = dynamic(() => import('@/components/pets/common/PostponeModal').then(mod => mod.PostponeModal))
-const CompletionDetailsModal = dynamic(() => import('@/components/pets/common/CompletionDetailsModal').then(mod => mod.CompletionDetailsModal))
 const ConfirmModal = dynamic(() => import('@/components/ui/ConfirmModal'));
 import FloatingSOS from '@/components/FloatingSOS'
 const AiDocumentScanner = dynamic(() => import('@/components/ai/AiDocumentScanner'), { ssr: false });
@@ -227,7 +222,6 @@ export interface PetDetailProps {
   score: number;
   overdue: number;
   schedules: any[];
-  agendaEvents?: any[];
   diseases: any[];
   allergies: any[];
   medications: any[];
@@ -248,6 +242,7 @@ export interface PetDetailProps {
   initialVaccines?: any[];
   initialParasites?: any[];
   initialVets?: any[];
+  agendaEvents?: any[];
 }
 
 export function getTaskCardStyle(isOverdue: boolean, isCompleted: boolean) {
@@ -292,7 +287,7 @@ export function getTaskCardStyle(isOverdue: boolean, isCompleted: boolean) {
   };
 }
 
-export default function PetDetailClient({ pet, age, score, overdue, schedules, agendaEvents = [], diseases, allergies, medications, growthRecords, appointments, nutritionLogs, inventory, feedingLogs, weightLogs, assignments, payments, subscription, activeLostReport, hasPasskey = false, isAdminView = false, lastVaccineRecord, initialVaccines, initialParasites, initialVets }: PetDetailProps) {
+export default function PetDetailClient({ pet, age, score, overdue, schedules, agendaEvents, diseases, allergies, medications, growthRecords, appointments, nutritionLogs, inventory, feedingLogs, weightLogs, assignments, payments, subscription, activeLostReport, hasPasskey = false, isAdminView = false, lastVaccineRecord, initialVaccines, initialParasites, initialVets }: PetDetailProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -334,6 +329,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, a
         : 'ozet'
 
   const [canonicalActionPlan, setCanonicalActionPlan] = useState<any>(null);
+  const [initialModalDetails, setInitialModalDetails] = useState<any>(null);
+  const [initialModalAction, setInitialModalAction] = useState<any>(null);
   const petCanonicalContext: any = canonicalActionPlan ? {
     planId: canonicalActionPlan._plan_id || canonicalActionPlan.id,
     plan: canonicalActionPlan,
@@ -470,6 +467,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, a
   const [parasiteCompletionTask, setParasiteCompletionTask] = useState<any>(null)
   const [enrichOpen, setEnrichOpen] = useState(false)
   const [trackerRefreshKey, setTrackerRefreshKey] = useState(0)
+  const [trackerResetToken, setTrackerResetToken] = useState(0)
   const coverInputRef = useRef<HTMLInputElement>(null)
   const avatarInputRef = useRef<HTMLInputElement>(null)
 
@@ -750,6 +748,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, a
     }
   }
 
+  const isTaskDone = (s: any) => s?.status === 'done' || s?.status === 'completed' || Boolean(s?.completed);
+
   const getSchedulesForTab = (tabName: string) => {
     const dbCat = TAB_CATEGORY_MAP[tabName]
     if (!dbCat) return []
@@ -765,7 +765,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, a
         return (s.sub_category || '').includes('Parazit') || (s.title || '').toLowerCase().includes('parazit');
       }
       return true;
-    }).filter((s: any) => s.status !== 'done')
+    }).filter((s: any) => !isTaskDone(s))
   }
 
   const getCompletedSchedulesForTab = (tabName: string) => {
@@ -783,15 +783,15 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, a
         return (s.sub_category || '').includes('Parazit') || (s.title || '').toLowerCase().includes('parazit');
       }
       return true;
-    }).filter((s: any) => s.status === 'done')
+    }).filter((s: any) => isTaskDone(s))
   }
 
   const getSchedulesForPeriod = (period: 'week' | 'all' | 'overdue' | 'done') => {
     const now = new Date()
     
     return localSchedules.filter((s: any) => {
-      if (period === 'done') return s.status === 'done'
-      if (s.status === 'done') return false
+      if (period === 'done') return isTaskDone(s)
+      if (isTaskDone(s)) return false
       
       try {
         const d = getTaskDateTime(s)
@@ -903,6 +903,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, a
       return null
     }
     if (item.id && isPlanSource(item.id)) return getRealPlanId(item.id)
+    if (item.plan_id) return item.plan_id
+    if (item.parent_plan_id) return item.parent_plan_id
     if ((item._source === 'plans' || item._source === 'health_schedules') && item._plan_id) return item._plan_id
     if (item._is_virtual && (item._source === 'plans' || item._source === 'health_schedules') && item._plan_id) return item._plan_id
     return null
@@ -932,6 +934,63 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, a
     }
     setTrackerRefreshKey(prev => prev + 1)
   }
+
+  // Akış Geri Dönüşü: Yeni veteriner eklendikten sonra "İşlem Tamamlandı" sürecine geri dönme
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const sp = new URLSearchParams(window.location.search);
+    const completePlanId = sp.get('complete_plan_id');
+    const newVetId = sp.get('new_vet_id');
+
+    let pendingDraft: any = null;
+    try {
+      const stored = sessionStorage.getItem('pending_plan_completion');
+      if (stored) {
+        pendingDraft = JSON.parse(stored);
+      }
+    } catch (e) {
+      console.warn('Failed to parse pending_plan_completion', e);
+    }
+
+    const targetPlanId = completePlanId || pendingDraft?.planId;
+
+    if (targetPlanId && localSchedules && localSchedules.length > 0) {
+      const matchingSchedule = localSchedules.find((s: any) => {
+        const rId = resolveRealPlanId(s) || s.id;
+        return rId === targetPlanId || s.id === targetPlanId || s._plan_id === targetPlanId;
+      });
+
+      const planToUse = matchingSchedule || pendingDraft?.plan;
+
+      if (planToUse) {
+        let details = pendingDraft?.applicationDetails || {};
+        if (newVetId) {
+          details = {
+            ...details,
+            selected_vet_id: newVetId,
+            administration_place: 'veterinary_clinic',
+          };
+        }
+        setInitialModalDetails(details);
+        setInitialModalAction('complete_details');
+        setCanonicalActionPlan(planToUse);
+
+        try {
+          sessionStorage.removeItem('pending_plan_completion');
+        } catch {}
+
+        const cleanParams = new URLSearchParams(window.location.search);
+        cleanParams.delete('complete_plan_id');
+        cleanParams.delete('new_vet_id');
+        cleanParams.delete('return_tab');
+        cleanParams.delete('return_plan_id');
+        cleanParams.delete('action');
+        const newRelativePathQuery = window.location.pathname + (cleanParams.toString() ? `?${cleanParams.toString()}` : '');
+        window.history.replaceState(null, '', newRelativePathQuery);
+      }
+    }
+  }, [localSchedules, searchParams]);
 
 
 
@@ -1002,7 +1061,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, a
           )
         ) : (
           list.map((item: any) => {
-          const isCompleted = item.status === 'done';
+          const isCompleted = isTaskDone(item);
           const now = new Date();
           const isOverdue = !isCompleted && getTaskDateTime(item) < now;
 
@@ -1353,7 +1412,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, a
 
         // Sıradaki
         const now = new Date();
-        const upcomingSchedules = localSchedules.filter((s: any) => s.status !== 'done').sort((a: any, b: any) => getTaskDateTime(a).getTime() - getTaskDateTime(b).getTime());
+        const upcomingSchedules = localSchedules.filter((s: any) => !isTaskDone(s)).sort((a: any, b: any) => getTaskDateTime(a).getTime() - getTaskDateTime(b).getTime());
         const nextSchedule = upcomingSchedules[0]; // Geçmiş veya gelecek, ilk yapılmamış görev
         const nextDateObj = nextSchedule ? getTaskDateTime(nextSchedule) : null;
         const nextDateStr = nextDateObj ? `${nextDateObj.getDate()} ${['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'][nextDateObj.getMonth()]}` : '-';
@@ -1419,7 +1478,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, a
             </div>
 
             {activeTab === 'ozet' && (
-              <div className="p-4 flex flex-col gap-6">
+              <div className="py-4 flex flex-col gap-6">
 
                 <div className="lg:grid lg:grid-cols-12 lg:gap-6 lg:items-start flex flex-col gap-4">
                   
@@ -1820,6 +1879,9 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, a
                   </div>
                 )}
 
+                {/* ── Irka Özel Sağlık Rehberi ── */}
+                <BreedHealthCard breed={pet.breed} />
+
               </div>
             )}
           </div>
@@ -1946,14 +2008,24 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, a
       )}
 
       {activeTab === 'takvim' && (
-      <div className="p-4 flex flex-col gap-3">
+      <div className="py-4 flex flex-col gap-3">
       {/* Timeline - Görev Takibi */}
       <div className="mt-4">
-        <h3 className="text-base font-bold text-text-primary mb-3">
-          Görev Takibi
-        </h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-base font-bold text-text-primary">
+            Görev Takibi
+          </h3>
+          <button
+            type="button"
+            onClick={() => setTrackerResetToken(t => t + 1)}
+            className="px-3 py-1.5 rounded-full text-[11px] font-black border bg-[#eef3ff] border-[#5b86ff]/40 text-[#3358e0] transition-all active:scale-95 hover:bg-[#e0eaff]"
+          >
+            Bugüne Dön
+          </button>
+        </div>
         <HealthTracker
           refreshTrigger={trackerRefreshKey}
+          resetTodayTrigger={trackerResetToken}
           petId={pet.id}
           onEditTask={(t) => setCanonicalActionPlan(t)}
           onSelectTask={(t) => setCanonicalActionPlan(t)}
@@ -1964,13 +2036,11 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, a
         <EstrusTracker petId={pet.id} petSpecies={pet.species} />
       )}
 
-      <HealthTimeline events={agendaEvents} schedules={localSchedules} />
-
       </div>
       )}
 
       {activeTab === 'beslenme' && (
-        <div className="flex flex-col gap-3 p-4">
+        <div className="flex flex-col gap-3 py-4">
           {showFoodBanner && (
             <SmartCardBanner
               title="Beslenme Profili Eksik"
@@ -2014,7 +2084,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, a
 
       {/* ── Sağlık & Bakım Accordion (Tab Filtrelemeli) ── */}
       {(activeTab === 'saglik' || activeTab === 'bakim') && (
-      <div className="p-4 flex flex-col gap-3">
+      <div className="py-4 flex flex-col gap-3">
         {activeTab === 'saglik' && showNeuterBanner && (
           <SmartCardBanner
             title="Sağlık Profili Eksik"
@@ -2159,26 +2229,23 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, a
           )}
         </div>
         {activeTab === 'saglik' && (
-          <>
-            <HealthTab 
-              petId={pet.id} 
-              petName={pet.name}
-              onMarkDone={setCanonicalActionPlan}
-              onPostpone={setCanonicalActionPlan}
-              onEdit={handleEditTask}
-              initialVaccines={initialVaccines}
-              initialParasites={initialParasites}
-              initialVetRecords={appointments}
-            />
-            <BreedHealthCard breed={pet.breed} />
-          </>
+          <HealthTab 
+            petId={pet.id} 
+            petName={pet.name}
+            onMarkDone={setCanonicalActionPlan}
+            onPostpone={setCanonicalActionPlan}
+            onEdit={handleEditTask}
+            initialVaccines={initialVaccines}
+            initialParasites={initialParasites}
+            initialVetRecords={appointments}
+          />
         )}
       </div>
       )}
 
       {/* ── Ekstra Sekmesi ── */}
       {activeTab === 'ekstra' && (
-      <div className="p-4 flex flex-col gap-3">
+      <div className="py-4 flex flex-col gap-3">
       {/* ── Ek Bilgiler ve Araçlar ── */}
       <div className="flex flex-col gap-3">
         <h2 className="text-base font-semibold text-text-primary px-1">Ek Bilgiler ve Araçlar</h2>
@@ -2257,7 +2324,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, a
 
       {/* ── Veteriner Sekmesi ── */}
       {activeTab === 'veteriner' && (
-        <div className="p-4">
+        <div className="py-4">
           <VeterinerTab 
             petId={pet.id} 
             petName={pet.name} 
@@ -2602,10 +2669,20 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, a
 
       <CanonicalPlanActionModal
         isOpen={!!canonicalActionPlan}
-        onClose={() => setCanonicalActionPlan(null)}
+        onClose={() => {
+          setCanonicalActionPlan(null);
+          setInitialModalAction(null);
+          setInitialModalDetails(null);
+        }}
         context={petCanonicalContext}
+        petId={pet.id}
+        initialAction={initialModalAction}
+        initialApplicationDetails={initialModalDetails}
+        sourceTab={activeTab}
         onSuccess={() => {
           setCanonicalActionPlan(null);
+          setInitialModalAction(null);
+          setInitialModalDetails(null);
           router.refresh();
           setTrackerRefreshKey(prev => prev + 1);
         }}

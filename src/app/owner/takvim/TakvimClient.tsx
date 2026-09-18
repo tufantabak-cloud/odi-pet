@@ -181,7 +181,7 @@ export default function TakvimClient({ pets, initialEvents = [] }: { pets: Pet[]
     <div className="flex flex-col gap-3 pb-32 w-full mx-auto font-sans">
 
       {/* Başlık */}
-      <div className="px-4 pt-6 flex items-start justify-between gap-4">
+      <div className="pt-6 flex items-start justify-between gap-4">
         <div className="flex flex-col gap-1 min-w-0">
           <h1 className="text-2xl font-bold text-text-primary leading-tight tracking-tight">Takvim</h1>
           <p className="text-xs text-text-secondary font-medium">
@@ -206,7 +206,7 @@ export default function TakvimClient({ pets, initialEvents = [] }: { pets: Pet[]
       </div>
 
       {/* Görünüm Sekmeleri: Yaklaşan Görevler (Varsayılan) / Son Yapılanlar */}
-      <div className="px-4">
+      <div>
         <div className="grid grid-cols-2 p-1 rounded-2xl bg-surface-secondary/70 border border-border-main/60">
           <button
             type="button"
@@ -259,7 +259,7 @@ export default function TakvimClient({ pets, initialEvents = [] }: { pets: Pet[]
 
       {/* Pet filtre çipleri — yalnızca birden fazla pet varsa */}
       {multiPet && (
-        <div className="flex gap-2 overflow-x-auto scrollbar-none px-4 py-1">
+        <div className="flex gap-2 overflow-x-auto scrollbar-none py-1">
           <button
             type="button"
             onClick={() => setActivePetId(null)}
@@ -300,7 +300,7 @@ export default function TakvimClient({ pets, initialEvents = [] }: { pets: Pet[]
       )}
 
       {/* Kategori filtresi & Bağlamsal Hızlı Planlama */}
-      <div className="px-4 flex flex-col gap-2">
+      <div className="flex flex-col gap-2">
         <div className="flex gap-1 p-1 rounded-xl bg-surface-secondary/70 border border-border-main/60">
           {FILTERS.map(f => {
             const on = activeFilter === f.key
@@ -339,7 +339,7 @@ export default function TakvimClient({ pets, initialEvents = [] }: { pets: Pet[]
 
       {/* İçerik */}
       {currentCount === 0 ? (
-        <div className="px-4 pt-2">
+        <div className="pt-2">
           <div className="rounded-card border border-dashed border-border-main bg-surface p-8 text-center flex flex-col items-center justify-center">
             {activeView === 'yaklasan' ? (
               <>
@@ -373,7 +373,7 @@ export default function TakvimClient({ pets, initialEvents = [] }: { pets: Pet[]
           </div>
         </div>
       ) : (
-        <div className="px-4 flex flex-col">
+        <div className="flex flex-col">
           {currentBucketKeys.map(key => {
             const list = buckets[key]
             if (list.length === 0) return null

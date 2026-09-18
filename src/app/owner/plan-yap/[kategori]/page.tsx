@@ -8,7 +8,7 @@ import { useWizardStore } from '@/store/wizardStore';
 import { WizardShell } from '@/components/wizard/WizardShell';
 import { WizardStep } from '@/components/wizard/WizardStep';
 import { PetAvatar } from '@/components/ui/PetAvatar';
-import { CheckCircle2, Search, ScanLine, Check, Sparkles } from 'lucide-react';
+import { CheckCircle2, Search, ScanLine, Check, Sparkles, Calendar, AlertCircle } from 'lucide-react';
 import { TaskCategory, getFilteredSubCategories, getSmartDefault } from '@/lib/tasks/taskDefaults';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -108,6 +108,14 @@ export default function WizardOrchestrator() {
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [selectedDuplicatePlan, setSelectedDuplicatePlan] = useState<{
+    id: string;
+    category: string;
+    subType: string;
+    scheduledAt: string;
+    isCompleted?: boolean;
+  } | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Vaccine/Parasite List State
   const [dbProducts, setDbProducts] = useState<any[]>([]);
@@ -418,9 +426,40 @@ export default function WizardOrchestrator() {
       .from('plans')
       .select('*')
       .eq('pet_id', wizardData.pet_id)
-      .eq('status', 'active')
+      .in('status', ['active', 'overdue'])
+      .is('parent_plan_id', null)
       .then(({ data }: { data: any[] | null; error: unknown }) => {
-        if (!cancelled && data) setExistingActivePlans(data);
+        if (!cancelled && data) {
+          setExistingActivePlans(data.filter((p: any) => p.is_active !== false));
+        }
+      });
+    return () => { cancelled = true; };
+  }, [wizardData.pet_id]);
+
+  // Evcil hayvanın son 30 güne ait tamamlanmış planlarını çek (aynı güne mükerrer yapıldı kontrolü için)
+  const [existingCompletedPlans, setExistingCompletedPlans] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!wizardData.pet_id) {
+      setExistingCompletedPlans([]);
+      return;
+    }
+    const supabase = createBrowserSupabaseClient();
+    let cancelled = false;
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
+
+    supabase
+      .from('plans')
+      .select('*')
+      .eq('pet_id', wizardData.pet_id)
+      .eq('status', 'completed')
+      .gte('scheduled_at', `${thirtyDaysAgoStr}T00:00:00`)
+      .then(({ data }: { data: any[] | null; error: unknown }) => {
+        if (!cancelled && data) {
+          setExistingCompletedPlans(data.filter((p: any) => p.is_active !== false));
+        }
       });
     return () => { cancelled = true; };
   }, [wizardData.pet_id]);
@@ -1103,11 +1142,23 @@ export default function WizardOrchestrator() {
         setIsSuccess(true);
       } else {
         const errData = await res.json();
-        alert(`Hata: ${errData.error || 'Plan kaydedilemedi'}`);
+        if (res.status === 409) {
+          if (errData.plan_id) {
+            setSelectedDuplicatePlan({
+              id: errData.plan_id,
+              category: errData.category || categoryKey,
+              subType: errData.sub_type || wizardData.subCategory || 'Görev',
+              scheduledAt: errData.scheduled_at || '',
+              isCompleted: errData.error === 'DUPLICATE_COMPLETED_PLAN_SAME_DAY'
+            });
+            return;
+          }
+        }
+        setSubmitError(errData.message || errData.error || 'Plan kaydedilemedi.');
       }
     } catch (err) {
       console.error(err);
-      alert('Beklenmeyen bir hata oluştu.');
+      setSubmitError('Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.');
     } finally {
       setIsSubmitting(false);
     }
@@ -1209,20 +1260,89 @@ export default function WizardOrchestrator() {
         <div className="flex flex-wrap gap-2 animate-in fade-in slide-in-from-bottom-2">
           {subs.map((sub) => {
             const isSelected = wizardData.subCategory === sub.id;
+
+            // İlaç hariç alt kategorilerde aktif plan kontrolü (İlaçta ad bazlı kontrol uygulanır)
+            const activePlan = (categoryKey === 'saglik' && sub.id === 'İlaç') ? null : existingActivePlans.find(p => {
+              const pCat = p.extra_data?.original_category || p.category;
+              if (pCat !== categoryKey) return false;
+              if (categoryKey === 'parazit') {
+                const pNorm = (p.sub_type || '').toLocaleLowerCase('tr-TR').replace(/\s+/g, '');
+                const sNorm = sub.id.toLocaleLowerCase('tr-TR').replace(/\s+/g, '');
+                return pNorm === sNorm ||
+                  (pNorm.includes('iç') && sNorm.includes('iç')) ||
+                  (pNorm.includes('dış') && sNorm.includes('dış')) ||
+                  (pNorm.includes('tasma') && sNorm.includes('tasma'));
+              }
+              return p.sub_type && p.sub_type.trim().toLocaleLowerCase('tr-TR') === sub.id.trim().toLocaleLowerCase('tr-TR');
+            });
+
+            // Log modu veya Yapıldı modunda: o gün için zaten tamamlanmış bir kayıt var mı?
+            const completedPlanSameDay = (!logMode && !wizardData.markAsDone) ? null : existingCompletedPlans.find(p => {
+              const pCat = p.extra_data?.original_category || p.category;
+              if (pCat !== categoryKey) return false;
+              const pDate = (p.scheduled_at || '').split('T')[0];
+              const curDate = wizardData.date || new Date().toISOString().split('T')[0];
+              if (pDate !== curDate) return false;
+              if (categoryKey === 'parazit') {
+                const pNorm = (p.sub_type || '').toLocaleLowerCase('tr-TR').replace(/\s+/g, '');
+                const sNorm = sub.id.toLocaleLowerCase('tr-TR').replace(/\s+/g, '');
+                return pNorm === sNorm ||
+                  (pNorm.includes('iç') && sNorm.includes('iç')) ||
+                  (pNorm.includes('dış') && sNorm.includes('dış')) ||
+                  (pNorm.includes('tasma') && sNorm.includes('tasma'));
+              }
+              return p.sub_type && p.sub_type.trim().toLocaleLowerCase('tr-TR') === sub.id.trim().toLocaleLowerCase('tr-TR');
+            });
+
+            const isCompletedBadge = !!completedPlanSameDay && (logMode || !!wizardData.markAsDone);
+            const isPlanliBadge = activePlan && !logMode;
+
             return (
               <button
                 key={sub.id}
                 onClick={() => {
+                  if (completedPlanSameDay && (logMode || wizardData.markAsDone)) {
+                    setSelectedDuplicatePlan({
+                      id: completedPlanSameDay.id,
+                      category: completedPlanSameDay.category,
+                      subType: sub.label || sub.id,
+                      scheduledAt: completedPlanSameDay.scheduled_at,
+                      isCompleted: true
+                    });
+                    return;
+                  }
+                  if (activePlan && !logMode) {
+                    setSelectedDuplicatePlan({
+                      id: activePlan.id,
+                      category: activePlan.category,
+                      subType: sub.label || sub.id,
+                      scheduledAt: activePlan.scheduled_at
+                    });
+                    return;
+                  }
                   setStepData({ subCategory: sub.id, selectedVaccine: null });
                   nextStep();
                 }}
-                className={`px-4 py-3 min-h-[50px] rounded-xl text-[13px] font-bold flex items-center transition-all border text-left ${
-                  isSelected
-                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-md scale-[1.02]'
-                    : 'bg-white text-slate-700 border-slate-200 hover:border-indigo-300'
+                className={`px-4 py-3 min-h-[50px] rounded-xl text-[13px] font-bold flex items-center justify-between gap-3 transition-all border text-left ${
+                  isCompletedBadge
+                    ? 'bg-emerald-50/70 text-slate-800 border-emerald-200 hover:border-emerald-300'
+                    : isPlanliBadge
+                      ? 'bg-amber-50/70 text-slate-800 border-amber-200 hover:border-amber-300'
+                      : isSelected
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-md scale-[1.02]'
+                        : 'bg-white text-slate-700 border-slate-200 hover:border-indigo-300'
                 }`}
               >
-                {sub.label}
+                <span>{sub.label}</span>
+                {isCompletedBadge ? (
+                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 shrink-0 border border-emerald-200/60">
+                    Yapıldı
+                  </span>
+                ) : isPlanliBadge ? (
+                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 shrink-0 border border-amber-200/60">
+                    Planlı
+                  </span>
+                ) : null}
               </button>
             );
           })}
@@ -1749,7 +1869,7 @@ export default function WizardOrchestrator() {
                             return codeInPlan.toUpperCase() === vaccine.code.toUpperCase();
                           }
                           if (nameInPlan && vaccine.name) {
-                            return nameInPlan.toLowerCase().trim() === vaccine.name.toLowerCase().trim();
+                            return nameInPlan.toLocaleLowerCase('tr-TR').trim() === vaccine.name.toLocaleLowerCase('tr-TR').trim();
                           }
                           return false;
                         });
@@ -1769,7 +1889,14 @@ export default function WizardOrchestrator() {
                               type="button"
                               onClick={() => {
                                 if (activePlan) {
-                                  // Plan zaten var uyarısı / aksiyonu
+                                  if (!logMode) {
+                                    setSelectedDuplicatePlan({
+                                      id: activePlan.id,
+                                      category: 'asi',
+                                      subType: vaccine.name,
+                                      scheduledAt: activePlan.scheduled_at
+                                    });
+                                  }
                                   return;
                                 }
                                 setStepData({ selectedVaccine: vaccine });
@@ -2670,6 +2797,77 @@ export default function WizardOrchestrator() {
           onClose={() => setShowDeleteConfirmModal(false)}
           onConfirm={confirmDeletePlan}
         />
+      )}
+
+      {selectedDuplicatePlan && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-[24px] max-w-sm w-full p-6 shadow-[0_12px_32px_-4px_rgba(15,23,42,0.12)] border border-slate-100 flex flex-col items-center text-center animate-in zoom-in-95 duration-200">
+            <div className={`w-14 h-14 rounded-2xl ${selectedDuplicatePlan.isCompleted ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100'} flex items-center justify-center mb-4 border`}>
+              <Calendar size={28} />
+            </div>
+            <h3 className="text-lg font-bold text-slate-800 mb-2">
+              {selectedDuplicatePlan.isCompleted ? 'Tamamlanmış Kayıt Mevcut' : 'Aktif Planlama Mevcut'}
+            </h3>
+            <p className="text-sm text-slate-600 leading-relaxed mb-6">
+              {selectedDuplicatePlan.isCompleted ? (
+                <>
+                  Bu dostunuz için <b>{selectedDuplicatePlan.subType}</b> konusunda
+                  {selectedDuplicatePlan.scheduledAt ? (
+                    <> <b>{new Date(selectedDuplicatePlan.scheduledAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}</b> tarihinde</>
+                  ) : ''} zaten bir yapıldı kaydı bulunmaktadır. Aynı güne mükerrer kayıt eklenemez. Mevcut kaydı incelemek veya düzenlemek ister misiniz?
+                </>
+              ) : (
+                <>
+                  Bu dostunuz için <b>{selectedDuplicatePlan.subType}</b> konusunda
+                  {selectedDuplicatePlan.scheduledAt ? (
+                    <> <b>{new Date(selectedDuplicatePlan.scheduledAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}</b> tarihli</>
+                  ) : ''} aktif bir planlama zaten bulunmaktadır. Mükerrer kayıt açmak yerine mevcut planı düzenlemek ister misiniz?
+                </>
+              )}
+            </p>
+            <div className="flex flex-col w-full gap-2.5">
+              <button
+                type="button"
+                onClick={() => {
+                  router.push(`/owner/plan-yap/edit/${selectedDuplicatePlan.id}`);
+                }}
+                className={`w-full py-3 px-4 ${selectedDuplicatePlan.isCompleted ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200' : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200'} text-white font-bold rounded-2xl transition-all shadow-md active:scale-[0.98]`}
+              >
+                {selectedDuplicatePlan.isCompleted ? 'Mevcut Kaydı İncele / Düzenle' : 'Mevcut Planı Düzenle'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedDuplicatePlan(null)}
+                className="w-full py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl transition-all active:scale-[0.98]"
+              >
+                Vazgeç
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {submitError && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-[24px] max-w-sm w-full p-6 shadow-[0_12px_32px_-4px_rgba(15,23,42,0.12)] border border-slate-100 flex flex-col items-center text-center animate-in zoom-in-95 duration-200">
+            <div className="w-14 h-14 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mb-4 border border-rose-100">
+              <AlertCircle size={28} />
+            </div>
+            <h3 className="text-lg font-bold text-slate-800 mb-2">
+              İşlem Gerçekleştirilemedi
+            </h3>
+            <p className="text-sm text-slate-600 leading-relaxed mb-6">
+              {submitError}
+            </p>
+            <button
+              type="button"
+              onClick={() => setSubmitError(null)}
+              className="w-full py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl transition-all active:scale-[0.98]"
+            >
+              Tamam
+            </button>
+          </div>
+        </div>
       )}
     </>
   );

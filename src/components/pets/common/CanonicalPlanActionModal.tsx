@@ -35,6 +35,10 @@ export interface CanonicalPlanActionModalProps {
   onClose: () => void;
   context: CanonicalPlanContext | null;
   onSuccess?: () => void;
+  petId?: string;
+  initialAction?: CanonicalPlanActionType | 'complete_details';
+  initialApplicationDetails?: ApplicationDetails | null;
+  sourceTab?: string;
 }
 
 export function CanonicalPlanActionModal({
@@ -42,6 +46,10 @@ export function CanonicalPlanActionModal({
   onClose,
   context,
   onSuccess,
+  petId: propsPetId,
+  initialAction,
+  initialApplicationDetails,
+  sourceTab,
 }: CanonicalPlanActionModalProps) {
   const router = useRouter();
 
@@ -56,6 +64,12 @@ export function CanonicalPlanActionModal({
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (isOpen && initialAction === 'complete_details') {
+      setShowDetailsModal(true);
+    }
+  }, [isOpen, initialAction]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -79,7 +93,7 @@ export function CanonicalPlanActionModal({
 
   const resolved = resolvePlanActions(context);
   const realPlanId = normalizePlanId(context.planId || context.plan?.id);
-  const petId = context.petId || context.plan?.pet_id || '';
+  const petId = propsPetId || context.petId || context.plan?.pet_id || (context.plan as any)?.pets?.id || '';
 
   const handleActionClick = (actionId: CanonicalPlanActionType) => {
     setErrorMsg(null);
@@ -147,13 +161,20 @@ export function CanonicalPlanActionModal({
       // 1. If it's a vaccine plan and we have petId, attempt agenda write to create canonical record
       if (resolved.isVaccine && petId && details) {
         try {
+          const detectedVaccineCode =
+            context.plan?.extra_data?.vaccine_code ||
+            context.plan?.extra_data?.vaccine?.code ||
+            ((resolved.displayTitle || '').toLowerCase().includes('kuduz') ? 'DOG_RABIES' : context.plan?.sub_type) ||
+            'CUSTOM';
+
           const agendaPayload = {
             pet_id: petId,
             category: 'asi',
             input: {
+              pet_id: petId,
               vaccine_name: resolved.displayTitle,
-              vaccine_code: context.plan?.sub_type || 'CUSTOM',
-              administered_at: details.product_expiry_at || new Date().toISOString().split('T')[0],
+              vaccine_code: detectedVaccineCode,
+              administered_at: details.administered_at || new Date().toISOString().split('T')[0],
               notes: details.product_notes || undefined,
               brand_name: details.brand || undefined,
             },
@@ -167,11 +188,29 @@ export function CanonicalPlanActionModal({
             body: JSON.stringify(agendaPayload),
           });
           if (agendaRes.ok) {
+            // Planın statusunu da tamamlandı olarak kesinleştir
+            await fetch(`${getMutationRoute()}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ status: 'completed' }),
+            }).catch(() => {});
+
             handleCompleteSuccess();
             return;
+          } else {
+            const errData = await agendaRes.json().catch(() => ({}));
+            console.error('[CanonicalPlanActionModal] Agenda write failed:', errData);
+            const isMedical = resolved.isVaccine || resolved.isParasite;
+            if (isMedical) {
+              throw new Error(errData.error || `${resolved.category === 'asi' ? 'Aşı' : 'Parazit'} kaydı oluşturulamadı. Lütfen tekrar deneyiniz.`);
+            }
           }
-        } catch (agendaErr) {
-          console.warn('[CanonicalPlanActionModal] Agenda write failed, falling back to plans PATCH:', agendaErr);
+        } catch (agendaErr: any) {
+          console.error('[CanonicalPlanActionModal] Agenda write error:', agendaErr);
+          const isMedical = resolved.isVaccine || resolved.isParasite;
+          if (isMedical) {
+            throw agendaErr;
+          }
         }
       }
 
@@ -187,11 +226,15 @@ export function CanonicalPlanActionModal({
       if (details?.product_notes) {
         payload.notes = details.product_notes;
       }
-      if (details?.brand) {
-        payload.brand_free_text = details.brand;
-      }
-      if (details?.product_name) {
-        payload.product_free_text = details.product_name;
+      // brand_free_text ve product_free_text alanları API tarafından parazit protokolü anahtarı olarak
+      // değerlendirildiği için yalnızca kategori 'parazit' ise root payload'a eklenmelidir.
+      if (resolved.category === 'parazit') {
+        if (details?.brand) {
+          payload.brand_free_text = details.brand;
+        }
+        if (details?.product_name) {
+          payload.product_free_text = details.product_name;
+        }
       }
 
       const res = await fetch(`${getMutationRoute()}`, {
@@ -439,9 +482,21 @@ export function CanonicalPlanActionModal({
         <CompletionDetailsModal
           isOpen={true}
           taskTitle={resolved.displayTitle}
-          category={(resolved.isVaccine ? 'asi' : resolved.category) as any}
-          onClose={() => setShowDetailsModal(false)}
+          category={resolved.category as any}
+          onClose={() => {
+            setShowDetailsModal(false);
+            onClose();
+          }}
+          onNavigateAway={() => {
+            setShowDetailsModal(false);
+            onClose();
+          }}
           onComplete={handleCompleteWithDetails}
+          petId={petId}
+          initialDetails={initialApplicationDetails}
+          planId={realPlanId}
+          plan={context.plan}
+          sourceTab={sourceTab}
         />
       )}
 
