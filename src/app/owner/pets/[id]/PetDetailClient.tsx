@@ -30,7 +30,6 @@ const SmartCardBanner = dynamic(() => import('@/components/ui/SmartCardBanner'))
 import PetHeroCard from './PetHeroCard'
 const AllergyManager = dynamic(() => import('@/components/pets/AllergyManager'));
 const MedicationManager = dynamic(() => import('@/components/pets/MedicationManager'));
-const HealthTimeline = dynamic(() => import('@/components/pets/health/HealthTimeline'), { loading: () => <div className='animate-pulse bg-gray-100 rounded-2xl w-full h-12' /> });
 import { buildPetMicroTasks } from '@/lib/microTasks/petMicroTasks'
 import { PetMicroTaskCard } from '@/components/micro-tasks/PetMicroTaskCard'
 import { useDismissedMicroTasks } from '@/hooks/useDismissedMicroTasks'
@@ -2026,8 +2025,6 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, a
       {pet.gender === 'female' && !pet.is_neutered && (
         <EstrusTracker petId={pet.id} petSpecies={pet.species} />
       )}
-
-      <HealthTimeline schedules={localSchedules} />
 
       </div>
       )}
