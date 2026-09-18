@@ -27,6 +27,7 @@ describe('Phase 3 P0 Remediation Test Suite (Tests 1 - 8)', () => {
           return {
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
+            in: vi.fn().mockReturnThis(),
             then: (resolve: any) => resolve({ data: [mockPlan], error: null })
           };
         }
@@ -94,6 +95,7 @@ describe('Phase 3 P0 Remediation Test Suite (Tests 1 - 8)', () => {
           return {
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
+            in: vi.fn().mockReturnThis(),
             then: (resolve: any) => resolve({ data: [mockPlan], error: null })
           };
         }
@@ -158,6 +160,7 @@ describe('Phase 3 P0 Remediation Test Suite (Tests 1 - 8)', () => {
           return {
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
+            in: vi.fn().mockReturnThis(),
             then: (resolve: any) => resolve({ data: [mockPlan], error: null })
           };
         }
@@ -229,6 +232,7 @@ describe('Phase 3 P0 Remediation Test Suite (Tests 1 - 8)', () => {
           return {
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
+            in: vi.fn().mockReturnThis(),
             then: (resolve: any) => resolve({ data: [candidate1, candidate2], error: null })
           };
         }
@@ -283,6 +287,7 @@ describe('Phase 3 P0 Remediation Test Suite (Tests 1 - 8)', () => {
           return {
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
+            in: vi.fn().mockReturnThis(),
             then: (resolve: any) => resolve({ data: [], error: null })
           };
         }

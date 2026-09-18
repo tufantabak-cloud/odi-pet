@@ -126,7 +126,7 @@ describe('POST /api/agenda/write', () => {
     expect(response.status).toBe(200)
     expect(mocks.processRecordCreation).toHaveBeenCalledWith(
       validBody.category,
-      validBody.input,
+      { ...validBody.input, pet_id: validBody.pet_id },
       expect.objectContaining({
         supabase: sessionClient,
         rpcSupabase: rpcClient,

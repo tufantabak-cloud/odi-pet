@@ -41,6 +41,7 @@ describe('ADIM 5 — UI & API Entegrasyon Testleri', () => {
           return {
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
+            in: vi.fn().mockReturnThis(),
             then: (cb: any) => cb({ data: [], error: null })
           };
         }
@@ -74,6 +75,7 @@ describe('ADIM 5 — UI & API Entegrasyon Testleri', () => {
           return {
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
+            in: vi.fn().mockReturnThis(),
             then: (cb: any) => cb({ data: [], error: null })
           };
         }
