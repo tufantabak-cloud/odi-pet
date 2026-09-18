@@ -34,22 +34,40 @@ export default async function OwnerDashboard() {
 
   const supabase = await createServerSupabaseClient()
 
-  // Kullanıcının e-postasına gelen bekleyen bakım ekibi davetleri
-  const { data: pendingUserInvites } = user.email
-    ? await supabase
-        .from('pet_invites')
-        .select('id, token, role, created_at, expires_at, pets(id, name, species, breed, avatar_url, profiles(first_name, last_name))')
-        .eq('email', user.email)
-        .eq('status', 'pending')
-        .gt('expires_at', new Date().toISOString())
-    : { data: null }
+  const now = getNowTR()
+  const today = getNowTR()
+  today.setHours(0, 0, 0, 0)
+  const in30 = getNowTR()
+  in30.setDate(in30.getDate() + 30)
 
-  const { data: lostReportsRaw } = await supabase
-    .from('lost_reports')
-    .select('*, pets(name, avatar_url, species, breed, city)')
-    .eq('status', 'active')
-    .order('created_at', { ascending: false })
-    .limit(50)
+  // Bağımsız ikincil sorguları Promise.all ile paralel yürüt
+  const [
+    { data: pendingUserInvites },
+    { data: lostReportsRaw },
+    { data: journalEntries }
+  ] = await Promise.all([
+    user.email
+      ? supabase
+          .from('pet_invites')
+          .select('id, token, role, created_at, expires_at, pets(id, name, species, breed, avatar_url, profiles(first_name, last_name))')
+          .eq('email', user.email)
+          .eq('status', 'pending')
+          .gt('expires_at', new Date().toISOString())
+      : Promise.resolve({ data: null } as any),
+    supabase
+      .from('lost_reports')
+      .select('*, pets(name, avatar_url, species, breed, city)')
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(50),
+    (pets && pets.length > 0)
+      ? supabase
+          .from('pet_journal_entries')
+          .select('id, pet_id, created_at')
+          .in('pet_id', (pets || []).map((p: any) => p.id))
+          .gte('created_at', today.toISOString())
+      : Promise.resolve({ data: [] } as any),
+  ])
 
   const userCities = Array.from(new Set((pets || []).map((p: any) => p.city).filter(Boolean)))
   const lostReports = lostReportsRaw?.filter((report: any) => {
@@ -58,18 +76,6 @@ export default async function OwnerDashboard() {
     if (!reportCity) return false
     return userCities.includes(reportCity)
   }).slice(0, 10) || []
-
-  const now = getNowTR()
-  const today = getNowTR()
-  today.setHours(0, 0, 0, 0)
-  const in30 = getNowTR()
-  in30.setDate(in30.getDate() + 30)
-
-  const { data: journalEntries } = await supabase
-    .from('pet_journal_entries')
-    .select('id, pet_id, created_at')
-    .in('pet_id', (pets || []).map((p: any) => p.id))
-    .gte('created_at', today.toISOString())
 
   const nowStr = now.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
   // Etkinlikler: Gecikenler en başta, ardından yaklaşanlar

@@ -28,7 +28,12 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
 
   const supabase = await createServerSupabaseClient()
 
-  const [{ data: pets }, { data: onboardingData }, { count: unreadCount }] = await Promise.all([
+  const [
+    { data: pets },
+    { data: onboardingData },
+    { count: unreadCount },
+    { data: navItems }
+  ] = await Promise.all([
     supabase
       .from('pets')
       .select('id, name, vet_phone, vet_name, sos_contacts, city')
@@ -44,6 +49,11 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
       .select('id', { count: 'exact', head: true })
       .eq('profile_id', profile.id)
       .eq('is_read', false),
+    supabase
+      .from('navigation_items')
+      .select('*')
+      .eq('is_active', true)
+      .order('order_index'),
   ])
 
   const petCount = pets?.length ?? 0
@@ -52,12 +62,6 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
   const showNav = petCount > 0 || onboardingData?.wizard_completed === false
 
   const userCities = Array.from(new Set((pets || []).map(p => p.city).filter(Boolean))) as string[]
-
-  const { data: navItems } = await supabase
-    .from('navigation_items')
-    .select('*')
-    .eq('is_active', true)
-    .order('order_index')
 
   // Modül kaydı (src/lib/modules/registry.ts) tek yetkili kaynaktır:
   // kapalı modüle işaret eden navigation_items satırları düşürülür, DB'de

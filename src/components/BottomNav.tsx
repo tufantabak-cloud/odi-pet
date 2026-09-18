@@ -278,7 +278,7 @@ export default function BottomNav({
                     <Link
                       key={item.id}
                       href={item.href}
-                      prefetch={['/owner/scanner', '/owner/ai-vet', '/owner/social', '/owner/services', '/owner/plan-yap'].includes(item.href) ? false : undefined}
+                      prefetch={['/owner/takvim', '/owner/dashboard', '/owner/scanner', '/owner/ai-vet', '/owner/social', '/owner/services', '/owner/plan-yap'].includes(item.href) ? false : undefined}
                       onClick={() => setIsDrawerOpen(false)}
                       className="flex flex-col items-center gap-2 text-center group"
                     >
@@ -339,7 +339,7 @@ export default function BottomNav({
               <Link
                 key={tab.id || tab.href || idx}
                 href={tab.href}
-                prefetch={['/owner/scanner', '/owner/ai-vet', '/owner/social', '/owner/services', '/owner/plan-yap'].includes(tab.href) ? false : undefined}
+                prefetch={['/owner/takvim', '/owner/dashboard', '/owner/scanner', '/owner/ai-vet', '/owner/social', '/owner/services', '/owner/plan-yap'].includes(tab.href) ? false : undefined}
                 onClick={(e) => handleNavClick(e, tab)}
                 data-testid={tab.href === '/owner/services' ? 'services-module-button' : undefined}
                 className={`flex-1 flex flex-col items-center justify-center gap-1 py-1 px-1 transition-all duration-200 select-none cursor-pointer min-h-[44px] min-w-[44px] ${

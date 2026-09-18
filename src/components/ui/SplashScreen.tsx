@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 
-const PHASE_ONE_DURATION_MS = 1000;
-const TOTAL_SPLASH_DURATION_MS = 3000;
-const FADE_OUT_DURATION_MS = 500;
+const PHASE_ONE_DURATION_MS = 200;
+const TOTAL_SPLASH_DURATION_MS = 400;
+const FADE_OUT_DURATION_MS = 200;
 
 export default function SplashScreen() {
   const [isVisible, setIsVisible] = useState(false);
@@ -14,31 +14,45 @@ export default function SplashScreen() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const alreadySeen = sessionStorage.getItem("odi_splash_seen") === "true";
+      const alreadySeen =
+        sessionStorage.getItem("odi_splash_seen") === "true" ||
+        localStorage.getItem("odi_splash_seen") === "true";
+
+      const isTwaOrStandalone =
+        window.matchMedia("(display-mode: standalone)").matches ||
+        (window.navigator as any).standalone === true ||
+        document.referrer.includes("android-app://");
+
       const isTestEnv =
         window.navigator.userAgent.includes("Playwright") ||
         window.location.search.includes("test=true") ||
         window.location.search.includes("nosplash=true");
 
-      if (alreadySeen || isTestEnv) {
+      // In TWA / standalone, Android native splash is already shown; bypass immediately.
+      if (alreadySeen || isTwaOrStandalone || isTestEnv) {
+        try {
+          localStorage.setItem("odi_splash_seen", "true");
+          sessionStorage.setItem("odi_splash_seen", "true");
+        } catch {}
         return;
       }
       setIsVisible(true);
     }
 
-    // Faz 1 -> Faz 2 geçişi (1000ms)
+    // Fast, crisp transition for initial web browser load
     const phase2Timer = setTimeout(() => {
       setPhase(2);
     }, PHASE_ONE_DURATION_MS);
 
-    // Fade-out başlatma (3000ms)
+    // Fade-out starts
     const fadeTimer = setTimeout(() => {
       setIsFadingOut(true);
     }, TOTAL_SPLASH_DURATION_MS);
 
-    // Ekrandan tamamen kaldırma (3500ms)
+    // Remove from DOM completely
     const endTimer = setTimeout(() => {
       try {
+        localStorage.setItem("odi_splash_seen", "true");
         sessionStorage.setItem("odi_splash_seen", "true");
       } catch {}
       setIsVisible(false);

@@ -96,10 +96,15 @@ export default function PwaEnforcer() {
       setOs("other");
     }
 
-    // 3. Standalone (PWA installed) check
+    // 3. Standalone (PWA installed) / TWA check
+    const isTwa =
+      typeof document !== "undefined" &&
+      (document.referrer.includes("android-app://") ||
+       document.referrer.startsWith("android-app://pet.odi.twa"));
     const isStandalone =
       window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as any).standalone === true;
+      (window.navigator as any).standalone === true ||
+      isTwa;
     
     setIsStandalone(isStandalone);
 
