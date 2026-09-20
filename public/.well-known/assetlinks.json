@@ -1,4 +1,4 @@
-﻿[
+[
   {
     "relation": [
       "delegate_permission/common.handle_all_urls"
@@ -7,7 +7,8 @@
       "namespace": "android_app",
       "package_name": "pet.odi.twa",
       "sha256_cert_fingerprints": [
-        "79:E9:1B:08:9A:1C:9C:CB:72:3B:E2:79:3A:79:11:EF:71:9B:D8:B0:23:11:37:D2:FF:33:54:3E:38:06:53:BC"
+        "79:E9:1B:08:9A:1C:9C:CB:72:3B:E2:79:3A:79:11:EF:71:9B:D8:B0:23:11:37:D2:FF:33:54:3E:38:06:53:BC",
+        "44:78:F2:CD:8A:69:1B:74:20:2B:56:91:2C:C5:76:07:6B:21:0C:87:CA:CF:1A:56:15:19:24:D2:D0:3B:85:4E"
       ]
     }
   }
