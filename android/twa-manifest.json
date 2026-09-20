@@ -20,8 +20,8 @@
     "path": "./keystore/odi-pet-release.keystore",
     "alias": "odi-pet-key"
   },
-  "appVersionName": "1.0.0",
-  "appVersionCode": 1,
+  "appVersionName": "1.0.2",
+  "appVersionCode": 3,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://odi.pet/manifest.json",
@@ -45,10 +45,16 @@
   "fingerprints": [
     {
       "value": "79:E9:1B:08:9A:1C:9C:CB:72:3B:E2:79:3A:79:11:EF:71:9B:D8:B0:23:11:37:D2:FF:33:54:3E:38:06:53:BC"
+    },
+    {
+      "value": "3A:FE:DB:D3:16:FC:12:17:8F:6B:5D:13:12:80:F9:6E:70:2A:1C:AE:97:A6:E3:C6:53:E4:D3:3C:88:DC:36:88"
+    },
+    {
+      "value": "44:78:F2:CD:8A:69:1B:74:20:2B:56:91:2C:C5:76:07:6B:21:0C:87:CA:CF:1A:56:15:19:24:D2:D0:3B:85:4E"
     }
   ],
   "additionalTrustedOrigins": [],
   "retainedBundles": [],
   "displayOverride": [],
-  "appVersion": "1.0.0"
+  "appVersion": "1.0.2"
 }
