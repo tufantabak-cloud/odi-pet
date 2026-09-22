@@ -82,6 +82,7 @@ export const MODULES: ModuleEntry[] = [
     key: 'takvim',
     label: 'Takvim',
     href: '/owner/takvim',
+    extraRoutes: ['/owner/calendar'],
     icon: 'ti-calendar',
     status: 'live',
     version: 'V1.0',
@@ -519,18 +520,27 @@ export function normalizeHref(href: string): string {
 }
 
 /**
+ * Verilen href, id veya label bilgisine göre modül kaydını bulur.
+ * extraRoutes desteği ile eski/takma rota adreslerini de kanonik modülle eşleştirir.
+ */
+export function findModuleByHrefOrIdOrLabel(href?: string, id?: string, label?: string): ModuleEntry | undefined {
+  const normHref = href ? normalizeHref(href) : ''
+  const normLabel = label?.toLowerCase().trim()
+  return MODULES.find(
+    m =>
+      (normHref && normalizeHref(m.href) === normHref) ||
+      (normHref && m.extraRoutes?.some(r => normalizeHref(r) === normHref)) ||
+      (id && m.key === id) ||
+      (normLabel && m.label.toLowerCase() === normLabel)
+  )
+}
+
+/**
  * Bir menü öğesinin modül kaydındaki öncelik sırasını çözer.
  * Modül kaydında (MODULES) tanımlı ise m.order kullanılır; aksi halde order_index veya 99.
  */
 function getNavItemOrder<T extends { href: string; id?: string; label?: string }>(item: T): number {
-  const normHref = normalizeHref(item.href)
-  const normLabel = item.label?.toLowerCase().trim()
-  const moduleEntry = MODULES.find(
-    m =>
-      (normHref && normalizeHref(m.href) === normHref) ||
-      (item.id && m.key === item.id) ||
-      (normLabel && m.label.toLowerCase() === normLabel)
-  )
+  const moduleEntry = findModuleByHrefOrIdOrLabel(item.href, item.id, item.label)
   if (moduleEntry && moduleEntry.order !== undefined) {
     return moduleEntry.order
   }
@@ -567,14 +577,7 @@ export function resolveNavItems<T extends { href: string; label?: string; id?: s
   slot: NavSlot
 ): Array<T | ModuleNavItem> {
   const rawFiltered = filterNavItems(dbItems).filter(item => {
-    const normHref = normalizeHref(item.href)
-    const normLabel = item.label?.toLowerCase().trim()
-    const moduleEntry = MODULES.find(
-      m =>
-        (normHref && normalizeHref(m.href) === normHref) ||
-        (item.id && m.key === item.id) ||
-        (normLabel && m.label.toLowerCase() === normLabel)
-    )
+    const moduleEntry = findModuleByHrefOrIdOrLabel(item.href, item.id, item.label)
     if (moduleEntry) {
       return moduleEntry.slots.includes(slot)
     }
@@ -588,16 +591,17 @@ export function resolveNavItems<T extends { href: string; label?: string; id?: s
   for (const item of rawFiltered) {
     const normHref = normalizeHref(item.href)
     const normLabel = item.label?.toLowerCase().trim() || ''
-    const moduleEntry = MODULES.find(
-      m =>
-        (normHref && normalizeHref(m.href) === normHref) ||
-        (item.id && m.key === item.id) ||
-        (normLabel && m.label.toLowerCase() === normLabel)
-    )
+    const moduleEntry = findModuleByHrefOrIdOrLabel(item.href, item.id, item.label)
     const dedupKey = moduleEntry?.key || (normHref ? `href:${normHref}` : `label:${normLabel}`)
     if (!seenKeys.has(dedupKey)) {
       seenKeys.add(dedupKey)
-      kept.push(item)
+      // Modül kaydında tanımlı bir ekstra rota ise (ör. /owner/calendar -> /owner/takvim),
+      // menü linkini doğrudan kanonik hedefe güncelle.
+      if (moduleEntry && normHref !== normalizeHref(moduleEntry.href)) {
+        kept.push({ ...item, href: moduleEntry.href })
+      } else {
+        kept.push(item)
+      }
     }
   }
 

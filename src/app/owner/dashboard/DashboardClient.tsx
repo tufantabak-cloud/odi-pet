@@ -195,7 +195,7 @@ export default function DashboardClient({
             )}
           </div>
           <Link
-            href="/owner/calendar"
+            href="/owner/takvim"
             className="text-xs font-semibold text-primary inline-flex items-center gap-0.5 hover:underline py-1 px-2 rounded-lg hover:bg-primary/5 transition-all"
           >
             <span>Takvime Git</span>
