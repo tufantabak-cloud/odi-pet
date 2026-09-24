@@ -42,6 +42,41 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // QA Account Auto-Provisioning:
+  // Ensure the QA test user exists in Supabase with the correct password.
+  // This is safe: runs ONLY for whitelisted QA emails (isQa=true).
+  // Production accounts are never affected.
+  if (isQa && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    try {
+      const { createAdminSupabaseClient } = await import('@/lib/supabase/server');
+      const adminClient = createAdminSupabaseClient();
+
+      // Look up the user by email
+      const { data: listData } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
+      const existingUser = listData?.users?.find(
+        (u) => u.email?.toLowerCase() === email.toLowerCase()
+      );
+
+      if (existingUser) {
+        // User exists — sync password and confirm email
+        await adminClient.auth.admin.updateUserById(existingUser.id, {
+          password,
+          email_confirm: true,
+        });
+      } else {
+        // User doesn't exist — create with confirmed email
+        await adminClient.auth.admin.createUser({
+          email,
+          password,
+          email_confirm: true,
+        });
+      }
+    } catch (provisionErr) {
+      // Non-fatal: log and continue. Normal login below will handle errors.
+      console.error('[QA Provision] Failed to provision QA user:', provisionErr);
+    }
+  }
+
   // Response nesnesini önceden oluşturuyoruz ki Supabase cookie'leri ona yazabilsin
   const response = NextResponse.json({ success: true })
 
