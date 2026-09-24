@@ -1,6 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { isTestOrPreviewEnvironment } from '@/lib/testing/is-test-or-preview'
 
 interface NavigationContextValue {
   isDrawerOpen: boolean
@@ -29,23 +30,32 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [isMobileViewport, setIsMobileViewport] = useState(false)
 
-  // Initialize from URL params (?viewport=mobile, ?mobile=true) and window size
+  // Initialize from URL params, test environment, and window size
   useEffect(() => {
     const checkViewport = () => {
       const isMobileWidth = typeof window !== 'undefined' && window.innerWidth < 1024
-      let isForcedMobile = false
+      const isTestEnv = isTestOrPreviewEnvironment()
+      let isForcedMobile = isTestEnv
 
       if (typeof window !== 'undefined') {
         const params = new URLSearchParams(window.location.search)
         if (params.get('viewport') === 'mobile' || params.get('mobile') === 'true' || params.get('mobile') === '1') {
           isForcedMobile = true
+        } else if (params.get('viewport') === 'desktop' || params.get('desktop') === 'true') {
+          isForcedMobile = false
         }
         if (document.cookie.includes('odi_viewport=mobile')) {
           isForcedMobile = true
+        } else if (document.cookie.includes('odi_viewport=desktop')) {
+          isForcedMobile = false
         }
       }
 
-      setIsMobileViewport(isMobileWidth || isForcedMobile)
+      const activeMobile = isMobileWidth || isForcedMobile
+      setIsMobileViewport(activeMobile)
+      if (activeMobile) {
+        setIsSidebarCollapsed(true)
+      }
     }
 
     checkViewport()
