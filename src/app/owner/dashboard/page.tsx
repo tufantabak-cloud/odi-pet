@@ -34,21 +34,20 @@ export default async function OwnerDashboard() {
 
   const supabase = await createServerSupabaseClient()
 
-  // Eğer cache henüz güncellenmediyse veya admin client erişimi yoksa doğrudan oturum istemcisinden petleri çek
-  let effectivePets = pets
-  if (!effectivePets || effectivePets.length === 0) {
-    const { data: directPets, error: directErr } = await supabase
-      .from('pets')
-      .select('*')
-      .eq('owner_id', user.id)
-      .order('created_at', { ascending: false })
-    if (directErr) {
-      console.error('[Dashboard] directPets error:', directErr)
-    }
-    if (directPets && directPets.length > 0) {
-      effectivePets = directPets.filter((p: any) => !p.is_archived) as any
-    }
+  // Doğrudan oturum istemcisinden kullanıcının evcil hayvanlarını çek (cache gecikmesini ve admin client eksikliğini önler)
+  const { data: directPets, error: directErr } = await supabase
+    .from('pets')
+    .select('*')
+    .eq('owner_id', user.id)
+    .order('created_at', { ascending: false })
+
+  if (directErr) {
+    console.error('[Dashboard] directPets error:', directErr)
   }
+
+  const effectivePets = (directPets && directPets.length > 0)
+    ? directPets.filter((p: any) => !p.is_archived)
+    : (pets || [])
 
   const now = getNowTR()
   const today = getNowTR()
