@@ -63,7 +63,10 @@ export default function PwaEnforcer() {
     const hostname = window.location.hostname;
     const isLocal = hostname === "localhost" || hostname === "127.0.0.1" || hostname.startsWith("192.168.");
     const hasBypassParam = window.location.search.includes("bypass-pwa=true") || window.location.search.includes("test=true");
-    const isPlaywright = navigator.userAgent.includes("Playwright");
+    // PET-018 Fix: Playwright veya HeadlessChrome (test araçları) ya da bypass
+    // parametresi varsa PWA enforce ekranını gösterme. Driver.js ve PwaEnforcer
+    // ekranları test araçlarının viewport emülasyonunu ve pointer-events'ini engeller.
+    const isPlaywright = navigator.userAgent.includes('Playwright') || navigator.userAgent.includes('HeadlessChrome');
 
     if (isLocal || hasBypassParam || isPlaywright) {
       setShouldShow(false);

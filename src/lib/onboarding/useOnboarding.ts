@@ -90,7 +90,18 @@ export function useOnboarding() {
   useEffect(() => {
     // Check ENV or localStorage for testing
     const isTestDisabled = typeof window !== 'undefined' && window.localStorage.getItem('onboarding_disabled') === 'true';
-    if (process.env.NEXT_PUBLIC_ONBOARDING_ENABLED === 'false' || isTestDisabled) {
+
+    // PET-018 Fix: Playwright / headless / ?test=true ortamlarında onboarding
+    // overlay'ini tamamen devre dışı bırak. Driver.js tam ekranı kaplar ve
+    // test araçlarının tıklama / viewport emülasyonunu engeller.
+    const isAutomatedTestEnv =
+      typeof window !== 'undefined' &&
+      (window.navigator.userAgent.includes('Playwright') ||
+        window.navigator.userAgent.includes('HeadlessChrome') ||
+        window.location.search.includes('test=true') ||
+        window.location.search.includes('notour=true'));
+
+    if (process.env.NEXT_PUBLIC_ONBOARDING_ENABLED === 'false' || isTestDisabled || isAutomatedTestEnv) {
       setIsEnabled(false);
       setIsReady(true);
       return;
