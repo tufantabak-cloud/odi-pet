@@ -255,7 +255,12 @@ export default function BottomNav({
           <div className="relative z-[9991] w-full max-w-lg mx-auto bg-surface rounded-t-3xl shadow-xl animate-in slide-in-from-bottom-full overflow-hidden">
             <div className="p-5 border-b border-border-main flex justify-between items-center">
               <h3 className="font-black text-[18px] text-text-primary">Daha Fazla</h3>
-              <button onClick={() => setIsDrawerOpen(false)} className="w-8 h-8 flex items-center justify-center bg-bg-main rounded-full text-text-secondary hover:text-text-primary">
+              <button
+                onClick={() => setIsDrawerOpen(false)}
+                data-testid="menu-drawer-close"
+                aria-label="Menüyü kapat"
+                className="w-8 h-8 flex items-center justify-center bg-bg-main rounded-full text-text-secondary hover:text-text-primary"
+              >
                 &times;
               </button>
             </div>
@@ -278,6 +283,8 @@ export default function BottomNav({
                     <Link
                       key={item.id}
                       href={item.href}
+                      data-testid={`menu-drawer-item-${(item.label || item.id || '').toLowerCase().replace(/\s+/g, '-')}`}
+                      aria-label={item.label}
                       prefetch={['/owner/takvim', '/owner/dashboard', '/owner/scanner', '/owner/ai-vet', '/owner/social', '/owner/services', '/owner/plan-yap'].includes(item.href) ? false : undefined}
                       onClick={() => setIsDrawerOpen(false)}
                       className="flex flex-col items-center gap-2 text-center group"
@@ -323,6 +330,7 @@ export default function BottomNav({
                 <div key="action-btn-wrapper" className="flex-1 flex justify-center">
                   <button
                     id="nav-action-btn"
+                    data-testid="bottom-nav-action-btn"
                     aria-label="Yeni kayıt ekle"
                     onClick={(e) => handleNavClick(e, tab)}
                     className="flex flex-col items-center justify-center gap-1.5 py-1 px-1 transition-all duration-200 select-none cursor-pointer focus:outline-none z-[9990] min-h-[44px] min-w-[44px]"
@@ -335,13 +343,26 @@ export default function BottomNav({
               )
             }
 
+            const navTestId = tab.href === '/owner/dashboard'
+              ? 'bottom-nav-dashboard'
+              : tab.href === '/owner/takvim'
+              ? 'bottom-nav-takvim'
+              : tab.href === '/owner/social'
+              ? 'bottom-nav-social'
+              : tab.label === 'Menü' || tab.href === '#'
+              ? 'bottom-nav-menu'
+              : tab.href === '/owner/services'
+              ? 'services-module-button'
+              : `bottom-nav-${(tab.label || tab.id || idx).toString().toLowerCase()}`
+
             return (
               <Link
                 key={tab.id || tab.href || idx}
                 href={tab.href}
                 prefetch={['/owner/takvim', '/owner/dashboard', '/owner/scanner', '/owner/ai-vet', '/owner/social', '/owner/services', '/owner/plan-yap'].includes(tab.href) ? false : undefined}
                 onClick={(e) => handleNavClick(e, tab)}
-                data-testid={tab.href === '/owner/services' ? 'services-module-button' : undefined}
+                data-testid={navTestId}
+                aria-label={tab.label || 'Navigasyon'}
                 className={`flex-1 flex flex-col items-center justify-center gap-1 py-1 px-1 transition-all duration-200 select-none cursor-pointer min-h-[44px] min-w-[44px] ${
                   isActive
                     ? 'text-[var(--color-primary)]'

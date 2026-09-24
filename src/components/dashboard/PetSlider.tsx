@@ -237,12 +237,27 @@ export function PetSlider({
               <div
                 key={pet.id}
                 data-testid="pet-card"
+                data-pet-id={pet.id}
+                data-pet-name={pet.name}
+                aria-label={`${pet.name} profilini seç`}
+                role="button"
+                tabIndex={0}
                 ref={(el) => { cardRefs.current[index] = el }}
-                className={`snap-center flex-shrink-0 w-[200px] sm:w-[230px] rounded-[24px] transition-all duration-300 ease-out cursor-pointer select-none flex flex-col justify-between overflow-hidden bg-white border-2 ${
+                className={`snap-center flex-shrink-0 w-[200px] sm:w-[230px] rounded-[24px] transition-all duration-300 ease-out cursor-pointer select-none flex flex-col justify-between overflow-hidden bg-white border-2 touch-pan-y ${
                   isActive
                     ? 'border-primary shadow-[0_12px_28px_-4px_rgba(93,63,211,0.22)] ring-4 ring-primary/10 scale-[1.02] z-10'
                     : 'border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.05)] hover:border-slate-200 hover:shadow-[0_8px_24px_-4px_rgba(15,23,42,0.08)] opacity-90 hover:opacity-100'
                 } active:scale-[0.98]`}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    if (!isActive) {
+                      setActiveIndex(index);
+                      if (pets[index]) onActiveChange?.(pets[index].id);
+                      centerActiveCard(index, true);
+                    }
+                  }
+                }}
                 onClick={() => {
                   if (!isActive) {
                     setActiveIndex(index)
@@ -310,6 +325,8 @@ export function PetSlider({
                   {/* Navigation Link */}
                   <Link
                     href={`/owner/pets/${pet.id}`}
+                    data-testid={`pet-profile-link-${pet.name.toLowerCase()}`}
+                    aria-label={`${pet.name} profiline git`}
                     className={`mt-1 pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-bold transition-colors ${
                       isActive ? 'text-primary' : 'text-text-secondary hover:text-primary'
                     }`}

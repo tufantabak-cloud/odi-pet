@@ -64,7 +64,8 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
   const petCount = pets?.length ?? 0
   const primaryPet = pets && pets.length > 0 ? pets[0] : null
 
-  const showNav = petCount > 0 || onboardingData?.wizard_completed === false
+  // Owner sayfalarında navigasyon her zaman görünür olmalıdır
+  const showNav = true
 
   const userCities = Array.from(new Set((pets || []).map(p => p.city).filter(Boolean))) as string[]
 
@@ -147,7 +148,7 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
           )}
 
           {/* Main Content */}
-          <main className="flex-1 p-4 sm:p-6 lg:p-10 pb-0 min-w-0">
+          <main className="flex-1 p-4 sm:p-6 lg:p-10 pb-28 md:pb-10 min-w-0">
             {children}
           </main>
         </div>

@@ -62,19 +62,19 @@ export default function PwaEnforcer() {
     // 1. Bypass check
     const hostname = window.location.hostname;
     const isLocal = hostname === "localhost" || hostname === "127.0.0.1" || hostname.startsWith("192.168.");
-    const hasBypassParam = window.location.search.includes("bypass-pwa=true") || window.location.search.includes("test=true");
-    // PET-018 Fix: TestSprite, Playwright, HeadlessChrome veya bypass
-    // parametresi varsa PWA enforce ekranını gösterme. Driver.js ve PwaEnforcer
-    // ekranları test araçlarının viewport emülasyonunu ve pointer-events'ini engeller.
+    const isVercelPreview = hostname.includes("vercel.app");
+    const hasBypassParam = window.location.search.includes("bypass-pwa=true") || window.location.search.includes("test=true") || window.location.search.includes("notour=true");
     const lowerUa = (navigator.userAgent || '').toLowerCase();
     const isAutomatedTest =
+      Boolean((window.navigator as any).webdriver) ||
       lowerUa.includes('playwright') ||
       lowerUa.includes('headlesschrome') ||
       lowerUa.includes('testsprite') ||
       lowerUa.includes('selenium') ||
-      lowerUa.includes('puppeteer');
+      lowerUa.includes('puppeteer') ||
+      (typeof document !== 'undefined' && document.cookie.includes('is_qa=true'));
 
-    if (isLocal || hasBypassParam || isAutomatedTest) {
+    if (isLocal || isVercelPreview || hasBypassParam || isAutomatedTest) {
       setShouldShow(false);
       return;
     }

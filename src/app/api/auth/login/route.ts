@@ -6,12 +6,18 @@ import { loginSchema } from '@/lib/validations/auth'
 export async function POST(req: NextRequest) {
   const ip = getIP(req);
 
-  const fd = await req.formData()
-  const data = Object.fromEntries(fd.entries());
+  let data: Record<string, any> = {};
+  const contentType = (req.headers.get('content-type') || '').toLowerCase();
+  if (contentType.includes('application/json')) {
+    data = await req.json().catch(() => ({}));
+  } else {
+    const fd = await req.formData().catch(() => new FormData());
+    data = Object.fromEntries(fd.entries());
+  }
   
   const parsed = loginSchema.safeParse({
     ...data,
-    rememberMe: data.rememberMe === 'true',
+    rememberMe: data.rememberMe === true || data.rememberMe === 'true',
   });
 
   if (!parsed.success) {
@@ -283,5 +289,14 @@ export async function POST(req: NextRequest) {
   }
 
   // Cookie'leri içeren response'u döndür
+  if (isQa) {
+    response.cookies.set('is_qa', 'true', {
+      path: '/',
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 86400,
+    });
+  }
+
   return response
 }

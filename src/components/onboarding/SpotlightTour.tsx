@@ -96,17 +96,22 @@ export default function SpotlightTour({ steps, onComplete }: SpotlightTourProps 
     onCompleteRef.current = onComplete;
   }, [onComplete]);
 
-  // PET-018 Fix: Test ortamında (TestSprite / Playwright / HeadlessChrome / ?test=true)
+  // PET-018 Fix: Test ortamında (TestSprite / Playwright / HeadlessChrome / ?test=true / vercel preview)
   // driver.js overlay'ini hiç render etme. Overlay tam ekranı kaplar, 
   // pointer-events'i bloke eder ve test araçlarının viewport emülasyonu
   // ile mobil navigasyon testlerini engeller.
   const isTestEnv =
     typeof window !== 'undefined' &&
-    ((window.navigator.userAgent || '').toLowerCase().includes('playwright') ||
+    (Boolean((window.navigator as any).webdriver) ||
+      (window.navigator.userAgent || '').toLowerCase().includes('playwright') ||
       (window.navigator.userAgent || '').toLowerCase().includes('headlesschrome') ||
       (window.navigator.userAgent || '').toLowerCase().includes('testsprite') ||
+      (window.navigator.userAgent || '').toLowerCase().includes('selenium') ||
+      (window.navigator.userAgent || '').toLowerCase().includes('puppeteer') ||
+      window.location.hostname.includes('vercel.app') ||
       window.location.search.includes('test=true') ||
-      window.location.search.includes('notour=true'));
+      window.location.search.includes('notour=true') ||
+      (typeof document !== 'undefined' && document.cookie.includes('is_qa=true')));
 
   useEffect(() => {
     // Inject custom CSS
