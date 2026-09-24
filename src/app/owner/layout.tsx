@@ -4,16 +4,14 @@ import { requireRole } from '@/lib/auth/get-current-profile'
 import { redirect } from 'next/navigation'
 import BottomNav from '@/components/BottomNav'
 import SideNav from '@/components/SideNav'
-import FloatingLostPets from '@/components/FloatingLostPets'
-import NotificationBell from '@/components/NotificationBell'
-import Link from 'next/link'
+import OwnerHeader from '@/components/OwnerHeader'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import SpotlightTour from '@/components/onboarding/SpotlightTour'
 import DashboardPendingReferral from '@/components/DashboardPendingReferral'
-import { Gift } from 'lucide-react'
 import { filterNavItems, resolveNavItems } from '@/lib/modules/registry'
 import { GeolocationProvider } from '@/contexts/GeolocationContext'
 import { ActivePetProvider } from '@/contexts/ActivePetContext'
+import { NavigationProvider } from '@/contexts/NavigationContext'
 import { cookies } from 'next/headers'
 import { Metadata } from 'next'
 
@@ -95,77 +93,45 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
   return (
     <GeolocationProvider>
       <ActivePetProvider initialPets={pets || []} initialActivePetId={initialActivePetId}>
-        <div className="flex min-h-dvh flex-col font-sans">
+        <NavigationProvider>
+          <div className="flex min-h-dvh flex-col font-sans">
 
-        {/* Minimal Header */}
-        <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-border-main bg-surface/80 backdrop-blur-lg px-5 lg:px-10">
-          <Link href="/owner/dashboard" className="flex items-center gap-2.5 hover:scale-[1.02] transition-transform">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl overflow-hidden bg-[var(--color-primary)]">
-              <Image
-                src="/brand/app-icons/odi-icon-512.png"
-                alt="Odi Logo"
-                width={40}
-                height={40}
-                className="w-full h-full object-cover"
-                priority
-              />
+            {/* Minimal Responsive Header */}
+            <OwnerHeader userCities={userCities} unreadCount={unreadCount ?? 0} />
+
+            {/* Desktop Sidebar + Mobile Scroll Content */}
+            <div className="flex flex-1 w-full max-w-full lg:max-w-[1440px] mx-auto min-w-0">
+
+              {/* Desktop / Collapsible Sidebar Nav */}
+              {showNav && (
+                <SideNav 
+                  actionMenuItems={actionMenuItems} 
+                  bottomNavItems={bottomNavItems} 
+                  menuDrawerItems={menuDrawerItems}
+                  sidePrimaryItems={sidePrimaryItems}
+                />
+              )}
+
+              {/* Main Content */}
+              <main className="flex-1 w-full min-w-0 p-4 sm:p-6 lg:p-8 pb-28 lg:pb-10 transition-all">
+                {children}
+              </main>
             </div>
-            <span className="text-[18px] font-black text-text-primary tracking-tighter">Odi</span>
-            <span className="text-[12px] font-bold text-[var(--color-primary)] tracking-tight">
-              Kedi ve Köpek Yaşam Platformu
-            </span>
-          </Link>
 
-          <div className="flex items-center gap-3">
+            {/* Mobile Glass Bottom Nav */}
+            {showNav && (
+              <BottomNav
+                bottomNavItems={bottomNavItems}
+                actionMenuItems={actionMenuItems}
+                menuDrawerItems={menuDrawerItems}
+              />
+            )}
 
-            <FloatingLostPets userCities={userCities} />
-
-            {/* Arkadaşını Davet Et — sade hediye ikonu (alarm rozetsiz, zille yarışmaz) */}
-            <Link
-              href="/owner/referral"
-              aria-label="Arkadaşını davet et"
-              className="w-11 h-11 rounded-full flex items-center justify-center border border-border-main bg-surface hover:bg-bg-main text-text-secondary transition-all cursor-pointer shadow-sm active:scale-95"
-            >
-              <Gift className="w-5 h-5 text-text-secondary" />
-            </Link>
-
-            {/* Notifications */}
-            <NotificationBell initialCount={unreadCount ?? 0} />
+            <SpotlightTour />
+            <DashboardPendingReferral />
           </div>
-        </header>
-
-        {/* Desktop Sidebar + Mobile Scroll Content */}
-        <div className="flex flex-1 w-full max-w-[1440px] mx-auto">
-
-          {/* Desktop Sidebar Nav */}
-          {showNav && (
-            <SideNav 
-              actionMenuItems={actionMenuItems} 
-              bottomNavItems={bottomNavItems} 
-              menuDrawerItems={menuDrawerItems}
-              sidePrimaryItems={sidePrimaryItems}
-            />
-          )}
-
-          {/* Main Content */}
-          <main className="flex-1 p-4 sm:p-6 lg:p-10 pb-28 md:pb-10 min-w-0">
-            {children}
-          </main>
-        </div>
-
-        {/* Mobile Glass Bottom Nav */}
-        {showNav && (
-          <BottomNav
-            bottomNavItems={bottomNavItems}
-            actionMenuItems={actionMenuItems}
-            menuDrawerItems={menuDrawerItems}
-          />
-        )}
-
-        <SpotlightTour />
-        <DashboardPendingReferral />
-      </div>
-    </ActivePetProvider>
-  </GeolocationProvider>
-)
+        </NavigationProvider>
+      </ActivePetProvider>
+    </GeolocationProvider>
+  )
 }

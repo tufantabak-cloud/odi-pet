@@ -236,7 +236,9 @@ export function PetSlider({
             return (
               <div
                 key={pet.id}
+                id={`pet-card-${pet.name.toLowerCase()}`}
                 data-testid="pet-card"
+                data-testid-pet={pet.name.toLowerCase()}
                 data-pet-id={pet.id}
                 data-pet-name={pet.name}
                 aria-label={`${pet.name} profilini seç`}
@@ -300,7 +302,7 @@ export function PetSlider({
 
                   {/* Gradient Overlay & Pet Name */}
                   <div className="absolute inset-x-0 bottom-0 pt-8 pb-2 px-3 bg-gradient-to-t from-black/75 via-black/30 to-transparent flex items-end">
-                    <h3 className="text-base font-bold text-white tracking-tight truncate drop-shadow-md">
+                    <h3 data-testid={`pet-card-${pet.name.toLowerCase()}`} className="text-base font-bold text-white tracking-tight truncate drop-shadow-md">
                       {pet.name}
                     </h3>
                   </div>

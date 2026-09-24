@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { createPortal } from 'react-dom'
 import { getIcon } from '@/lib/navigation/iconMap'
 import { getNavModules } from '@/lib/modules/registry'
+import { useNavigation } from '@/contexts/NavigationContext'
 
 export type NavItem = {
   id: string
@@ -150,8 +151,8 @@ export default function BottomNav({
   menuDrawerItems
 }: BottomNavProps) {
   const pathname = usePathname()
+  const { isDrawerOpen, setIsDrawerOpen, isMobileViewport } = useNavigation()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => { setMounted(true) }, [])
@@ -252,7 +253,10 @@ export default function BottomNav({
             className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-in fade-in"
             onClick={() => setIsDrawerOpen(false)}
           />
-          <div className="relative z-[9991] w-full max-w-lg mx-auto bg-surface rounded-t-3xl shadow-xl animate-in slide-in-from-bottom-full overflow-hidden">
+          <div
+            data-testid="menu-drawer"
+            className="relative z-[9991] w-full max-w-lg mx-auto bg-surface rounded-t-3xl shadow-xl animate-in slide-in-from-bottom-full overflow-hidden"
+          >
             <div className="p-5 border-b border-border-main flex justify-between items-center">
               <h3 className="font-black text-[18px] text-text-primary">Daha Fazla</h3>
               <button
@@ -310,7 +314,7 @@ export default function BottomNav({
       )}
 
       {/* Main Bottom Nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[9989] bg-[var(--color-surface)] border-t border-[var(--color-border)] pt-2 pb-[max(20px,env(safe-area-inset-bottom))] px-2 shadow-[0_-2px_12px_rgba(16,24,40,0.06)]">
+      <nav className={`${isMobileViewport ? 'block' : 'block lg:hidden'} fixed bottom-0 left-0 right-0 z-[9989] bg-[var(--color-surface)] border-t border-[var(--color-border)] pt-2 pb-[max(20px,env(safe-area-inset-bottom))] px-2 shadow-[0_-2px_12px_rgba(16,24,40,0.06)]`}>
         <div className="flex justify-evenly items-center w-full max-w-lg mx-auto">
           {activeTabs.map((tab: any, idx) => {
             let isActive = false
