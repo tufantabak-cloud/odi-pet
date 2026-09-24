@@ -133,7 +133,8 @@ async function fetchDashboardData(uid: string): Promise<DashboardData> {
           supabase
             .from('pets')
             .select('id')
-            .eq('owner_id', uid),
+            .eq('owner_id', uid)
+            .or('is_archived.is.null,is_archived.eq.false'),
         ])
 
         const activeMembershipIds = (petMemberships ?? []).map((m: any) => m.pet_id).filter(Boolean)
@@ -148,6 +149,7 @@ async function fetchDashboardData(uid: string): Promise<DashboardData> {
               .from('pets')
               .select('*')
               .in('id', petMembershipPetIds)
+              .or('is_archived.is.null,is_archived.eq.false')
               .order('created_at', { ascending: false })
 
         const { data: pets, error: petsError } = petResult

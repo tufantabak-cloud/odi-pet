@@ -34,6 +34,8 @@ type CalendarEvent = {
   priority?: string
   assigned_to?: string | null
   assignee_name?: string | null
+  source?: string
+  sourceRecordId?: string
 }
 
 type CategoryKey = 'asi' | 'parazit' | 'bakim' | 'beslenme' | 'randevu' | 'diger'
@@ -78,17 +80,26 @@ function toCategory(ev: CalendarEvent): CategoryKey {
   return 'diger'
 }
 
-/** Yerel takvim gününe göre gün farkı (saat bileşeni sıfırlanır) */
-function dayDiff(dateStr: string): number {
+function getIstanbulDateKey(dateStr: string): string {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr
   const d = new Date(dateStr)
-  d.setHours(0, 0, 0, 0)
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  return Math.round((d.getTime() - today.getTime()) / 86400000)
+  if (isNaN(d.getTime())) return dateStr.split('T')[0]
+  return d.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
+}
+
+/** Yerel takvim gününe göre gün farkı (Europe/Istanbul takvim gününe göre normalize edilir) */
+function dayDiff(dateStr: string): number {
+  const eventDateKey = getIstanbulDateKey(dateStr)
+  const todayDateKey = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
+  const tEvent = new Date(eventDateKey + 'T00:00:00Z').getTime()
+  const tToday = new Date(todayDateKey + 'T00:00:00Z').getTime()
+  return Math.round((tEvent - tToday) / 86400000)
 }
 
 function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })
+  const d = new Date(dateStr)
+  if (isNaN(d.getTime())) return dateStr
+  return d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', timeZone: 'Europe/Istanbul' })
 }
 
 type BucketKey = 'geciken' | 'bugun' | 'buHafta' | 'sonraki' | 'sonYapilanlar'
@@ -179,6 +190,8 @@ export default function TakvimClient({ pets, initialEvents = [] }: { pets: Pet[]
       status: selectedEventForAction.status || undefined,
       scheduledAt: selectedEventForAction.date,
       petId: selectedEventForAction.pet_id || undefined,
+      sourceTable: selectedEventForAction.source === 'health_schedules' ? 'health_schedules' : (selectedEventForAction.source || 'plans'),
+      plan: selectedEventForAction,
     }
   }, [selectedEventForAction])
 

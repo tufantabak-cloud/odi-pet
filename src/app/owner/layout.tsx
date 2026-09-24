@@ -42,6 +42,7 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
       .from('pets')
       .select('id, name, vet_phone, vet_name, sos_contacts, city')
       .eq('owner_id', profile.id)
+      .or('is_archived.is.null,is_archived.eq.false')
       .order('created_at', { ascending: false }),
     supabase
       .from('onboarding_progress')

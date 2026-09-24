@@ -63,6 +63,38 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
       return NextResponse.json({ error: 'Aşı adı zorunludur' }, { status: 400 })
     }
 
+    const adminDate = administered_at
+      ? (administered_at.includes('T') ? administered_at.split('T')[0] : administered_at)
+      : new Date().toISOString().split('T')[0]
+
+    // Idempotency / duplicate check:
+    if (body.idempotency_key) {
+      const { data: existingByKey } = await supabase
+        .from('vaccine_records_v2')
+        .select('*')
+        .eq('pet_id', id)
+        .eq('idempotency_key', body.idempotency_key)
+        .maybeSingle()
+
+      if (existingByKey) {
+        return NextResponse.json({ data: existingByKey, duplicate: true })
+      }
+    }
+
+    const { data: existingVaccine } = await supabase
+      .from('vaccine_records_v2')
+      .select('*')
+      .eq('pet_id', id)
+      .eq('vaccine_name', vaccine_name)
+      .gte('administered_at', `${adminDate}T00:00:00`)
+      .lte('administered_at', `${adminDate}T23:59:59.999Z`)
+      .or('is_archived.is.null,is_archived.eq.false')
+      .maybeSingle()
+
+    if (existingVaccine) {
+      return NextResponse.json({ data: existingVaccine, duplicate: true })
+    }
+
     const { processRecordCreation } = await import('@/lib/agenda/write-handlers/write-service')
     const adminSupabase = createAdminSupabaseClient()
 
@@ -74,10 +106,6 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
       timeZone: 'Europe/Istanbul',
       idempotencyKey: body.idempotency_key || crypto.randomUUID(),
     }
-
-    const adminDate = administered_at
-      ? (administered_at.includes('T') ? administered_at.split('T')[0] : administered_at)
-      : new Date().toISOString().split('T')[0]
 
     const vaccineInput = {
       pet_id: id,
