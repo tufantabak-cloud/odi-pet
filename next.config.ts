@@ -65,6 +65,11 @@ const nextConfig: NextConfig = {
         permanent: false,
       },
       {
+        source: '/owner/calendar',
+        destination: '/owner/takvim',
+        permanent: false,
+      },
+      {
         source: '/owner/budget',
         destination: '/owner/pets',
         permanent: false,

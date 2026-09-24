@@ -35,6 +35,7 @@ export const createPlanSchema = z.object({
 
 export const updatePlanSchema = createPlanSchema.partial().extend({
   status: planStatusSchema.optional(),
+  scheduled_at: z.string().optional(),
   administered_at: z.string().optional(),
   brand_free_text: z.string().nullable().optional(),
   product_free_text: z.string().nullable().optional(),

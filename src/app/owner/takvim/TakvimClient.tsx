@@ -1,9 +1,10 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import { useActivePet } from '@/contexts/ActivePetContext'
 import { getSpeciesEmoji } from '@/lib/species'
 import { getPlanTargetUrl, getPlanActionLabel, type TakvimCategoryKey } from '@/lib/agenda/takvim-navigation'
 import { VaccineIcon, ParasiteIcon, ShampooIcon, BowlIcon, VetIcon, BoneIcon } from '@/components/icons/PetIcons'
@@ -33,6 +34,8 @@ type CalendarEvent = {
   priority?: string
   assigned_to?: string | null
   assignee_name?: string | null
+  source?: string
+  sourceRecordId?: string
 }
 
 type CategoryKey = 'asi' | 'parazit' | 'bakim' | 'beslenme' | 'randevu' | 'diger'
@@ -77,17 +80,26 @@ function toCategory(ev: CalendarEvent): CategoryKey {
   return 'diger'
 }
 
-/** Yerel takvim gününe göre gün farkı (saat bileşeni sıfırlanır) */
-function dayDiff(dateStr: string): number {
+function getIstanbulDateKey(dateStr: string): string {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr
   const d = new Date(dateStr)
-  d.setHours(0, 0, 0, 0)
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  return Math.round((d.getTime() - today.getTime()) / 86400000)
+  if (isNaN(d.getTime())) return dateStr.split('T')[0]
+  return d.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
+}
+
+/** Yerel takvim gününe göre gün farkı (Europe/Istanbul takvim gününe göre normalize edilir) */
+function dayDiff(dateStr: string): number {
+  const eventDateKey = getIstanbulDateKey(dateStr)
+  const todayDateKey = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
+  const tEvent = new Date(eventDateKey + 'T00:00:00Z').getTime()
+  const tToday = new Date(todayDateKey + 'T00:00:00Z').getTime()
+  return Math.round((tEvent - tToday) / 86400000)
 }
 
 function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })
+  const d = new Date(dateStr)
+  if (isNaN(d.getTime())) return dateStr
+  return d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', timeZone: 'Europe/Istanbul' })
 }
 
 type BucketKey = 'geciken' | 'bugun' | 'buHafta' | 'sonraki' | 'sonYapilanlar'
@@ -105,7 +117,56 @@ const COMPLETED_BUCKET_KEYS: BucketKey[] = ['sonYapilanlar']
 
 export default function TakvimClient({ pets, initialEvents = [] }: { pets: Pet[]; initialEvents?: CalendarEvent[] }) {
   const router = useRouter()
-  const [activePetId, setActivePetId] = useState<string | null>(null)
+  const {
+    activePetId: sharedActivePetId,
+    setActivePetId: setSharedActivePetId,
+  } = useActivePet(pets)
+
+  // Initialize active pet from URL or shared context if it exists in pets
+  const [activePetId, setActivePetIdLocal] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const urlPet = params.get('pet') || params.get('petId') || params.get('pet_id')
+      if (urlPet) {
+        const trimmed = urlPet.trim().toLowerCase()
+        const matched = pets.find(p => p.id === urlPet || (p.name && p.name.trim().toLowerCase() === trimmed))
+        if (matched) return matched.id
+      }
+    }
+    if (sharedActivePetId && pets.some(p => p.id === sharedActivePetId)) {
+      return sharedActivePetId
+    }
+    return null
+  })
+
+  // Synchronize when sharedActivePetId changes
+  useEffect(() => {
+    if (sharedActivePetId && pets.some(p => p.id === sharedActivePetId)) {
+      setActivePetIdLocal(sharedActivePetId)
+    }
+  }, [sharedActivePetId, pets])
+
+  const setActivePetId = useCallback((petId: string | null) => {
+    setActivePetIdLocal(petId)
+    if (petId) {
+      setSharedActivePetId(petId)
+      const found = pets.find(p => p.id === petId)
+      if (typeof window !== 'undefined' && window.history?.replaceState) {
+        const url = new URL(window.location.href)
+        url.searchParams.set('pet', found?.name || petId)
+        window.history.replaceState(null, '', url.toString())
+      }
+    } else {
+      if (typeof window !== 'undefined' && window.history?.replaceState) {
+        const url = new URL(window.location.href)
+        url.searchParams.delete('pet')
+        url.searchParams.delete('petId')
+        url.searchParams.delete('pet_id')
+        window.history.replaceState(null, '', url.toString())
+      }
+    }
+  }, [pets, setSharedActivePetId])
+
   const [activeFilter, setActiveFilter] = useState<'tumu' | CategoryKey>('tumu')
   const [activeView, setActiveView] = useState<'yaklasan' | 'sonYapilanlar'>('yaklasan')
   const [selectedEventForAction, setSelectedEventForAction] = useState<CalendarEvent | null>(null)
@@ -129,6 +190,8 @@ export default function TakvimClient({ pets, initialEvents = [] }: { pets: Pet[]
       status: selectedEventForAction.status || undefined,
       scheduledAt: selectedEventForAction.date,
       petId: selectedEventForAction.pet_id || undefined,
+      sourceTable: selectedEventForAction.source === 'health_schedules' ? 'health_schedules' : (selectedEventForAction.source || 'plans'),
+      plan: selectedEventForAction,
     }
   }, [selectedEventForAction])
 

@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useActivePet } from '@/contexts/ActivePetContext'
 import SocialShortcuts from '@/components/dashboard/SocialShortcuts'
 import { PetSlider } from '@/components/dashboard/PetSlider'
 import DashboardSmartCards from './DashboardSmartCards'
@@ -70,9 +71,20 @@ export default function DashboardClient({
   pendingUserInvites,
 }: any) {
   const router = useRouter()
-  const [activePetId, setActivePetId] = useState(pets[0]?.id)
+  const {
+    activePetId: sharedActivePetId,
+    setActivePetId: setSharedActivePetId,
+    activePet: resolvedActivePet,
+  } = useActivePet(petsWithStats || pets)
+
+  const activePet = resolvedActivePet || petsWithStats?.[0] || pets?.[0]
+  const activePetId = activePet?.id || sharedActivePetId || pets?.[0]?.id
+
+  const setActivePetId = (newId: string | null) => {
+    setSharedActivePetId(newId)
+  }
+
   const [selectedAgendaPlan, setSelectedAgendaPlan] = useState<any | null>(null)
-  const activePet = petsWithStats?.find((p: any) => p.id === activePetId) || pets?.find((p: any) => p.id === activePetId) || pets?.[0]
 
   const agendaCanonicalContext: CanonicalPlanContext | null = useMemo(() => {
     if (!selectedAgendaPlan) return null
@@ -157,7 +169,7 @@ export default function DashboardClient({
               + Ekle
             </Link>
           </div>
-          <PetSlider pets={petsWithStats} onActiveChange={setActivePetId} />
+          <PetSlider pets={petsWithStats} activePetId={activePetId} onActiveChange={setActivePetId} />
         </div>
       )}
 

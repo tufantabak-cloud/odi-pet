@@ -96,14 +96,15 @@ export default function SpotlightTour({ steps, onComplete }: SpotlightTourProps 
     onCompleteRef.current = onComplete;
   }, [onComplete]);
 
-  // PET-018 Fix: Test ortamında (Playwright / HeadlessChrome / ?test=true)
+  // PET-018 Fix: Test ortamında (TestSprite / Playwright / HeadlessChrome / ?test=true)
   // driver.js overlay'ini hiç render etme. Overlay tam ekranı kaplar, 
   // pointer-events'i bloke eder ve test araçlarının viewport emülasyonu
   // ile mobil navigasyon testlerini engeller.
   const isTestEnv =
     typeof window !== 'undefined' &&
-    (window.navigator.userAgent.includes('Playwright') ||
-      window.navigator.userAgent.includes('HeadlessChrome') ||
+    ((window.navigator.userAgent || '').toLowerCase().includes('playwright') ||
+      (window.navigator.userAgent || '').toLowerCase().includes('headlesschrome') ||
+      (window.navigator.userAgent || '').toLowerCase().includes('testsprite') ||
       window.location.search.includes('test=true') ||
       window.location.search.includes('notour=true'));
 

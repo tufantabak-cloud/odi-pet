@@ -372,7 +372,7 @@ export default function HealthTab({ petId, petName, onMarkDone, onPostpone, onEd
                     itemType="parasite"
                     onMarkDone={undefined}
                     onPostpone={undefined}
-                    onEdit={onEdit ? () => onEdit(rec) : undefined}
+                    onEdit={undefined}
                     onArchiveOrDelete={() =>
                       setArchiveItem({
                         id: rec.id,

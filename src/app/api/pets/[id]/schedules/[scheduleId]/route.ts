@@ -20,7 +20,12 @@ export async function PATCH(
   if (body.due_date !== undefined) updates.due_date = body.due_date;
   if (body.scheduled_at !== undefined) updates.due_date = body.scheduled_at;
   if (body.title !== undefined) updates.title = body.title;
+  if (body.notes !== undefined) updates.notes = body.notes;
   if (body.metadata !== undefined) updates.metadata = body.metadata;
+  if (body.extra_data !== undefined) {
+    updates.metadata = { ...(updates.metadata || {}), ...body.extra_data };
+  }
+  if (body.postpone_count !== undefined) updates.postpone_count = body.postpone_count;
 
   // Sadece yetkili pet_id ve schedule_id güncellenebilir (SSOT - Canonical)
   const { data, error } = await supabase

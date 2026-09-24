@@ -63,12 +63,18 @@ export default function PwaEnforcer() {
     const hostname = window.location.hostname;
     const isLocal = hostname === "localhost" || hostname === "127.0.0.1" || hostname.startsWith("192.168.");
     const hasBypassParam = window.location.search.includes("bypass-pwa=true") || window.location.search.includes("test=true");
-    // PET-018 Fix: Playwright veya HeadlessChrome (test araçları) ya da bypass
+    // PET-018 Fix: TestSprite, Playwright, HeadlessChrome veya bypass
     // parametresi varsa PWA enforce ekranını gösterme. Driver.js ve PwaEnforcer
     // ekranları test araçlarının viewport emülasyonunu ve pointer-events'ini engeller.
-    const isPlaywright = navigator.userAgent.includes('Playwright') || navigator.userAgent.includes('HeadlessChrome');
+    const lowerUa = (navigator.userAgent || '').toLowerCase();
+    const isAutomatedTest =
+      lowerUa.includes('playwright') ||
+      lowerUa.includes('headlesschrome') ||
+      lowerUa.includes('testsprite') ||
+      lowerUa.includes('selenium') ||
+      lowerUa.includes('puppeteer');
 
-    if (isLocal || hasBypassParam || isPlaywright) {
+    if (isLocal || hasBypassParam || isAutomatedTest) {
       setShouldShow(false);
       return;
     }
@@ -83,7 +89,6 @@ export default function PwaEnforcer() {
     }
 
     // Determine OS & In-App Browser
-    const lowerUa = userAgent.toLowerCase();
     const isIosDevice = /iphone|ipad|ipod/i.test(lowerUa);
     const isSafariBrowser = /^((?!chrome|android|crios|fxios|opera|biambrowser).)*safari/i.test(lowerUa);
     const inAppDetected = /fban|fbav|instagram|micromessenger|line\/|twitter|telegram|linkedin|crios|fxios|wv/i.test(lowerUa) || (isIosDevice && !isSafariBrowser);

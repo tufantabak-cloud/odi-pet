@@ -611,14 +611,21 @@ export default async function ProfileMenuPage({
               <ChevronRight className="w-4 h-4 text-text-secondary" />
             </Link>
             <BiometricSettingsRow initialHasPasskey={(passkeyCount ?? 0) > 0} />
-            <div className="p-4 hover:bg-bg-main transition-all cursor-pointer flex justify-between items-center active:scale-[0.99]">
+            <Link
+              href="/owner/profile/security"
+              className="p-4 hover:bg-bg-main transition-all cursor-pointer flex justify-between items-center active:scale-[0.99]"
+            >
               Şifre Değiştir
               <ChevronRight className="w-4 h-4 text-text-secondary" />
-            </div>
-            <div className="p-4 hover:bg-bg-main transition-all cursor-pointer flex justify-between items-center active:scale-[0.99]">
+            </Link>
+            <a
+              href="/api/owner/export-data"
+              download="odi-personal-data.json"
+              className="p-4 hover:bg-bg-main transition-all cursor-pointer flex justify-between items-center active:scale-[0.99]"
+            >
               Tüm Verilerimi İndir
               <Download className="w-4 h-4 text-text-secondary" />
-            </div>
+            </a>
             <DeleteAccountRow />
           </div>
         </section>

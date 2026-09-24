@@ -24,6 +24,7 @@ export default async function TakvimPage() {
       .from('pets')
       .select('id, name, species, avatar_url')
       .eq('owner_id', user.id)
+      .or('is_archived.is.null,is_archived.eq.false')
       .order('created_at', { ascending: false }),
     supabase
       .from('pet_members')

@@ -50,8 +50,25 @@ export function findClosestCardIndex(
   return closestIndex
 }
 
-export function PetSlider({ pets, onActiveChange }: { pets: Pet[], onActiveChange?: (petId: string) => void }) {
-  const [activeIndex, setActiveIndex] = useState(0)
+export function PetSlider({
+  pets,
+  activePetId,
+  onActiveChange,
+}: {
+  pets: Pet[]
+  activePetId?: string | null
+  onActiveChange?: (petId: string) => void
+}) {
+  const resolveIndex = useCallback((idOrName?: string | null) => {
+    if (!idOrName || !pets || pets.length === 0) return 0
+    const trimmed = idOrName.trim().toLowerCase()
+    const foundIndex = pets.findIndex(
+      p => p.id === idOrName || (p.name && p.name.trim().toLowerCase() === trimmed)
+    )
+    return foundIndex >= 0 ? foundIndex : 0
+  }, [pets])
+
+  const [activeIndex, setActiveIndex] = useState(() => resolveIndex(activePetId))
   const [sidePadding, setSidePadding] = useState<number>(0)
   const containerRef = useRef<HTMLDivElement>(null)
   const cardRefs = useRef<(HTMLDivElement | null)[]>([])
@@ -102,6 +119,16 @@ export function PetSlider({ pets, onActiveChange }: { pets: Pet[], onActiveChang
     }
   }, [])
 
+  // Sync activeIndex if activePetId changes externally
+  useEffect(() => {
+    if (!activePetId) return
+    const targetIdx = resolveIndex(activePetId)
+    if (targetIdx !== activeIndex) {
+      setActiveIndex(targetIdx)
+      centerActiveCard(targetIdx, true)
+    }
+  }, [activePetId, resolveIndex, activeIndex, centerActiveCard])
+
   // ResizeObserver ve window resize dinleyici
   useEffect(() => {
     updateDimensions()
@@ -123,14 +150,14 @@ export function PetSlider({ pets, onActiveChange }: { pets: Pet[], onActiveChang
 
   // Selected pet callback & auto-centering on mount / activeIndex change
   useEffect(() => {
-    if (pets[activeIndex]) {
+    if (pets[activeIndex] && (!activePetId || pets[activeIndex].id !== activePetId)) {
       onActiveChange?.(pets[activeIndex].id)
     }
     const timer = setTimeout(() => {
       centerActiveCard(activeIndex, true)
     }, 60)
     return () => clearTimeout(timer)
-  }, [activeIndex, pets, onActiveChange, centerActiveCard])
+  }, [activeIndex, pets, onActiveChange, centerActiveCard, activePetId])
 
   // Dynamic scroll state check and closest-card detection on swipe/scroll
   const handleScroll = useCallback(() => {
@@ -219,6 +246,9 @@ export function PetSlider({ pets, onActiveChange }: { pets: Pet[], onActiveChang
                 onClick={() => {
                   if (!isActive) {
                     setActiveIndex(index)
+                    if (pets[index]) {
+                      onActiveChange?.(pets[index].id)
+                    }
                     centerActiveCard(index, true)
                   }
                 }}

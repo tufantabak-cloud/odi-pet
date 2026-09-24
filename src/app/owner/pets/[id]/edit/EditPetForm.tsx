@@ -17,6 +17,7 @@ import {
   Building2, 
   RotateCcw, 
   Trash2, 
+  Archive,
   Navigation, 
   Lock, 
   Paperclip, 
@@ -189,6 +190,8 @@ export default function EditPetForm({ pet, ownerProfile }: { pet: any; ownerProf
   const [resetLoading, setResetLoading] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
+  const [showArchiveModal, setShowArchiveModal] = useState(false)
+  const [archiveLoading, setArchiveLoading] = useState(false)
 
   const handleRegistrationCityChange = (city: string) => {
     setRegistrationCity(city)
@@ -430,6 +433,29 @@ export default function EditPetForm({ pet, ownerProfile }: { pet: any; ownerProf
       alert('Bağlantı hatası: ' + e.message)
     } finally {
       setDeleteLoading(false)
+    }
+  }
+
+  // Handle Archive Pet Action
+  const handleExecuteArchive = async () => {
+    setArchiveLoading(true)
+    try {
+      const res = await fetch(`/api/pets/${pet.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_archived: true }),
+      })
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}))
+        alert(d.error || 'Profil arşivlenirken bir hata oluştu.')
+        return
+      }
+      setShowArchiveModal(false)
+      router.push('/owner/dashboard')
+    } catch (e: any) {
+      alert('Bağlantı hatası: ' + e.message)
+    } finally {
+      setArchiveLoading(false)
     }
   }
 
@@ -1181,9 +1207,30 @@ export default function EditPetForm({ pet, ownerProfile }: { pet: any; ownerProf
             </div>
           </button>
 
+          {/* Pet Profilini Arşivle Kartı */}
+          <button
+            type="button"
+            data-testid="archive-pet-button"
+            onClick={() => setShowArchiveModal(true)}
+            className="w-full text-left p-4.5 bg-amber-50/80 hover:bg-amber-100/70 border border-amber-200/70 rounded-3xl flex items-center gap-3.5 transition-all cursor-pointer active:scale-[0.99] group"
+          >
+            <div className="w-10 h-10 rounded-2xl bg-amber-100/90 text-amber-700 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+              <Archive size={18} />
+            </div>
+            <div className="flex flex-col flex-1">
+              <span className="text-xs sm:text-sm font-bold text-amber-900">
+                {petName || pet.name} profilini arşivle
+              </span>
+              <span className="text-xs text-amber-700/80 mt-0.5">
+                Sağlık ve geçmiş verileri kaybolmaz, aktif listelerden gizlenir
+              </span>
+            </div>
+          </button>
+
           {/* Pet Kaydını Sil Kartı */}
           <button
             type="button"
+            data-testid="delete-pet-button"
             onClick={() => setShowDeleteModal(true)}
             className="w-full text-left p-4.5 bg-red-50/80 hover:bg-red-100/70 border border-red-200/70 rounded-3xl flex items-center gap-3.5 transition-all cursor-pointer active:scale-[0.99] group"
           >
@@ -1268,6 +1315,42 @@ export default function EditPetForm({ pet, ownerProfile }: { pet: any; ownerProf
                 className="flex-1 py-2.5 text-xs font-bold rounded-xl bg-red-600 hover:bg-red-700 text-white transition-all shadow-md active:scale-95 disabled:opacity-50"
               >
                 {deleteLoading ? 'Siliniyor...' : 'Evet, Sil'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3. Pet Profilini Arşivle Onay Modalı */}
+      {showArchiveModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className="bg-surface rounded-3xl p-6 sm:p-7 max-w-md w-full border border-border-main shadow-2xl flex flex-col gap-4 animate-scaleIn">
+            <div className="flex items-center gap-3 text-amber-600">
+              <div className="w-10 h-10 rounded-2xl bg-amber-100 flex items-center justify-center shrink-0">
+                <Archive size={20} />
+              </div>
+              <h3 className="text-base font-bold text-text-primary">Profili Arşivle</h3>
+            </div>
+            <p className="text-xs sm:text-sm text-text-secondary leading-relaxed">
+              <strong>{petName || pet.name}</strong> profilini arşivlemek istediğinize emin misiniz? Tıbbi geçmiş ve aşı kayıtları korunacak ancak aktif evcil hayvan listelerinizden gizlenecektir.
+            </p>
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowArchiveModal(false)}
+                disabled={archiveLoading}
+                className="btn-secondary flex-1 py-2.5 text-xs font-bold rounded-xl"
+              >
+                Vazgeç
+              </button>
+              <button
+                type="button"
+                data-testid="confirm-archive-button"
+                onClick={handleExecuteArchive}
+                disabled={archiveLoading}
+                className="flex-1 py-2.5 text-xs font-bold rounded-xl bg-amber-600 hover:bg-amber-700 text-white transition-all shadow-md active:scale-95 disabled:opacity-50"
+              >
+                {archiveLoading ? 'Arşivleniyor...' : 'Evet, Arşivle'}
               </button>
             </div>
           </div>

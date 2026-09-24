@@ -88,18 +88,21 @@ export function useOnboarding() {
   }, [completeStep]);
 
   useEffect(() => {
-    // Check ENV or localStorage for testing
+    // Check ENV, user-agent or localStorage for testing
+    const userAgent = typeof navigator !== 'undefined' ? (navigator.userAgent || '').toLowerCase() : '';
+    const isBotOrQa = userAgent.includes('testsprite') || userAgent.includes('playwright');
     const isTestDisabled = typeof window !== 'undefined' && window.localStorage.getItem('onboarding_disabled') === 'true';
-
-    // PET-018 Fix: Playwright / headless / ?test=true ortamlarında onboarding
+    // PET-018 Fix: TestSprite / Playwright / headless / ?test=true ortamlarında onboarding
     // overlay'ini tamamen devre dışı bırak. Driver.js tam ekranı kaplar ve
     // test araçlarının tıklama / viewport emülasyonunu engeller.
     const isAutomatedTestEnv =
-      typeof window !== 'undefined' &&
-      (window.navigator.userAgent.includes('Playwright') ||
-        window.navigator.userAgent.includes('HeadlessChrome') ||
-        window.location.search.includes('test=true') ||
-        window.location.search.includes('notour=true'));
+      isBotOrQa ||
+      (typeof window !== 'undefined' &&
+        (window.navigator.userAgent.includes('Playwright') ||
+          window.navigator.userAgent.includes('HeadlessChrome') ||
+          window.navigator.userAgent.toLowerCase().includes('testsprite') ||
+          window.location.search.includes('test=true') ||
+          window.location.search.includes('notour=true')));
 
     if (process.env.NEXT_PUBLIC_ONBOARDING_ENABLED === 'false' || isTestDisabled || isAutomatedTestEnv) {
       setIsEnabled(false);
