@@ -1,9 +1,10 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import { useActivePet } from '@/contexts/ActivePetContext'
 import { getSpeciesEmoji } from '@/lib/species'
 import { getPlanTargetUrl, getPlanActionLabel, type TakvimCategoryKey } from '@/lib/agenda/takvim-navigation'
 import { VaccineIcon, ParasiteIcon, ShampooIcon, BowlIcon, VetIcon, BoneIcon } from '@/components/icons/PetIcons'
@@ -105,7 +106,56 @@ const COMPLETED_BUCKET_KEYS: BucketKey[] = ['sonYapilanlar']
 
 export default function TakvimClient({ pets, initialEvents = [] }: { pets: Pet[]; initialEvents?: CalendarEvent[] }) {
   const router = useRouter()
-  const [activePetId, setActivePetId] = useState<string | null>(null)
+  const {
+    activePetId: sharedActivePetId,
+    setActivePetId: setSharedActivePetId,
+  } = useActivePet(pets)
+
+  // Initialize active pet from URL or shared context if it exists in pets
+  const [activePetId, setActivePetIdLocal] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const urlPet = params.get('pet') || params.get('petId') || params.get('pet_id')
+      if (urlPet) {
+        const trimmed = urlPet.trim().toLowerCase()
+        const matched = pets.find(p => p.id === urlPet || (p.name && p.name.trim().toLowerCase() === trimmed))
+        if (matched) return matched.id
+      }
+    }
+    if (sharedActivePetId && pets.some(p => p.id === sharedActivePetId)) {
+      return sharedActivePetId
+    }
+    return null
+  })
+
+  // Synchronize when sharedActivePetId changes
+  useEffect(() => {
+    if (sharedActivePetId && pets.some(p => p.id === sharedActivePetId)) {
+      setActivePetIdLocal(sharedActivePetId)
+    }
+  }, [sharedActivePetId, pets])
+
+  const setActivePetId = useCallback((petId: string | null) => {
+    setActivePetIdLocal(petId)
+    if (petId) {
+      setSharedActivePetId(petId)
+      const found = pets.find(p => p.id === petId)
+      if (typeof window !== 'undefined' && window.history?.replaceState) {
+        const url = new URL(window.location.href)
+        url.searchParams.set('pet', found?.name || petId)
+        window.history.replaceState(null, '', url.toString())
+      }
+    } else {
+      if (typeof window !== 'undefined' && window.history?.replaceState) {
+        const url = new URL(window.location.href)
+        url.searchParams.delete('pet')
+        url.searchParams.delete('petId')
+        url.searchParams.delete('pet_id')
+        window.history.replaceState(null, '', url.toString())
+      }
+    }
+  }, [pets, setSharedActivePetId])
+
   const [activeFilter, setActiveFilter] = useState<'tumu' | CategoryKey>('tumu')
   const [activeView, setActiveView] = useState<'yaklasan' | 'sonYapilanlar'>('yaklasan')
   const [selectedEventForAction, setSelectedEventForAction] = useState<CalendarEvent | null>(null)

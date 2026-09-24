@@ -21,6 +21,11 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
+        source: '/owner/calendar',
+        destination: '/owner/takvim',
+        permanent: false,
+      },
+      {
         source: '/owner/budget',
         destination: '/owner/pets',
         permanent: false,

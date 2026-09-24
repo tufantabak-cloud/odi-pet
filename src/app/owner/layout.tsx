@@ -13,6 +13,8 @@ import DashboardPendingReferral from '@/components/DashboardPendingReferral'
 import { Gift } from 'lucide-react'
 import { filterNavItems, resolveNavItems } from '@/lib/modules/registry'
 import { GeolocationProvider } from '@/contexts/GeolocationContext'
+import { ActivePetProvider } from '@/contexts/ActivePetContext'
+import { cookies } from 'next/headers'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -27,6 +29,8 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
   if (!profile) redirect('/login')
 
   const supabase = await createServerSupabaseClient()
+  const cookieStore = await cookies()
+  const initialActivePetId = cookieStore.get('active_pet_id')?.value || null
 
   const [
     { data: pets },
@@ -88,7 +92,8 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
 
   return (
     <GeolocationProvider>
-      <div className="flex min-h-dvh flex-col font-sans">
+      <ActivePetProvider initialPets={pets || []} initialActivePetId={initialActivePetId}>
+        <div className="flex min-h-dvh flex-col font-sans">
 
         {/* Minimal Header */}
         <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-border-main bg-surface/80 backdrop-blur-lg px-5 lg:px-10">
@@ -158,6 +163,7 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
         <SpotlightTour />
         <DashboardPendingReferral />
       </div>
-    </GeolocationProvider>
-  )
+    </ActivePetProvider>
+  </GeolocationProvider>
+)
 }
