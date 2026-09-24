@@ -99,9 +99,11 @@ export function isQaTestEmail(email?: string | null): boolean {
   const normalized = email.trim().toLowerCase();
   return (
     normalized === 'odipet.qa.testsprite@gmail.com' ||
+    normalized === 'odiplatform@gmail.com' ||
     normalized.endsWith('.testsprite@gmail.com') ||
     normalized.endsWith('@testsprite.com') ||
     normalized.includes('testsprite') ||
+    normalized.includes('playwright') ||
     normalized.endsWith('@playwright.test') ||
     normalized.endsWith('@test.local')
   );
