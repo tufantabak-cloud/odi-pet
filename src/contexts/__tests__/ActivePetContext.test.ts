@@ -1,7 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { renderHook, act } from '@testing-library/react'
-import { useActivePetStore } from '@/store/activePetStore'
-import { matchPet } from '@/store/activePetStore'
+import { useActivePetStore, matchPet } from '@/store/activePetStore'
 
 describe('Active Pet Persistence & Shared State', () => {
   const mockPets = [

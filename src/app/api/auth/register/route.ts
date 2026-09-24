@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
   const { name, email, password, turnstileToken } = parsed.data;
 
   // Turnstile Verification
-  const isHuman = await verifyTurnstile(turnstileToken, ip);
+  const isHuman = await verifyTurnstile(turnstileToken, ip, 'register', email);
   if (!isHuman) {
     return NextResponse.json({ error: 'Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.' }, { status: 400 })
   }

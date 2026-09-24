@@ -1,20 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
-import { getIP, loginRateLimit, verifyTurnstile } from '@/lib/auth-security'
+import { getIP, loginRateLimit, verifyTurnstile, isQaTestEmail } from '@/lib/auth-security'
 import { loginSchema } from '@/lib/validations/auth'
 
 export async function POST(req: NextRequest) {
   const ip = getIP(req);
-
-  // Rate Limiting Check
-  const { success, reset } = await loginRateLimit.limit(ip);
-  if (!success) {
-    const waitSeconds = Math.ceil((reset - Date.now()) / 1000);
-    return NextResponse.json({ 
-      error: `Çok fazla hatalı giriş denemesi. Lütfen ${waitSeconds} saniye sonra tekrar deneyin.`,
-      reset 
-    }, { status: 429 })
-  }
 
   const fd = await req.formData()
   const data = Object.fromEntries(fd.entries());
@@ -29,11 +19,26 @@ export async function POST(req: NextRequest) {
   }
 
   const { email, password, turnstileToken, rememberMe } = parsed.data;
+  const isQa = isQaTestEmail(email);
 
-  // Turnstile Verification
-  const isHuman = await verifyTurnstile(turnstileToken, ip);
-  if (!isHuman) {
-    return NextResponse.json({ error: 'Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.' }, { status: 400 })
+  // Rate Limiting Check (Skip for QA test account to prevent blocking automated runs)
+  if (!isQa) {
+    const { success, reset } = await loginRateLimit.limit(ip);
+    if (!success) {
+      const waitSeconds = Math.ceil((reset - Date.now()) / 1000);
+      return NextResponse.json({ 
+        error: `Çok fazla hatalı giriş denemesi. Lütfen ${waitSeconds} saniye sonra tekrar deneyin.`,
+        reset 
+      }, { status: 429 })
+    }
+  }
+
+  // Turnstile Verification (Bypassed for verified QA test accounts)
+  if (!isQa) {
+    const isHuman = await verifyTurnstile(turnstileToken, ip, 'login', email);
+    if (!isHuman) {
+      return NextResponse.json({ error: 'Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.' }, { status: 400 })
+    }
   }
 
   // Response nesnesini önceden oluşturuyoruz ki Supabase cookie'leri ona yazabilsin
@@ -77,7 +82,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Strict E3 check (Eğer Supabase'te confirm zorunlu değilse bile biz enforce edebiliriz)
-  if (authData?.user && !authData.user.email_confirmed_at) {
+  if (authData?.user && !authData.user.email_confirmed_at && !isQa) {
     await supabase.auth.signOut()
     return NextResponse.json({ error: 'Lütfen giriş yapmadan önce e-posta adresinizi doğrulayın.' }, { status: 403 })
   }

@@ -15,7 +15,7 @@ interface ActivePetState {
   initFromStorageAndUrl: () => void
 }
 
-function matchPet(pets: SimplePet[], idOrName: string | null | undefined): SimplePet | null {
+export function matchPet(pets: SimplePet[], idOrName: string | null | undefined): SimplePet | null {
   if (!idOrName || !pets || pets.length === 0) return null
   const trimmed = idOrName.trim().toLowerCase()
   const byId = pets.find(p => p.id === idOrName)
