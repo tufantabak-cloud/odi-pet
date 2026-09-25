@@ -1,0 +1,667 @@
+[
+  {
+    "id": "TC001",
+    "title": "Sign in and reach the owner dashboard",
+    "description": "Verifies that an authenticated user can log in and land on the owner dashboard with the pet overview visible.",
+    "category": "User Authentication",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the owner dashboard is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the active pet overview is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC002",
+    "title": "Sign in and reach the dashboard overview",
+    "description": "An authenticated owner can sign in and land on the dashboard with the active pet overview and upcoming care schedules visible.",
+    "category": "Pet Management and Details",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the login credentials for the authenticated owner"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the dashboard is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the active pet overview and upcoming care schedules are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC003",
+    "title": "Prevent dashboard access before sign in",
+    "description": "Verifies that an unauthenticated visitor is gated from the owner dashboard and cannot view pet information without signing in.",
+    "category": "User Authentication",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /owner/dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the login page is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the owner dashboard is not displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC004",
+    "title": "Access the dashboard only after signing in",
+    "description": "An unauthenticated user is redirected to sign in before accessing the owner dashboard.",
+    "category": "Pet Management and Details",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /owner/dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the login page is displayed"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the login credentials for the authenticated owner"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the dashboard is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC005",
+    "title": "Review upcoming care on the dashboard",
+    "description": "Verifies that a signed-in owner can view upcoming vaccines, parasite checks, and checkups on the dashboard.",
+    "category": "Pet Owner Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify upcoming care schedules are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify vaccine, parasite check, and checkup items are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC006",
+    "title": "Add a new pet to the account",
+    "description": "Verifies that an authenticated owner can register a new pet with required profile details and see it added to the account.",
+    "category": "Add Pet",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the add pet page link"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the pet name field with a unique pet name"
+      },
+      {
+        "type": "action",
+        "description": "Select a species"
+      },
+      {
+        "type": "action",
+        "description": "Select a breed"
+      },
+      {
+        "type": "action",
+        "description": "Fill in a valid birth date into the birth date field"
+      },
+      {
+        "type": "action",
+        "description": "Select a gender"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the initial weight field with a valid weight"
+      },
+      {
+        "type": "action",
+        "description": "Submit the pet registration form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a confirmation that the pet was added is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new pet appears in the account"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC007",
+    "title": "See a newly added pet in the dashboard and pet list",
+    "description": "Verifies that a newly registered pet is reflected in both the pet list and the dashboard after creation.",
+    "category": "Add Pet",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the add pet page link"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the pet name field with a unique pet name"
+      },
+      {
+        "type": "action",
+        "description": "Select a species"
+      },
+      {
+        "type": "action",
+        "description": "Select a breed"
+      },
+      {
+        "type": "action",
+        "description": "Fill in a valid birth date into the birth date field"
+      },
+      {
+        "type": "action",
+        "description": "Select a gender"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the initial weight field with a valid weight"
+      },
+      {
+        "type": "action",
+        "description": "Submit the pet registration form"
+      },
+      {
+        "type": "action",
+        "description": "Click the pet management page link"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new pet appears in the pet list"
+      },
+      {
+        "type": "action",
+        "description": "Click the dashboard link"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new pet appears in the dashboard pet overview"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC008",
+    "title": "Switch the active pet on the dashboard",
+    "description": "Verifies that an authenticated owner can switch the active pet and see the dashboard update to the selected pet.",
+    "category": "Pet Owner Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click a different pet in the dashboard pet slider"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the active pet overview updates to a different pet"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the displayed pet details change for the selected pet"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC009",
+    "title": "Open a pet from the pet list and view its profile",
+    "description": "Verifies that an owner can browse the pet list and open a pet profile page from it.",
+    "category": "Pet Owner Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the pet management page link"
+      },
+      {
+        "type": "action",
+        "description": "Click a pet entry in the list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the pet profile page is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the pet's health record information is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC010",
+    "title": "Browse the pet list and open a pet profile",
+    "description": "An authenticated owner can view the pet list and open an individual pet profile page with profile and health record information.",
+    "category": "Pet Management and Details",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the login credentials for the authenticated owner"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open the pet list page"
+      },
+      {
+        "type": "action",
+        "description": "Open a pet from the list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the pet profile page is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify pet profile information and health record information are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC011",
+    "title": "Update a pet profile and save changes",
+    "description": "Verifies that an owner can edit a pet profile on the detail page and save the updated information.",
+    "category": "Pet Owner Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the pet management page link"
+      },
+      {
+        "type": "action",
+        "description": "Click a pet entry in the list"
+      },
+      {
+        "type": "action",
+        "description": "Edit one profile field"
+      },
+      {
+        "type": "action",
+        "description": "Save the pet profile changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated pet profile is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a success confirmation is visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC012",
+    "title": "Review upcoming care items from the dashboard",
+    "description": "An authenticated owner can open dashboard care items and view the upcoming vaccine, parasite, or checkup details.",
+    "category": "Pet Management and Details",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the login credentials for the authenticated owner"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open an upcoming care item from the dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the care item detail view is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the upcoming pet care information is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC013",
+    "title": "Open a quick action from the dashboard",
+    "description": "Verifies that a signed-in owner can launch a dashboard quick action to reach the expected pet-care workflow entry point.",
+    "category": "Pet Owner Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click a dashboard quick action shortcut"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the expected pet-care workflow entry point is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the dashboard quick action no longer blocks progress"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC014",
+    "title": "Use dashboard quick actions after sign in",
+    "description": "An authenticated owner can use dashboard quick actions and reach the expected pet-care workflow entry points.",
+    "category": "Pet Management and Details",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the login credentials for the authenticated owner"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Trigger the AI vet quick action from the dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the expected pet-care workflow entry point is displayed"
+      },
+      {
+        "type": "action",
+        "description": "Return to the dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Trigger the smart scan quick action from the dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the expected pet-care workflow entry point is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC015",
+    "title": "Show validation when required pet fields are missing",
+    "description": "Verifies that the add pet form prevents submission and shows validation feedback when required details are omitted.",
+    "category": "Add Pet",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the add pet page link"
+      },
+      {
+        "type": "action",
+        "description": "Submit the pet registration form without completing required fields"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify validation errors are visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the pet is not added"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC016",
+    "title": "Reject invalid login credentials",
+    "description": "Verifies that the login form shows an error and keeps the user signed out when credentials are invalid.",
+    "category": "User Authentication",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with an invalid email"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with an invalid password"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a login error is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the owner dashboard is not displayed"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC017",
+    "title": "Handle an empty pet state after sign in",
+    "description": "Verifies that an authenticated owner with no pets sees an empty state instead of a broken dashboard experience.",
+    "category": "Pet Owner Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an empty pet state message is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify no active pet overview is displayed"
+      }
+    ],
+    "priority": "Low"
+  }
+]

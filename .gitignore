@@ -111,3 +111,5 @@ android/.gradle/
 android/app/build/
 android/build/
 android/local.properties
+testsprite_tests/tmp/
+testsprite_tests/tmp/config.json
