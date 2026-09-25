@@ -22,17 +22,16 @@ export default async function TakvimPage() {
   const [ownedPetsRes, memberPetsRes, membershipPetsRes] = await Promise.all([
     supabase
       .from('pets')
-      .select('id, name, species, avatar_url')
+      .select('*')
       .eq('owner_id', user.id)
-      .or('is_archived.is.null,is_archived.eq.false')
       .order('created_at', { ascending: false }),
     supabase
       .from('pet_members')
-      .select('pet_id, pets(id, name, species, avatar_url)')
+      .select('pet_id, pets(*)')
       .eq('profile_id', user.id),
     supabase
       .from('pet_memberships')
-      .select('pet_id, pets(id, name, species, avatar_url)')
+      .select('pet_id, pets(*)')
       .eq('profile_id', user.id)
       .eq('status', 'active'),
   ])
@@ -42,16 +41,16 @@ export default async function TakvimPage() {
   if (membershipPetsRes.error) console.error('[takvim] pet_memberships fetch failed:', membershipPetsRes.error.message)
 
   const petMap = new Map<string, { id: string; name: string; species: string | null; avatar_url: string | null }>()
-  for (const p of ownedPetsRes.data ?? []) {
-    if (p?.id) petMap.set(p.id, p as never)
+  for (const p of (ownedPetsRes.data ?? []) as any[]) {
+    if (p?.id && !p.is_archived) petMap.set(p.id, p as never)
   }
   for (const m of memberPetsRes.data ?? []) {
-    const p = (m as unknown as { pets: { id: string; name: string; species: string | null; avatar_url: string | null } | null }).pets
-    if (p?.id) petMap.set(p.id, p)
+    const p = (m as unknown as { pets: { id: string; name: string; species: string | null; avatar_url: string | null; is_archived?: boolean } | null }).pets
+    if (p?.id && !p.is_archived) petMap.set(p.id, p)
   }
   for (const m of membershipPetsRes.data ?? []) {
-    const p = (m as unknown as { pets: { id: string; name: string; species: string | null; avatar_url: string | null } | null }).pets
-    if (p?.id) petMap.set(p.id, p)
+    const p = (m as unknown as { pets: { id: string; name: string; species: string | null; avatar_url: string | null; is_archived?: boolean } | null }).pets
+    if (p?.id && !p.is_archived) petMap.set(p.id, p)
   }
 
   const pets = Array.from(petMap.values())

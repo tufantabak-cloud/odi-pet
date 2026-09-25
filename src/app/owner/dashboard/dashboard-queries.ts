@@ -133,8 +133,7 @@ async function fetchDashboardData(uid: string): Promise<DashboardData> {
           supabase
             .from('pets')
             .select('id')
-            .eq('owner_id', uid)
-            .or('is_archived.is.null,is_archived.eq.false'),
+            .eq('owner_id', uid),
         ])
 
         const activeMembershipIds = (petMemberships ?? []).map((m: any) => m.pet_id).filter(Boolean)
@@ -149,13 +148,13 @@ async function fetchDashboardData(uid: string): Promise<DashboardData> {
               .from('pets')
               .select('*')
               .in('id', petMembershipPetIds)
-              .or('is_archived.is.null,is_archived.eq.false')
               .order('created_at', { ascending: false })
 
-        const { data: pets, error: petsError } = petResult
+        const rawPets = (petResult.data ?? []) as DashboardPet[]
+        const pets = rawPets.filter((p: any) => !p.is_archived)
 
-        if (petsError) {
-          console.error('[dashboard] pets fetch failed:', petsError.message)
+        if (petResult.error) {
+          console.error('[dashboard] pets fetch failed:', petResult.error.message)
         }
 
         /* ── Health schedules (sessiz) ───────────────────── */

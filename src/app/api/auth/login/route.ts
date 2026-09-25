@@ -82,17 +82,26 @@ export async function POST(req: NextRequest) {
 
       if (userId) {
         // 1. Ensure Profile exists
+        const { data: existingProfile } = await adminClient
+          .from('profiles')
+          .select('role, first_name, last_name')
+          .eq('id', userId)
+          .maybeSingle();
+
+        const isAdmin = existingProfile?.role === 'admin' || existingProfile?.role === 'founder' || email.toLowerCase().includes('admin');
+        const role = isAdmin ? 'admin' : (existingProfile?.role || 'owner');
+
         await adminClient.from('profiles').upsert({
           id: userId,
           email,
-          first_name: 'QA',
-          last_name: 'TestSprite',
-          role: 'owner',
+          first_name: existingProfile?.first_name || (isAdmin ? 'Admin' : 'QA'),
+          last_name: existingProfile?.last_name || 'TestSprite',
+          role,
         }, { onConflict: 'id' });
 
         const isEmptyQa = email.toLowerCase().includes('empty');
 
-        if (!isEmptyQa) {
+        if (!isEmptyQa && !isAdmin) {
           // 2. Ensure Pets exist for automated test fixtures
           const { data: userPets } = await adminClient
             .from('pets')

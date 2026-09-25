@@ -39,9 +39,8 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
   ] = await Promise.all([
     supabase
       .from('pets')
-      .select('id, name, vet_phone, vet_name, sos_contacts, city')
+      .select('*')
       .eq('owner_id', profile.id)
-      .or('is_archived.is.null,is_archived.eq.false')
       .order('created_at', { ascending: false }),
     supabase
       .from('onboarding_progress')
@@ -60,13 +59,14 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
       .order('order_index'),
   ])
 
-  const petCount = pets?.length ?? 0
-  const primaryPet = pets && pets.length > 0 ? pets[0] : null
+  const activePets = ((pets || []) as any[]).filter(p => !p.is_archived)
+  const petCount = activePets.length
+  const primaryPet = activePets.length > 0 ? activePets[0] : null
 
   // Owner sayfalarında navigasyon her zaman görünür olmalıdır
   const showNav = true
 
-  const userCities = Array.from(new Set((pets || []).map(p => p.city).filter(Boolean))) as string[]
+  const userCities = Array.from(new Set(activePets.map(p => p.city).filter(Boolean))) as string[]
 
   // Modül kaydı (src/lib/modules/registry.ts) tek yetkili kaynaktır:
   // kapalı modüle işaret eden navigation_items satırları düşürülür, DB'de
@@ -94,7 +94,7 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
   return (
     <GeolocationProvider>
       <ActivePetProvider 
-        initialPets={pets || []} 
+        initialPets={activePets} 
         initialActivePetId={initialActivePetId}
         initialActivePetName={initialActivePetName}
       >
