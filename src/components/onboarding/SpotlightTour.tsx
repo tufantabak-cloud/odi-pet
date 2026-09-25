@@ -113,6 +113,10 @@ export default function SpotlightTour({ steps, onComplete }: SpotlightTourProps 
       window.location.search.includes('notour=true') ||
       (typeof document !== 'undefined' && document.cookie.includes('is_qa=true')));
 
+  if (isTestEnv) {
+    return null;
+  }
+
   useEffect(() => {
     // Inject custom CSS
     const styleId = 'odi-driver-css';

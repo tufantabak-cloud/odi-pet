@@ -15,13 +15,27 @@ interface ActivePetState {
   initFromStorageAndUrl: () => void
 }
 
+function normalizePetName(str: string): string {
+  return str
+    .trim()
+    .replace(/İ/g, 'i')
+    .replace(/I/g, 'ı')
+    .toLocaleLowerCase('tr-TR')
+    .toLowerCase()
+}
+
 export function matchPet(pets: SimplePet[], idOrName: string | null | undefined): SimplePet | null {
   if (!idOrName || !pets || pets.length === 0) return null
-  const trimmed = idOrName.trim().toLowerCase()
   const byId = pets.find(p => p.id === idOrName)
   if (byId) return byId
-  const byName = pets.find(p => (p.name || '').trim().toLowerCase() === trimmed)
-  if (byName) return byName
+
+  const normTarget = normalizePetName(idOrName)
+  const byExactName = pets.find(p => p.name && normalizePetName(p.name) === normTarget)
+  if (byExactName) return byExactName
+
+  const byPartial = pets.find(p => p.name && (normalizePetName(p.name).includes(normTarget) || normTarget.includes(normalizePetName(p.name))))
+  if (byPartial) return byPartial
+
   return null
 }
 
@@ -58,6 +72,7 @@ export const useActivePetStore = create<ActivePetState>((set, get) => ({
           localStorage.removeItem('selected_pet_id')
           localStorage.removeItem('active_pet_name')
           document.cookie = 'active_pet_id=; path=/; max-age=0'
+          document.cookie = 'active_pet_name=; path=/; max-age=0'
           window.dispatchEvent(
             new CustomEvent('odi:active_pet_changed', { detail: { petId: null, petName: null } })
           )
@@ -100,7 +115,7 @@ export const useActivePetStore = create<ActivePetState>((set, get) => ({
 
   initFromStorageAndUrl: () => {
     if (typeof window === 'undefined') return
-    const { pets, activePetId } = get()
+    const { pets, activePetId, activePetName } = get()
 
     // 1. Check URL query parameters
     let urlPet: string | null = null
@@ -126,12 +141,15 @@ export const useActivePetStore = create<ActivePetState>((set, get) => ({
 
     // 3. Check Cookie
     let cookiePet: string | null = null
+    let cookiePetName: string | null = null
     try {
-      const match = document.cookie.match(/(?:^|;\s*)active_pet_id=([^;]+)/)
-      if (match) cookiePet = decodeURIComponent(match[1])
+      const matchId = document.cookie.match(/(?:^|;\s*)active_pet_id=([^;]+)/)
+      if (matchId) cookiePet = decodeURIComponent(matchId[1])
+      const matchName = document.cookie.match(/(?:^|;\s*)active_pet_name=([^;]+)/)
+      if (matchName) cookiePetName = decodeURIComponent(matchName[1])
     } catch {}
 
-    const candidate = urlPet || storedPet || storedPetName || cookiePet || activePetId
+    const candidate = urlPet || storedPet || storedPetName || cookiePet || cookiePetName || activePetId || activePetName
 
     if (candidate) {
       const matched = matchPet(pets, candidate)

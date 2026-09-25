@@ -399,7 +399,12 @@ async function fetchDashboardData(uid: string): Promise<DashboardData> {
 }
 
 export async function getCachedDashboardData(userId: string): Promise<DashboardData> {
-  if (process.env.PLAYWRIGHT_TEST === 'true') {
+  if (
+    process.env.PLAYWRIGHT_TEST === 'true' ||
+    process.env.NODE_ENV === 'test' ||
+    process.env.VERCEL_ENV === 'preview' ||
+    process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview'
+  ) {
     return fetchDashboardData(userId)
   }
 
@@ -408,7 +413,7 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
     [`dashboard-${userId}`],
     {
       tags: [`dashboard-${userId}`, 'dashboard'],
-      revalidate: 30, // 30 saniye TTL
+      revalidate: 10,
     }
   )
 

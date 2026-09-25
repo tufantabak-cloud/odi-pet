@@ -52,7 +52,18 @@ export default function QuickJournalWidget({ pets, activePet, onSuccess }: Quick
 
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
+      let userId = session?.user?.id
+      if (!userId) {
+        try {
+          const meRes = await fetch('/api/auth/me', { credentials: 'include' })
+          if (meRes.ok) {
+            const meData = await meRes.json()
+            if (meData.user?.id) userId = meData.user.id
+          }
+        } catch {}
+      }
+
+      if (!userId) {
         throw new Error('Oturum bulunamadı.')
       }
 
@@ -60,7 +71,7 @@ export default function QuickJournalWidget({ pets, activePet, onSuccess }: Quick
       if (appetite) {
         entriesToInsert.push({
           pet_id: activePet.id,
-          user_id: session.user.id,
+          user_id: userId,
           entry_type: 'appetite',
           data: { level: appetite },
           note: notes || null

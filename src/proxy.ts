@@ -128,6 +128,7 @@ export async function proxy(request: NextRequest) {
           cookiesToSet.forEach(({ name, value, options }) => {
             supabaseResponse.cookies.set(name, value, {
               ...options,
+              path: '/',
               secure: process.env.NODE_ENV === 'production',
               sameSite: 'lax',
             })
@@ -143,9 +144,22 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  let user = null
+  try {
+    const { data } = await supabase.auth.getUser()
+    user = data?.user || null
+  } catch {
+    // Fallback to local session check if network getUser() times out or fails
+  }
+
+  if (!user) {
+    try {
+      const { data } = await supabase.auth.getSession()
+      user = data?.session?.user || null
+    } catch {
+      // Session parsing failed
+    }
+  }
 
   if (!user) {
     if (isLoginPage) {
@@ -158,6 +172,9 @@ export async function proxy(request: NextRequest) {
         { error: 'Unauthorized', requiresAuth: true },
         { status: 401 }
       )
+      supabaseResponse.cookies.getAll().forEach((cookie) => {
+        res.cookies.set(cookie)
+      })
       applyCspHeaders(res, cspHeader, nonce)
       return res
     }
@@ -166,6 +183,9 @@ export async function proxy(request: NextRequest) {
     loginUrl.pathname = '/login'
     loginUrl.searchParams.set('reason', 'session_expired')
     const res = NextResponse.redirect(loginUrl)
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      res.cookies.set(cookie)
+    })
     applyCspHeaders(res, cspHeader, nonce)
     return res
   }

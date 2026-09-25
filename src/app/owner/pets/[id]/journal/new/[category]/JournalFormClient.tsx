@@ -24,7 +24,18 @@ export default function JournalFormClient({ petId, category }: { petId: string, 
     // Auth user id is needed via RLS automatically, we don't strictly need to pass user_id if RLS is set, 
     // but the policy requires user_id = auth.uid(). We fetch session to include it.
     const { data: { session } } = await supabase.auth.getSession()
-    if (!session) {
+    let userId = session?.user?.id
+    if (!userId) {
+      try {
+        const meRes = await fetch('/api/auth/me', { credentials: 'include' })
+        if (meRes.ok) {
+          const meData = await meRes.json()
+          if (meData.user?.id) userId = meData.user.id
+        }
+      } catch {}
+    }
+
+    if (!userId) {
       setError('Oturum bulunamadı')
       setLoading(false)
       return
@@ -34,7 +45,7 @@ export default function JournalFormClient({ petId, category }: { petId: string, 
       .from('pet_journal_entries')
       .insert({
         pet_id: petId,
-        user_id: session.user.id,
+        user_id: userId,
         entry_type: category,
         data: formData,
         note: note || null

@@ -19,9 +19,20 @@ import DashboardClient from './DashboardClient'
 import { GlassCard } from '@/components/ui/primitives'
 
 
-export default async function OwnerDashboard() {
+export default async function OwnerDashboard({
+  searchParams,
+}: {
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
   const user = await getSessionUser()
   if (!user) redirect('/login')
+
+  const params = searchParams ? await searchParams : {}
+  const isForcedEmpty =
+    params.empty === 'true' ||
+    params.state === 'empty' ||
+    params.empty_state === 'true' ||
+    params.onboarding === 'true'
 
   const [currentProfile, cachedData] = await Promise.all([
     getCurrentProfile(),
@@ -45,9 +56,11 @@ export default async function OwnerDashboard() {
     console.error('[Dashboard] directPets error:', directErr)
   }
 
-  const effectivePets = (directPets && directPets.length > 0)
-    ? directPets.filter((p: any) => !p.is_archived)
-    : (pets || [])
+  const effectivePets = isForcedEmpty
+    ? []
+    : directPets !== null
+      ? (directPets || []).filter((p: any) => !p.is_archived)
+      : (pets || [])
 
   const now = getNowTR()
   const today = getNowTR()

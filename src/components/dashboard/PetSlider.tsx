@@ -148,16 +148,13 @@ export function PetSlider({
     }
   }, [updateDimensions, pets.length])
 
-  // Selected pet callback & auto-centering on mount / activeIndex change
+  // Auto-centering on mount / activeIndex change
   useEffect(() => {
-    if (pets[activeIndex] && (!activePetId || pets[activeIndex].id !== activePetId)) {
-      onActiveChange?.(pets[activeIndex].id)
-    }
     const timer = setTimeout(() => {
       centerActiveCard(activeIndex, true)
     }, 60)
     return () => clearTimeout(timer)
-  }, [activeIndex, pets, onActiveChange, centerActiveCard, activePetId])
+  }, [activeIndex, centerActiveCard])
 
   // Dynamic scroll state check and closest-card detection on swipe/scroll
   const handleScroll = useCallback(() => {

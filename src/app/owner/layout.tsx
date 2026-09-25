@@ -29,6 +29,7 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
   const supabase = await createServerSupabaseClient()
   const cookieStore = await cookies()
   const initialActivePetId = cookieStore.get('active_pet_id')?.value || null
+  const initialActivePetName = cookieStore.get('active_pet_name')?.value || null
 
   const [
     { data: pets },
@@ -92,7 +93,11 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
 
   return (
     <GeolocationProvider>
-      <ActivePetProvider initialPets={pets || []} initialActivePetId={initialActivePetId}>
+      <ActivePetProvider 
+        initialPets={pets || []} 
+        initialActivePetId={initialActivePetId}
+        initialActivePetName={initialActivePetName}
+      >
         <NavigationProvider>
           <div className="flex min-h-dvh flex-col font-sans">
 

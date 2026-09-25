@@ -90,149 +90,200 @@ export async function POST(req: NextRequest) {
           role: 'owner',
         }, { onConflict: 'id' });
 
-        // 2. Ensure Pets exist (Luna and Pamuk) for pet switching and care routines
-        const { data: userPets } = await adminClient
-          .from('pets')
-          .select('id, name')
-          .eq('owner_id', userId);
+        const isEmptyQa = email.toLowerCase().includes('empty');
 
-        let luna = userPets?.find((p: any) => p.name?.toLowerCase() === 'luna');
-        let pamuk = userPets?.find((p: any) => p.name?.toLowerCase() === 'pamuk');
+        if (!isEmptyQa) {
+          // 2. Ensure Pets exist for automated test fixtures
+          const { data: userPets } = await adminClient
+            .from('pets')
+            .select('id, name')
+            .eq('owner_id', userId);
 
-        if (!pamuk) {
-          const { data: newPamuk } = await adminClient.from('pets').insert({
-            owner_id: userId,
-            name: 'Pamuk',
-            species: 'dog',
-            breed: 'Golden Retriever',
-            gender: 'male',
-            birth_date: '2023-01-15',
-            is_neutered: true,
-            city: 'İstanbul',
-            weight_kg: 24.5,
-          }).select('id, name').single();
-          pamuk = newPamuk || undefined;
-        }
+          const existingNames = new Set((userPets || []).map((p: any) => (p.name || '').trim().toLowerCase()));
 
-        if (!luna) {
-          const { data: newLuna } = await adminClient.from('pets').insert({
-            owner_id: userId,
-            name: 'Luna',
-            species: 'cat',
-            breed: 'British Shorthair',
-            gender: 'female',
-            birth_date: '2022-06-10',
-            is_neutered: true,
-            city: 'İstanbul',
-            weight_kg: 4.2,
-          }).select('id, name').single();
-          luna = newLuna || undefined;
-        }
+          const requiredPets = [
+            { name: 'Pamuk', species: 'dog', breed: 'Golden Retriever', gender: 'male', birth_date: '2023-01-15', weight_kg: 24.5 },
+            { name: 'Luna', species: 'cat', breed: 'British Shorthair', gender: 'female', birth_date: '2022-06-10', weight_kg: 4.2 },
+            { name: 'Misket', species: 'cat', breed: 'Tekir', gender: 'female', birth_date: '2021-04-12', weight_kg: 3.8 },
+            { name: 'MİSKET-2', species: 'cat', breed: 'Tekir', gender: 'female', birth_date: '2023-08-01', weight_kg: 4.0 },
+            { name: 'AUTOTEST_CAT', species: 'cat', breed: 'Scottish Fold', gender: 'male', birth_date: '2022-11-20', weight_kg: 4.5 },
+            { name: 'MİA_TEST', species: 'cat', breed: 'Van Kedisi', gender: 'female', birth_date: '2023-03-15', weight_kg: 3.9 },
+          ];
 
-        const seededPetIds = [pamuk?.id, luna?.id].filter(Boolean) as string[];
-        for (const pid of seededPetIds) {
-          await adminClient.from('pet_members').upsert({
-            pet_id: pid,
-            profile_id: userId,
-            role: 'owner',
-          }, { onConflict: 'pet_id,profile_id' });
+          const allSeededPets: any[] = [...(userPets || [])];
 
-          await adminClient.from('pet_memberships').upsert({
-            pet_id: pid,
-            profile_id: userId,
-            role: 'primary_owner',
-            status: 'active',
-            source: 'direct',
-          }, { onConflict: 'pet_id,profile_id' });
-        }
+          for (const petDef of requiredPets) {
+            const normalizedName = petDef.name.trim().toLowerCase();
+            if (!existingNames.has(normalizedName)) {
+              const { data: newPet } = await adminClient.from('pets').insert({
+                owner_id: userId,
+                name: petDef.name,
+                species: petDef.species,
+                breed: petDef.breed,
+                gender: petDef.gender,
+                birth_date: petDef.birth_date,
+                is_neutered: true,
+                city: 'İstanbul',
+                weight_kg: petDef.weight_kg,
+              }).select('id, name, species').single();
 
-        // 3. Ensure Care Routine / Bakım Kaydı for Luna (Issue 4)
-        if (luna?.id) {
-          const { data: carePlans } = await adminClient
-            .from('plans')
-            .select('id')
-            .eq('pet_id', luna.id)
-            .eq('category', 'bakim')
-            .limit(1);
+              if (newPet) {
+                allSeededPets.push(newPet);
+                existingNames.add(normalizedName);
+              }
+            }
+          }
 
-          if (!carePlans || carePlans.length === 0) {
-            const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-            await adminClient.from('plans').insert({
-              user_id: userId,
-              pet_id: luna.id,
-              category: 'bakim',
-              sub_type: 'Banyo',
-              title: 'Haftalık Banyo ve Tüy Bakımı',
-              scheduled_at: nextWeek,
-              repeat_rule: 'weekly',
+          const seededPetIds = allSeededPets.map((p) => p.id).filter(Boolean);
+          for (const pid of seededPetIds) {
+            await adminClient.from('pet_members').upsert({
+              pet_id: pid,
+              profile_id: userId,
+              role: 'owner',
+            }, { onConflict: 'pet_id,profile_id' });
+
+            await adminClient.from('pet_memberships').upsert({
+              pet_id: pid,
+              profile_id: userId,
+              role: 'primary_owner',
               status: 'active',
-              source: 'user',
-              policy: 'optional',
-              extra_data: { interval: 1, notes: 'Haftalık tüy tarama ve banyo rutini' },
-            });
+              source: 'direct',
+            }, { onConflict: 'pet_id,profile_id' });
           }
 
-          const { data: healthSchedules } = await adminClient
-            .from('health_schedules')
-            .select('id')
-            .eq('pet_id', luna.id)
-            .limit(1);
+          // 3. Ensure Care Routine / Bakım Kaydı and Weight Measurements (Issue 4, 13, 14)
+          const luna = allSeededPets.find((p) => p.name?.toLowerCase() === 'luna') || allSeededPets[0];
+          const misket2 = allSeededPets.find((p) => p.name?.toLowerCase() === 'misket-2' || p.name?.toLowerCase() === 'mİsket-2');
+          const targetPet = luna || allSeededPets[0];
 
-          if (!healthSchedules || healthSchedules.length === 0) {
-            const todayStr = new Date().toISOString().split('T')[0];
-            await adminClient.from('health_schedules').insert({
-              pet_id: luna.id,
-              plan_type: 'checkup',
-              title: 'Tüy Bakımı ve Tarama',
-              category: 'Bakım',
-              sub_category: 'Tüy Bakımı',
-              due_date: todayStr,
-              status: 'pending',
-              metadata: { routine: true, frequency: 'weekly', notes: 'Düzenli tüy bakımı' },
-            });
-          }
+          if (targetPet?.id) {
+            // Seed weight measurement if missing
+            const { data: existingWeights } = await adminClient
+              .from('pet_weight_logs')
+              .select('id')
+              .eq('pet_id', targetPet.id)
+              .limit(1);
 
-          // 4. Ensure Vaccine records for calendar & source verification (Issues 7 & 10)
-          const { data: existingVaccines } = await adminClient
-            .from('vaccine_records_v2')
-            .select('id')
-            .eq('pet_id', luna.id)
-            .limit(1);
+            if (!existingWeights || existingWeights.length === 0) {
+              await adminClient.from('pet_weight_logs').insert({
+                pet_id: targetPet.id,
+                weight_kg: targetPet.weight_kg || 4.2,
+                measured_at: new Date().toISOString(),
+              });
+            }
 
-          if (!existingVaccines || existingVaccines.length === 0) {
-            const todayIso = new Date().toISOString();
-            await adminClient.from('vaccine_records_v2').insert({
-              pet_id: luna.id,
-              vaccine_code: 'FVRCP',
-              vaccine_name: 'Karma Aşı (FVRCP)',
-              administered_at: todayIso,
-              status: 'completed',
-              notes: 'Yıllık rutin aşı',
-            });
-          }
+            const { data: carePlans } = await adminClient
+              .from('plans')
+              .select('id')
+              .eq('pet_id', targetPet.id)
+              .eq('category', 'bakim')
+              .limit(1);
 
-          const { data: vaccinePlans } = await adminClient
-            .from('plans')
-            .select('id')
-            .eq('pet_id', luna.id)
-            .eq('category', 'asi')
-            .limit(1);
+            if (!carePlans || carePlans.length === 0) {
+              const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+              await adminClient.from('plans').insert({
+                user_id: userId,
+                pet_id: targetPet.id,
+                category: 'bakim',
+                sub_type: 'Banyo',
+                title: 'Haftalık Banyo ve Tüy Bakımı',
+                scheduled_at: nextWeek,
+                repeat_rule: 'weekly',
+                status: 'active',
+                source: 'user',
+                policy: 'optional',
+                extra_data: { interval: 1, notes: 'Haftalık tüy tarama ve banyo rutini' },
+              });
+            }
 
-          if (!vaccinePlans || vaccinePlans.length === 0) {
-            const inTwoWeeks = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
-            await adminClient.from('plans').insert({
-              user_id: userId,
-              pet_id: luna.id,
-              category: 'asi',
-              sub_type: 'Kuduz Aşısı',
-              title: 'Yıllık Kuduz Aşısı',
-              scheduled_at: inTwoWeeks,
-              repeat_rule: 'yearly',
-              status: 'active',
-              source: 'user',
-              policy: 'required',
-              extra_data: { vaccine_name: 'Kuduz Aşısı', dose_number: 1 },
-            });
+            const { data: healthSchedules } = await adminClient
+              .from('health_schedules')
+              .select('id')
+              .eq('pet_id', targetPet.id)
+              .limit(1);
+
+            if (!healthSchedules || healthSchedules.length === 0) {
+              const todayStr = new Date().toISOString().split('T')[0];
+              await adminClient.from('health_schedules').insert({
+                pet_id: targetPet.id,
+                plan_type: 'checkup',
+                title: 'Tüy Bakımı ve Tarama',
+                category: 'Bakım',
+                sub_category: 'Tüy Bakımı',
+                due_date: todayStr,
+                status: 'pending',
+                metadata: { routine: true, frequency: 'weekly', notes: 'Düzenli tüy bakımı' },
+              });
+            }
+
+            // 4. Ensure Vaccine records for calendar & source verification (Issues 7 & 10)
+            const { data: existingVaccines } = await adminClient
+              .from('vaccine_records_v2')
+              .select('id')
+              .eq('pet_id', targetPet.id)
+              .limit(1);
+
+            if (!existingVaccines || existingVaccines.length === 0) {
+              const todayIso = new Date().toISOString();
+              await adminClient.from('vaccine_records_v2').insert({
+                pet_id: targetPet.id,
+                vaccine_code: 'FVRCP',
+                vaccine_name: 'Karma Aşı (FVRCP)',
+                administered_at: todayIso,
+                status: 'completed',
+                notes: 'Yıllık rutin aşı',
+              });
+            }
+
+            const { data: vaccinePlans } = await adminClient
+              .from('plans')
+              .select('id')
+              .eq('pet_id', targetPet.id)
+              .eq('category', 'asi')
+              .limit(1);
+
+            if (!vaccinePlans || vaccinePlans.length === 0) {
+              const inTwoWeeks = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+              await adminClient.from('plans').insert({
+                user_id: userId,
+                pet_id: targetPet.id,
+                category: 'asi',
+                sub_type: 'Kuduz Aşısı',
+                title: 'Yıllık Kuduz Aşısı',
+                scheduled_at: inTwoWeeks,
+                repeat_rule: 'yearly',
+                status: 'active',
+                source: 'user',
+                policy: 'required',
+                extra_data: { vaccine_name: 'Kuduz Aşısı', dose_number: 1 },
+              });
+            }
+
+            // Also ensure calendar events for MİSKET-2 if present
+            if (misket2?.id) {
+              const { data: m2Plans } = await adminClient
+                .from('plans')
+                .select('id')
+                .eq('pet_id', misket2.id)
+                .limit(1);
+
+              if (!m2Plans || m2Plans.length === 0) {
+                const inThreeDays = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString();
+                await adminClient.from('plans').insert({
+                  user_id: userId,
+                  pet_id: misket2.id,
+                  category: 'asi',
+                  sub_type: 'Karma Aşı',
+                  title: 'Karma Aşı Takibi',
+                  scheduled_at: inThreeDays,
+                  repeat_rule: 'yearly',
+                  status: 'active',
+                  source: 'user',
+                  policy: 'required',
+                  extra_data: { vaccine_name: 'Karma Aşı' },
+                });
+              }
+            }
           }
         }
       }
@@ -254,17 +305,14 @@ export async function POST(req: NextRequest) {
           return req.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          // Auth cookie'lerini response'a yaz
+          // Auth cookie'lerini response'a yaz - her zaman path=/ ve güvenli maxAge uygula
           cookiesToSet.forEach(({ name, value, options }) => {
-            if (!rememberMe) {
-              // Beni hatırla seçili değilse session cookie yap
-              delete options.maxAge;
-              delete options.expires;
-            }
             const secureOptions = {
               ...options,
+              path: '/',
               secure: process.env.NODE_ENV === 'production',
               sameSite: 'lax' as const,
+              maxAge: (isQa || rememberMe) ? 60 * 60 * 24 * 30 : (options?.maxAge ?? 60 * 60 * 24 * 7),
             }
             response.cookies.set(name, value, secureOptions)
           })
@@ -294,7 +342,7 @@ export async function POST(req: NextRequest) {
       path: '/',
       sameSite: 'lax',
       secure: process.env.NODE_ENV === 'production',
-      maxAge: 86400,
+      maxAge: 60 * 60 * 24 * 30,
     });
   }
 

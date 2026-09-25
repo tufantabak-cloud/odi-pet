@@ -1159,7 +1159,7 @@ function PetSOSStep({
   useEffect(() => {
     async function loadContacts() {
       try {
-        const res = await fetch('/api/owner/emergency-contacts')
+        const res = await fetch('/api/owner/emergency-contacts', { credentials: 'include' })
         if (res.ok) {
           const data = await res.json()
           if (data.c1?.name || data.c1?.phone || data.c2?.name) {
@@ -1763,7 +1763,7 @@ export default function AddPetPage() {
   useEffect(() => {
     async function loadOwnerProfile() {
       try {
-        const res = await fetch('/api/owner/emergency-contacts')
+        const res = await fetch('/api/owner/emergency-contacts', { credentials: 'include' })
         if (res.ok) {
           const data = await res.json()
           if (data.c1 || data.c2) {
@@ -1838,7 +1838,7 @@ export default function AddPetPage() {
       fd.set('height_cm', height)
     }
     try {
-      const res = await fetch('/api/pets', { method: 'POST', body: fd })
+      const res = await fetch('/api/pets', { method: 'POST', body: fd, credentials: 'include' })
       let data: any = {}
       try {
         data = await res.json()
@@ -1889,6 +1889,7 @@ export default function AddPetPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sos_contacts: normalizedContacts }),
+        credentials: 'include',
       })
 
       const data = await response.json()

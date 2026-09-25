@@ -17,10 +17,12 @@ export function ActivePetProvider({
   children,
   initialPets = [],
   initialActivePetId = null,
+  initialActivePetName = null,
 }: {
   children: React.ReactNode
   initialPets?: SimplePet[]
   initialActivePetId?: string | null
+  initialActivePetName?: string | null
 }) {
   const {
     activePetId,
@@ -40,11 +42,11 @@ export function ActivePetProvider({
 
   // Initialize active pet from SSR cookie or storage/URL
   useEffect(() => {
-    if (initialActivePetId && !activePetId) {
-      setActivePetId(initialActivePetId)
+    if ((initialActivePetId || initialActivePetName) && !activePetId && !activePetName) {
+      setActivePetId(initialActivePetId || initialActivePetName)
     }
     initFromStorageAndUrl()
-  }, [initialActivePetId, activePetId, setActivePetId, initFromStorageAndUrl])
+  }, [initialActivePetId, initialActivePetName, activePetId, activePetName, setActivePetId, initFromStorageAndUrl])
 
   // Storage and cross-tab/window event listeners
   useEffect(() => {

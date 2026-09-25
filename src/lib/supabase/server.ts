@@ -21,6 +21,7 @@ export async function createServerSupabaseClient() {
             cookiesToSet.forEach(({ name, value, options }) => {
               const secureOptions = {
                 ...options,
+                path: '/',
                 secure: process.env.NODE_ENV === 'production',
                 sameSite: 'lax' as const,
               }
