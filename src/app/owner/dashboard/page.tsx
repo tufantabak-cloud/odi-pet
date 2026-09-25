@@ -19,9 +19,20 @@ import DashboardClient from './DashboardClient'
 import { GlassCard } from '@/components/ui/primitives'
 
 
-export default async function OwnerDashboard() {
+export default async function OwnerDashboard({
+  searchParams,
+}: {
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
   const user = await getSessionUser()
   if (!user) redirect('/login')
+
+  const params = searchParams ? await searchParams : {}
+  const isForcedEmpty =
+    params.empty === 'true' ||
+    params.state === 'empty' ||
+    params.empty_state === 'true' ||
+    params.onboarding === 'true'
 
   const [currentProfile, cachedData] = await Promise.all([
     getCurrentProfile(),
@@ -33,6 +44,23 @@ export default async function OwnerDashboard() {
   const profile = currentProfile || cachedData.profile
 
   const supabase = await createServerSupabaseClient()
+
+  // Doğrudan oturum istemcisinden kullanıcının evcil hayvanlarını çek (cache gecikmesini ve admin client eksikliğini önler)
+  const { data: directPets, error: directErr } = await supabase
+    .from('pets')
+    .select('*')
+    .eq('owner_id', user.id)
+    .order('created_at', { ascending: false })
+
+  if (directErr) {
+    console.error('[Dashboard] directPets error:', directErr)
+  }
+
+  const effectivePets = isForcedEmpty
+    ? []
+    : directPets !== null
+      ? (directPets || []).filter((p: any) => !p.is_archived)
+      : (pets || [])
 
   const now = getNowTR()
   const today = getNowTR()
@@ -60,16 +88,16 @@ export default async function OwnerDashboard() {
       .eq('status', 'active')
       .order('created_at', { ascending: false })
       .limit(50),
-    (pets && pets.length > 0)
+    (effectivePets && effectivePets.length > 0)
       ? supabase
           .from('pet_journal_entries')
           .select('id, pet_id, created_at')
-          .in('pet_id', (pets || []).map((p: any) => p.id))
+          .in('pet_id', (effectivePets || []).map((p: any) => p.id))
           .gte('created_at', today.toISOString())
       : Promise.resolve({ data: [] } as any),
   ])
 
-  const userCities = Array.from(new Set((pets || []).map((p: any) => p.city).filter(Boolean)))
+  const userCities = Array.from(new Set((effectivePets || []).map((p: any) => p.city).filter(Boolean)))
   const lostReports = lostReportsRaw?.filter((report: any) => {
     if (userCities.length === 0) return false
     const reportCity = report.pets?.city
@@ -104,7 +132,7 @@ export default async function OwnerDashboard() {
       return new Date(a.scheduled_at || a.next_run).getTime() - new Date(b.scheduled_at || b.next_run).getTime()
     })
 
-  const petsWithStats = (pets || []).map((pet: any) => {
+  const petsWithStats = (effectivePets || []).map((pet: any) => {
     let lastFeedingDate = ''
     let weightVal = ''
 
@@ -182,7 +210,7 @@ export default async function OwnerDashboard() {
 
   return (
     <DashboardOnboardingWrapper>      <div className="flex flex-col gap-[var(--space-5)] pb-[calc(96px+env(safe-area-inset-bottom))]">
-        {(!pets || pets.length === 0) ? (
+        {(!effectivePets || effectivePets.length === 0) ? (
           <div className="px-[var(--space-4)] pt-6 flex flex-col gap-4">
             <h1 className="text-[22px] font-black text-[var(--color-text-primary)] leading-tight tracking-tight">
               {displayGreeting}
@@ -208,7 +236,7 @@ export default async function OwnerDashboard() {
             headerTaskLabel={headerTaskLabel}
             headerTaskTone={headerTaskTone}
             petsWithStats={petsWithStats}
-            pets={pets}
+            pets={effectivePets}
             activeQuestion={activeQuestion}
             activeInsight={activeInsight}
             upcomingSchedules={upcomingSchedules}

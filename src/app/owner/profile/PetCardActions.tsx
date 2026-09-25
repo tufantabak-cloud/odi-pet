@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import ConfirmModal from '@/components/ui/ConfirmModal'
-import { Edit3, MoreVertical, Eraser, Trash2, X } from 'lucide-react'
+import { Edit3, MoreVertical, Eraser, Trash2, X, Archive } from 'lucide-react'
 
 type ConfirmState = {
   open: boolean
@@ -45,6 +45,30 @@ export default function PetCardActions({ pet }: { pet: any }) {
             const res = await fetch(`/api/pets/${pet.id}/reset`, { method: 'POST' })
             if (!res.ok) throw new Error('Veriler silinemedi')
             setStatusMessage({ type: 'ok', text: 'Sağlık verileri başarıyla temizlendi.' })
+            router.refresh()
+          } catch (e: any) {
+            setStatusMessage({ type: 'err', text: 'Hata: ' + e.message })
+          }
+        }),
+    })
+  }
+
+  const handleArchivePet = () => {
+    setShowMenu(false)
+    openConfirm({
+      title: 'Peti Arşivle',
+      message: `${pet.name} adlı dostunuzu arşivlemek üzeresiniz. Arşivlenen dostlarınız aktif takvim ve gösterge panelinden kaldırılır, ancak tıbbi geçmişi korunur.`,
+      confirmLabel: 'Evet, Arşivle',
+      onConfirm: () =>
+        startTransition(async () => {
+          try {
+            const res = await fetch(`/api/pets/${pet.id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ is_archived: true }),
+            })
+            if (!res.ok) throw new Error('Arşivlenemedi')
+            setStatusMessage({ type: 'ok', text: `${pet.name} başarıyla arşivlendi.` })
             router.refresh()
           } catch (e: any) {
             setStatusMessage({ type: 'err', text: 'Hata: ' + e.message })
@@ -111,6 +135,12 @@ export default function PetCardActions({ pet }: { pet: any }) {
         <>
           <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
           <div className="absolute right-0 bottom-full mb-2 w-52 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 py-2 animate-in fade-in zoom-in duration-200 origin-bottom-right">
+            <button
+              onClick={handleArchivePet}
+              className="w-full text-left px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 transition-colors"
+            >
+              <Archive className="w-4 h-4 text-slate-500" /> Peti Arşivle
+            </button>
             <button
               onClick={handleResetData}
               className="w-full text-left px-4 py-2.5 text-xs font-semibold text-amber-700 hover:bg-amber-50 flex items-center gap-2.5 transition-colors"

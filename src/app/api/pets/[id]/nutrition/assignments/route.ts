@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
+import { revalidatePath } from 'next/cache'
 
 type RouteContext = {
   params: Promise<{ id: string }>
@@ -257,6 +258,9 @@ export async function POST(req: NextRequest, context: RouteContext) {
 
     return NextResponse.json({ error: insertError.message }, { status: 400 })
   }
+
+  revalidatePath(`/owner/pets/${petId}/nutrition`)
+  revalidatePath(`/owner/pets/${petId}`)
 
   // Single Source of Truth: ZERO writes to legacy pet_nutrition_profiles table!
   return NextResponse.json({ data: inserted }, { status: 201 })

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
 import { Trash2 } from 'lucide-react'
@@ -26,8 +26,15 @@ export default function DeleteAccountRow() {
         throw new Error(data.error || 'Hesap silme işlemi başarısız oldu.')
       }
 
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.clear()
+          sessionStorage.clear()
+        } catch {}
+      }
+
       // Başarılı silme sonrası oturum temizlenir ve login ekranına yönlendirilir
-      window.location.href = '/login?message=Hesabınız başarıyla silindi.'
+      window.location.replace('/login?message=Hesabınız başarıyla silindi.')
     } catch (err: any) {
       setError(err.message || 'Bir hata oluştu.')
       setLoading(false)

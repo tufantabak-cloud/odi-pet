@@ -20,6 +20,35 @@ const nextConfig: NextConfig = {
   turbopack: {},
   async redirects() {
     return [
+      // ── VAL-023 Fix: /profile ve yaygın alias'lar → /owner/profile ──────────
+      // Test araçları ve eski bağlantılar /profile'a gittiğinde 404 almaz,
+      // doğrudan /owner/profile'a yönlendirilir.
+      {
+        source: '/profile',
+        destination: '/owner/profile',
+        permanent: false,
+      },
+      {
+        source: '/profile/:path*',
+        destination: '/owner/profile/:path*',
+        permanent: false,
+      },
+      {
+        source: '/account',
+        destination: '/owner/profile',
+        permanent: false,
+      },
+      {
+        source: '/account/:path*',
+        destination: '/owner/profile/:path*',
+        permanent: false,
+      },
+      {
+        source: '/settings',
+        destination: '/owner/profile',
+        permanent: false,
+      },
+      // ────────────────────────────────────────────────────────────────────────
       {
         source: '/owner/calendar',
         destination: '/owner/takvim',
@@ -32,6 +61,11 @@ const nextConfig: NextConfig = {
       },
       {
         source: '/calendar',
+        destination: '/owner/takvim',
+        permanent: false,
+      },
+      {
+        source: '/owner/calendar',
         destination: '/owner/takvim',
         permanent: false,
       },

@@ -95,6 +95,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
   const payload: any = {}
 
   if (jsonBody) {
+    if (jsonBody.is_archived !== undefined) payload.is_archived = Boolean(jsonBody.is_archived)
     if (jsonBody.is_neutered !== undefined) payload.is_neutered = Boolean(jsonBody.is_neutered)
     if (jsonBody.name !== undefined) payload.name = jsonBody.name
     if (jsonBody.breed !== undefined) payload.breed = jsonBody.breed
@@ -129,6 +130,10 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
     const coverScale = fd.get('cover_scale') as string | null
     if (coverScale) payload.cover_scale = parseFloat(coverScale)
 
+    if (fd.has('is_archived')) {
+      const v = fd.get('is_archived')
+      payload.is_archived = v === 'true' || v === '1'
+    }
     if (fd.has('is_neutered')) {
       const v = fd.get('is_neutered')
       payload.is_neutered = v === 'true' || v === 'on' || v === '1' || v === 'yes'
@@ -208,6 +213,8 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
   revalidateTag(`dashboard-${user.id}`, 'default')
   revalidateTag('dashboard', 'default')
   revalidatePath('/owner/pets')
+  revalidatePath('/owner/profile')
+  revalidatePath('/owner/takvim')
   revalidatePath(`/owner/pets/${id}`)
 
   return NextResponse.json({ success: true })

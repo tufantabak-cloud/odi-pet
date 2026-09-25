@@ -88,8 +88,15 @@ export function useOnboarding() {
   }, [completeStep]);
 
   useEffect(() => {
-    // Check ENV or localStorage for testing
-    const isTestDisabled = typeof window !== 'undefined' && window.localStorage.getItem('onboarding_disabled') === 'true';
+    // Check ENV, user-agent or localStorage for testing
+    const userAgent = typeof navigator !== 'undefined' ? (navigator.userAgent || '').toLowerCase() : '';
+    const isTestDisabled =
+      typeof window !== 'undefined' &&
+      (window.localStorage.getItem('onboarding_disabled') === 'true' ||
+        userAgent.includes('testsprite') ||
+        window.location.search.includes('notour=true') ||
+        (window as any).ODI_DISABLE_TOUR === true);
+
     if (process.env.NEXT_PUBLIC_ONBOARDING_ENABLED === 'false' || isTestDisabled) {
       setIsEnabled(false);
       setIsReady(true);

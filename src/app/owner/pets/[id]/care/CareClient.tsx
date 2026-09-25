@@ -12,6 +12,35 @@ export default function CareClient({ pet }: { pet: any }) {
   const [plans, setPlans] = useState<any[]>([])
   const [loadingPlan, setLoadingPlan] = useState(true)
   const router = useRouter()
+  const [editingPlan, setEditingPlan] = useState<any | null>(null)
+  const [editTitle, setEditTitle] = useState('')
+  const [editDate, setEditDate] = useState('')
+  const [savingEdit, setSavingEdit] = useState(false)
+
+  const handleSaveEdit = async () => {
+    if (!editingPlan) return
+    setSavingEdit(true)
+    try {
+      const res = await fetch(`/api/plans/${editingPlan.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: editTitle,
+          sub_type: editTitle,
+          scheduled_at: editDate ? new Date(editDate).toISOString() : editingPlan.scheduled_at,
+        }),
+      })
+      if (res.ok) {
+        setPlans(prev => prev.map(p => p.id === editingPlan.id ? { ...p, title: editTitle, sub_type: editTitle, scheduled_at: editDate ? new Date(editDate).toISOString() : p.scheduled_at } : p))
+        setEditingPlan(null)
+        router.refresh()
+      }
+    } catch (e) {
+      console.error('Error saving care plan:', e)
+    } finally {
+      setSavingEdit(false)
+    }
+  }
 
   useEffect(() => {
     async function loadPlans() {
@@ -76,15 +105,28 @@ export default function CareClient({ pet }: { pet: any }) {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {activePlans.map(plan => (
-              <div key={plan.id} className="card-base p-5 flex flex-col gap-2">
+              <div key={plan.id} className="card-base p-5 flex flex-col justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold"><ShampooIcon width={20} height={20} className="w-5 h-5 text-rose-500" /></div>
                   <div>
-                    <h3 className="font-bold text-text-primary text-base">{plan.sub_type}</h3>
+                    <h3 className="font-bold text-text-primary text-base">{plan.title || plan.sub_type}</h3>
                     <p className="text-xs text-text-secondary">{plan.repeat_rule === 'daily' ? 'Günlük' : plan.repeat_rule === 'weekly' ? 'Haftalık' : plan.repeat_rule === 'monthly' ? 'Aylık' : 'Tek Seferlik'}</p>
                   </div>
                 </div>
-                <p className="text-xs text-text-secondary mt-2"><b>Tarih:</b> {new Date(plan.scheduled_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                <div className="flex items-center justify-between pt-2 border-t border-border-main/50">
+                  <p className="text-xs text-text-secondary"><b>Tarih:</b> {new Date(plan.scheduled_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                  <button
+                    onClick={() => {
+                      setEditingPlan(plan)
+                      setEditTitle(plan.title || plan.sub_type || '')
+                      setEditDate(plan.scheduled_at ? String(plan.scheduled_at).split('T')[0] : '')
+                    }}
+                    data-testid="edit-care-routine-button"
+                    className="text-xs font-bold text-primary hover:underline px-3 py-1.5 rounded-lg hover:bg-primary/10 transition-colors"
+                  >
+                    Düzenle
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -106,6 +148,64 @@ export default function CareClient({ pet }: { pet: any }) {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Bakım Rutini Düzenleme Modalı */}
+      {editingPlan && (
+        <div className="fixed inset-0 z-[9995] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in">
+          <div className="bg-surface rounded-3xl p-6 w-full max-w-md shadow-2xl border border-white/60 flex flex-col gap-4 animate-in zoom-in-95">
+            <div className="flex items-center justify-between border-b border-border-main pb-3">
+              <h3 className="font-bold text-lg text-text-primary">Bakım Rutinini Düzenle</h3>
+              <button
+                onClick={() => setEditingPlan(null)}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-text-secondary hover:bg-bg-main"
+              >
+                &times;
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <div>
+                <label className="text-xs font-semibold text-text-secondary block mb-1">Bakım Adı / Türü</label>
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-border-main bg-bg-main text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-text-secondary block mb-1">Planlanan Tarih</label>
+                <input
+                  type="date"
+                  value={editDate}
+                  onChange={(e) => setEditDate(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-border-main bg-bg-main text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-border-main">
+              <button
+                type="button"
+                onClick={() => setEditingPlan(null)}
+                className="px-4 py-2 rounded-xl text-sm font-semibold text-text-secondary hover:bg-bg-main"
+              >
+                İptal
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveEdit}
+                disabled={savingEdit || !editTitle.trim()}
+                data-testid="save-care-routine-button"
+                className="btn-primary px-5 py-2 rounded-xl text-sm font-bold shadow-sm"
+              >
+                {savingEdit ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
+              </button>
+            </div>
           </div>
         </div>
       )}

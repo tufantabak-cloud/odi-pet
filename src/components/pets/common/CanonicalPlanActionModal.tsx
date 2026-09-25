@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   CheckCircle2,
   Clock,
@@ -12,7 +13,9 @@ import {
   CalendarDays,
   Sparkles,
   AlertTriangle,
-  Loader2
+  Loader2,
+  FileText,
+  ChevronRight
 } from 'lucide-react';
 import {
   resolvePlanActions,
@@ -94,6 +97,18 @@ export function CanonicalPlanActionModal({
   const resolved = resolvePlanActions(context);
   const realPlanId = normalizePlanId(context.planId || context.plan?.id);
   const petId = propsPetId || context.petId || context.plan?.pet_id || (context.plan as any)?.pets?.id || '';
+
+  const sourceRecordUrl = petId ? (
+    resolved.isVaccine || resolved.category === 'asi'
+      ? `/owner/pets/${petId}?tab=asi`
+      : resolved.isParasite || resolved.category === 'parazit'
+      ? `/owner/pets/${petId}?tab=parazit`
+      : resolved.category === 'beslenme'
+      ? `/owner/pets/${petId}/nutrition`
+      : resolved.category === 'bakim'
+      ? `/owner/pets/${petId}/care`
+      : `/owner/pets/${petId}`
+  ) : null;
 
   const handleActionClick = (actionId: CanonicalPlanActionType) => {
     setErrorMsg(null);
@@ -226,6 +241,13 @@ export function CanonicalPlanActionModal({
       if (details?.product_notes) {
         payload.notes = details.product_notes;
       }
+      const vet = (details as any)?.veterinarian || details?.provider_name;
+      if (vet) {
+        payload.vet_name = vet;
+        if (!payload.extra_data) payload.extra_data = {};
+        payload.extra_data.veterinarian = vet;
+        payload.extra_data.provider_name = vet;
+      }
       // brand_free_text ve product_free_text alanları API tarafından parazit protokolü anahtarı olarak
       // değerlendirildiği için yalnızca kategori 'parazit' ise root payload'a eklenmelidir.
       if (resolved.category === 'parazit') {
@@ -262,11 +284,14 @@ export function CanonicalPlanActionModal({
     setLoadingAction('postpone');
     try {
       const currentExtra = context.plan?.extra_data || {};
+      const isoDate = newDate.includes('T') ? newDate : `${newDate}T09:00:00.000Z`;
       const payload: any = {
-        scheduled_at: newDate,
+        scheduled_at: isoDate,
+        due_date: isoDate,
       };
       if (note) {
         payload.note = note;
+        payload.notes = note;
         payload.extra_data = { ...currentExtra, postpone_note: note };
       }
 
@@ -454,6 +479,21 @@ export function CanonicalPlanActionModal({
                     </button>
                   );
                 })}
+
+                {sourceRecordUrl && (
+                  <Link
+                    href={sourceRecordUrl}
+                    onClick={onClose}
+                    data-testid="view-source-record"
+                    className="w-full min-h-[48px] py-3 px-4 rounded-[18px] border border-purple-200/80 bg-purple-50/50 hover:bg-purple-100/70 text-purple-700 font-bold text-[14px] flex items-center justify-between transition-all duration-200 active:scale-[0.98]"
+                  >
+                    <div className="flex items-center gap-3">
+                      <FileText className="w-5 h-5 text-purple-600" />
+                      <span>Kaynak Kaydı Görüntüle</span>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-purple-400" />
+                  </Link>
+                )}
 
                 <button
                   onClick={onClose}

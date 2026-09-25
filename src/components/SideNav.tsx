@@ -20,8 +20,11 @@ import {
   Bell,
   User,
   HelpCircle,
-  Plus
+  Plus,
+  PanelLeftClose,
+  PanelLeft
 } from 'lucide-react'
+import { useNavigation } from '@/contexts/NavigationContext'
 
 export type NavItem = {
   id: string
@@ -79,24 +82,28 @@ const toNavEntry = (m: ModuleEntry) => ({
 const primaryItems = getNavModules('side_primary').map(toNavEntry)
 const shortcutItems = getNavModules('side_shortcut').map(toNavEntry)
 
-function NavLink({ href, label, icon }: { href: string; label: string; icon: React.ReactNode }) {
+function NavLink({ href, label, icon, isCollapsed }: { href: string; label: string; icon: React.ReactNode; isCollapsed?: boolean }) {
   const pathname = usePathname()
   const isActive = pathname === href || pathname.startsWith(href + '/')
 
   return (
     <Link
       href={href}
-      className={`flex items-center gap-3 px-4 py-2.5 rounded-input text-sm font-semibold transition-all group
-        ${isActive
+      title={isCollapsed ? label : undefined}
+      aria-label={label}
+      className={`flex items-center rounded-input text-sm font-semibold transition-all group ${
+        isCollapsed ? 'justify-center p-2.5' : 'gap-3 px-4 py-2.5'
+      } ${
+        isActive
           ? 'bg-primary-soft text-primary'
           : 'text-text-secondary hover:text-text-primary hover:bg-bg-main'
-        }`}
+      }`}
     >
       <span className={`shrink-0 transition-colors ${isActive ? 'text-primary' : 'group-hover:text-primary'}`}>
         {icon}
       </span>
-      {label}
-      {isActive && (
+      {!isCollapsed && label}
+      {!isCollapsed && isActive && (
         <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />
       )}
     </Link>
@@ -105,6 +112,7 @@ function NavLink({ href, label, icon }: { href: string; label: string; icon: Rea
 
 export default function SideNav({ actionMenuItems, bottomNavItems, menuDrawerItems, sidePrimaryItems }: SideNavProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const { isSidebarCollapsed, toggleSidebar, isMobileViewport } = useNavigation()
 
   const activeActionMenuItems = actionMenuItems && actionMenuItems.length > 0
     ? actionMenuItems
@@ -176,22 +184,56 @@ export default function SideNav({ actionMenuItems, bottomNavItems, menuDrawerIte
     return deduplicated
   })()
 
+  if (isMobileViewport) {
+    return null
+  }
+
   return (
-    <aside className="hidden md:flex w-[220px] shrink-0 flex-col gap-1 p-6 border-r border-border-main sticky top-16 h-[calc(100vh-4rem)] self-start overflow-y-auto">
+    <aside
+      data-testid="desktop-sidebar"
+      className={`hidden lg:flex shrink-0 flex-col gap-1 border-r border-border-main sticky top-16 h-[calc(100vh-4rem)] self-start overflow-y-auto transition-all duration-300 ${
+        isSidebarCollapsed ? 'w-[72px] p-3' : 'w-[220px] p-6'
+      }`}
+    >
+      {/* Sidebar Header with Collapse / Expand Toggle */}
+      <div className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-between'} mb-3`}>
+        {!isSidebarCollapsed && (
+          <span className="text-2xs font-semibold text-text-tertiary uppercase tracking-wider">
+            Gezinme
+          </span>
+        )}
+        <button
+          type="button"
+          onClick={toggleSidebar}
+          data-testid="sidebar-toggle"
+          aria-label={isSidebarCollapsed ? 'Kenar çubuğunu genişlet' : 'Kenar çubuğunu daralt'}
+          className="p-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-main transition-colors cursor-pointer"
+        >
+          {isSidebarCollapsed ? <PanelLeft className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
+        </button>
+      </div>
+
       {/* Quick Action Plus Button */}
       <div className="relative mb-4">
         <button
           onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="w-full py-3 px-4 rounded-input bg-primary text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary-hover hover:shadow-lg active:scale-[0.98] transition-all duration-200"
+          data-testid="sidebar-quick-action-btn"
+          aria-label="Hızlı Ekle"
+          title={isSidebarCollapsed ? 'Hızlı Ekle' : undefined}
+          className={`w-full py-3 rounded-input bg-primary text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary-hover hover:shadow-lg active:scale-[0.98] transition-all duration-200 cursor-pointer ${
+            isSidebarCollapsed ? 'px-2' : 'px-4'
+          }`}
         >
           <Plus className={`w-4 h-4 transition-transform duration-200 ${isMenuOpen ? 'rotate-45' : ''}`} />
-          <span>Hızlı Ekle</span>
+          {!isSidebarCollapsed && <span>Hızlı Ekle</span>}
         </button>
         
         {isMenuOpen && (
           <>
             <div className="fixed inset-0 z-[9990]" onClick={() => setIsMenuOpen(false)} />
-            <div className="absolute left-0 right-0 mt-2 bg-surface border border-border-main rounded-input shadow-xl p-2 z-[9991] flex flex-col gap-1 animate-in fade-in slide-in-from-top-2 duration-150">
+            <div className={`absolute left-0 mt-2 bg-surface border border-border-main rounded-input shadow-xl p-2 z-[9991] flex flex-col gap-1 animate-in fade-in slide-in-from-top-2 duration-150 ${
+              isSidebarCollapsed ? 'w-48' : 'right-0'
+            }`}>
               {activeActionMenuItems.map((item) => {
                 const href = resolveActionHref(item)
                 return (
@@ -211,18 +253,26 @@ export default function SideNav({ actionMenuItems, bottomNavItems, menuDrawerIte
         )}
       </div>
 
-      <p className="text-2xs font-semibold text-text-tertiary uppercase tracking-wider px-4 mb-2">
-        ANA MENÜ
-      </p>
+      {!isSidebarCollapsed ? (
+        <p className="text-2xs font-semibold text-text-tertiary uppercase tracking-wider px-4 mb-2">
+          ANA MENÜ
+        </p>
+      ) : (
+        <div className="w-full h-px bg-border-main my-1" />
+      )}
       {activePrimaryItems.map((item) => (
-        <NavLink key={item.href} {...item} />
+        <NavLink key={item.href} {...item} isCollapsed={isSidebarCollapsed} />
       ))}
 
-      <p className="text-2xs font-semibold text-text-tertiary uppercase tracking-wider px-4 mb-2 mt-6">
-        KISA YOLLAR
-      </p>
+      {!isSidebarCollapsed ? (
+        <p className="text-2xs font-semibold text-text-tertiary uppercase tracking-wider px-4 mb-2 mt-6">
+          KISA YOLLAR
+        </p>
+      ) : (
+        <div className="w-full h-px bg-border-main my-2" />
+      )}
       {activeShortcutItems.map((item) => (
-        <NavLink key={item.href} {...item} />
+        <NavLink key={item.href} {...item} isCollapsed={isSidebarCollapsed} />
       ))}
     </aside>
   )

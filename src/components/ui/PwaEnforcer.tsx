@@ -62,10 +62,19 @@ export default function PwaEnforcer() {
     // 1. Bypass check
     const hostname = window.location.hostname;
     const isLocal = hostname === "localhost" || hostname === "127.0.0.1" || hostname.startsWith("192.168.");
-    const hasBypassParam = window.location.search.includes("bypass-pwa=true") || window.location.search.includes("test=true");
-    const isPlaywright = navigator.userAgent.includes("Playwright");
+    const isVercelPreview = hostname.includes("vercel.app");
+    const hasBypassParam = window.location.search.includes("bypass-pwa=true") || window.location.search.includes("test=true") || window.location.search.includes("notour=true");
+    const lowerUa = (navigator.userAgent || '').toLowerCase();
+    const isAutomatedTest =
+      Boolean((window.navigator as any).webdriver) ||
+      lowerUa.includes('playwright') ||
+      lowerUa.includes('headlesschrome') ||
+      lowerUa.includes('testsprite') ||
+      lowerUa.includes('selenium') ||
+      lowerUa.includes('puppeteer') ||
+      (typeof document !== 'undefined' && document.cookie.includes('is_qa=true'));
 
-    if (isLocal || hasBypassParam || isPlaywright) {
+    if (isLocal || isVercelPreview || hasBypassParam || isAutomatedTest) {
       setShouldShow(false);
       return;
     }
@@ -80,7 +89,6 @@ export default function PwaEnforcer() {
     }
 
     // Determine OS & In-App Browser
-    const lowerUa = userAgent.toLowerCase();
     const isIosDevice = /iphone|ipad|ipod/i.test(lowerUa);
     const isSafariBrowser = /^((?!chrome|android|crios|fxios|opera|biambrowser).)*safari/i.test(lowerUa);
     const inAppDetected = /fban|fbav|instagram|micromessenger|line\/|twitter|telegram|linkedin|crios|fxios|wv/i.test(lowerUa) || (isIosDevice && !isSafariBrowser);

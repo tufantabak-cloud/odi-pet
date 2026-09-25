@@ -103,6 +103,8 @@ export function WizardShell({
           <div className="flex items-center justify-between px-4 h-14 max-w-3xl mx-auto w-full">
             <button
               onClick={() => router.back()}
+              data-testid="wizard-back-btn"
+              aria-label="Geri Dön"
               className="w-11 h-11 flex items-center justify-center -ml-2 rounded-full hover:bg-slate-100 transition-colors"
             >
               <ChevronLeft className="w-6 h-6 text-slate-700" />
@@ -171,6 +173,8 @@ export function WizardShell({
         <div className="flex items-center justify-between px-4 h-14 max-w-3xl mx-auto w-full">
           <button
             onClick={handleBack}
+            data-testid="wizard-back-btn"
+            aria-label="Geri Dön"
             className="w-11 h-11 flex items-center justify-center -ml-2 rounded-full hover:bg-slate-100 transition-colors"
           >
             <ChevronLeft className="w-6 h-6 text-slate-700" />

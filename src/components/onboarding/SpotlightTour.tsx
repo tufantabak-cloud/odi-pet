@@ -97,6 +97,7 @@ export default function SpotlightTour({ steps, onComplete }: SpotlightTourProps 
   }, [onComplete]);
 
   useEffect(() => {
+    if (!isReady || !isEnabled) return;
     // Inject custom CSS
     const styleId = 'odi-driver-css';
     if (!document.getElementById(styleId)) {
@@ -105,7 +106,7 @@ export default function SpotlightTour({ steps, onComplete }: SpotlightTourProps 
       style.innerHTML = driverCssOverride;
       document.head.appendChild(style);
     }
-  }, []);
+  }, [isReady, isEnabled]);
 
   // Effect 1: Wizard-driven tour
   useEffect(() => {

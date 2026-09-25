@@ -54,7 +54,7 @@ test.describe('Lost Pet E2E Lifecycle Flow', () => {
     await expect(page.locator(`h1:has-text("${tempPetName}")`).first()).toBeVisible();
 
     // 4. Open SOS Modal and click Lost Pet Report
-    const sosButton = page.locator('button[aria-label="Acil SOS"]');
+    const sosButton = page.locator('button[aria-label="Acil SOS"]').first();
     await expect(sosButton).toBeVisible();
     await sosButton.click();
 

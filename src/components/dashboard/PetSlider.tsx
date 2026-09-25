@@ -50,8 +50,25 @@ export function findClosestCardIndex(
   return closestIndex
 }
 
-export function PetSlider({ pets, onActiveChange }: { pets: Pet[], onActiveChange?: (petId: string) => void }) {
-  const [activeIndex, setActiveIndex] = useState(0)
+export function PetSlider({
+  pets,
+  activePetId,
+  onActiveChange,
+}: {
+  pets: Pet[]
+  activePetId?: string | null
+  onActiveChange?: (petId: string) => void
+}) {
+  const resolveIndex = useCallback((idOrName?: string | null) => {
+    if (!idOrName || !pets || pets.length === 0) return 0
+    const trimmed = idOrName.trim().toLowerCase()
+    const foundIndex = pets.findIndex(
+      p => p.id === idOrName || (p.name && p.name.trim().toLowerCase() === trimmed)
+    )
+    return foundIndex >= 0 ? foundIndex : 0
+  }, [pets])
+
+  const [activeIndex, setActiveIndex] = useState(() => resolveIndex(activePetId))
   const [sidePadding, setSidePadding] = useState<number>(0)
   const containerRef = useRef<HTMLDivElement>(null)
   const cardRefs = useRef<(HTMLDivElement | null)[]>([])
@@ -102,6 +119,16 @@ export function PetSlider({ pets, onActiveChange }: { pets: Pet[], onActiveChang
     }
   }, [])
 
+  // Sync activeIndex if activePetId changes externally
+  useEffect(() => {
+    if (!activePetId) return
+    const targetIdx = resolveIndex(activePetId)
+    if (targetIdx !== activeIndex) {
+      setActiveIndex(targetIdx)
+      centerActiveCard(targetIdx, true)
+    }
+  }, [activePetId, resolveIndex, activeIndex, centerActiveCard])
+
   // ResizeObserver ve window resize dinleyici
   useEffect(() => {
     updateDimensions()
@@ -121,16 +148,13 @@ export function PetSlider({ pets, onActiveChange }: { pets: Pet[], onActiveChang
     }
   }, [updateDimensions, pets.length])
 
-  // Selected pet callback & auto-centering on mount / activeIndex change
+  // Auto-centering on mount / activeIndex change
   useEffect(() => {
-    if (pets[activeIndex]) {
-      onActiveChange?.(pets[activeIndex].id)
-    }
     const timer = setTimeout(() => {
       centerActiveCard(activeIndex, true)
     }, 60)
     return () => clearTimeout(timer)
-  }, [activeIndex, pets, onActiveChange, centerActiveCard])
+  }, [activeIndex, centerActiveCard])
 
   // Dynamic scroll state check and closest-card detection on swipe/scroll
   const handleScroll = useCallback(() => {
@@ -209,16 +233,36 @@ export function PetSlider({ pets, onActiveChange }: { pets: Pet[], onActiveChang
             return (
               <div
                 key={pet.id}
+                id={`pet-card-${pet.name.toLowerCase()}`}
                 data-testid="pet-card"
+                data-testid-pet={pet.name.toLowerCase()}
+                data-pet-id={pet.id}
+                data-pet-name={pet.name}
+                aria-label={`${pet.name} profilini seç`}
+                role="button"
+                tabIndex={0}
                 ref={(el) => { cardRefs.current[index] = el }}
-                className={`snap-center flex-shrink-0 w-[200px] sm:w-[230px] rounded-[24px] transition-all duration-300 ease-out cursor-pointer select-none flex flex-col justify-between overflow-hidden bg-white border-2 ${
+                className={`snap-center flex-shrink-0 w-[200px] sm:w-[230px] rounded-[24px] transition-all duration-300 ease-out cursor-pointer select-none flex flex-col justify-between overflow-hidden bg-white border-2 touch-pan-y ${
                   isActive
                     ? 'border-primary shadow-[0_12px_28px_-4px_rgba(93,63,211,0.22)] ring-4 ring-primary/10 scale-[1.02] z-10'
                     : 'border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.05)] hover:border-slate-200 hover:shadow-[0_8px_24px_-4px_rgba(15,23,42,0.08)] opacity-90 hover:opacity-100'
                 } active:scale-[0.98]`}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    if (!isActive) {
+                      setActiveIndex(index);
+                      if (pets[index]) onActiveChange?.(pets[index].id);
+                      centerActiveCard(index, true);
+                    }
+                  }
+                }}
                 onClick={() => {
                   if (!isActive) {
                     setActiveIndex(index)
+                    if (pets[index]) {
+                      onActiveChange?.(pets[index].id)
+                    }
                     centerActiveCard(index, true)
                   }
                 }}
@@ -255,7 +299,7 @@ export function PetSlider({ pets, onActiveChange }: { pets: Pet[], onActiveChang
 
                   {/* Gradient Overlay & Pet Name */}
                   <div className="absolute inset-x-0 bottom-0 pt-8 pb-2 px-3 bg-gradient-to-t from-black/75 via-black/30 to-transparent flex items-end">
-                    <h3 className="text-base font-bold text-white tracking-tight truncate drop-shadow-md">
+                    <h3 data-testid={`pet-card-${pet.name.toLowerCase()}`} className="text-base font-bold text-white tracking-tight truncate drop-shadow-md">
                       {pet.name}
                     </h3>
                   </div>
@@ -280,6 +324,8 @@ export function PetSlider({ pets, onActiveChange }: { pets: Pet[], onActiveChang
                   {/* Navigation Link */}
                   <Link
                     href={`/owner/pets/${pet.id}`}
+                    data-testid={`pet-profile-link-${pet.name.toLowerCase()}`}
+                    aria-label={`${pet.name} profiline git`}
                     className={`mt-1 pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-bold transition-colors ${
                       isActive ? 'text-primary' : 'text-text-secondary hover:text-primary'
                     }`}

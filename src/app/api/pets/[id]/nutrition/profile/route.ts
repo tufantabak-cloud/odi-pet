@@ -85,3 +85,6 @@ export async function POST(req: NextRequest, { params }: Params) {
 
   return NextResponse.json({ profile: data })
 }
+
+export const PATCH = POST
+export const PUT = POST
