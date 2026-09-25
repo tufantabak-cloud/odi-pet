@@ -96,6 +96,7 @@ export default function DashboardClient({
       scheduledAt: selectedAgendaPlan.scheduled_at || selectedAgendaPlan.due_date || selectedAgendaPlan.next_run,
       status: selectedAgendaPlan.status,
       petId: selectedAgendaPlan.pet_id || selectedAgendaPlan.pets?.id,
+      sourceTable: selectedAgendaPlan._source || (selectedAgendaPlan.plan_type || selectedAgendaPlan.vaccine_id ? 'health_schedules' : 'plans'),
     }
   }, [selectedAgendaPlan])
 

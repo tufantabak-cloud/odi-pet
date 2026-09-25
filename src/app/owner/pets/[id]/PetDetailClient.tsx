@@ -338,7 +338,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, a
     category: canonicalActionPlan._plan_category || canonicalActionPlan.category || ((canonicalActionPlan.title || canonicalActionPlan.taskTitle || '').toLowerCase().includes('aşı') ? 'asi' : 'saglik'),
     scheduledAt: canonicalActionPlan.due_date || canonicalActionPlan.scheduled_at,
     status: canonicalActionPlan.status,
-    petId: canonicalActionPlan.pet_id || pet.id
+    petId: canonicalActionPlan.pet_id || pet.id,
+    sourceTable: canonicalActionPlan._source || (canonicalActionPlan.plan_type || canonicalActionPlan.vaccine_id ? 'health_schedules' : 'plans'),
   } : null;
   const [activeTab, setActiveTab] = useState<'ozet'|'saglik'|'bakim'|'takvim'|'beslenme'|'veteriner'|'ekstra'>(initialTab)
 

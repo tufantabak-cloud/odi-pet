@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createServerSupabaseClient, createAdminSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
+import { hasPetCapability } from '@/lib/pets/access'
 
 export async function PATCH(
   req: NextRequest,
@@ -10,8 +11,14 @@ export async function PATCH(
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const body = await req.json()
   const supabase = await createServerSupabaseClient()
+  const canManage = await hasPetCapability(supabase, petId, 'can_manage_pet_care')
+  if (!canManage) {
+    return NextResponse.json({ error: 'Bu evcil hayvanın planlarını yönetme yetkiniz bulunmuyor.' }, { status: 403 })
+  }
+
+  const body = await req.json()
+  const adminSupabase = createAdminSupabaseClient()
 
   const updates: any = {};
   if (body.status !== undefined) {
@@ -27,20 +34,59 @@ export async function PATCH(
   }
   if (body.postpone_count !== undefined) updates.postpone_count = body.postpone_count;
 
-  // Sadece yetkili pet_id ve schedule_id güncellenebilir (SSOT - Canonical)
-  const { data, error } = await supabase
+  // 1. health_schedules tablosunda güncelle
+  const { data: scheduleData, error: scheduleError } = await adminSupabase
     .from('health_schedules')
     .update(updates)
     .eq('id', scheduleId)
     .eq('pet_id', petId)
     .select()
-    .single()
+    .maybeSingle()
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  if (scheduleError) {
+    console.error('[API/schedules PATCH] health_schedules error:', scheduleError)
+    return NextResponse.json({ error: 'Görev güncellenirken bir hata oluştu.' }, { status: 500 })
   }
 
-  return NextResponse.json(data)
+  if (scheduleData) {
+    return NextResponse.json(scheduleData)
+  }
+
+  // 2. Resilience Fallback: health_schedules'da bulunamadıysa plans tablosunu kontrol et
+  // (SSOT: 'plans' tablosundan gelen bir görevin yanlış rotaya yönlenmesi durumunda veri kaybını önler)
+  const planUpdates: any = {}
+  if (body.status !== undefined) {
+    planUpdates.status = (body.status === 'done' || body.status === 'completed') ? 'completed' : body.status;
+  }
+  if (body.due_date !== undefined || body.scheduled_at !== undefined) {
+    planUpdates.scheduled_at = body.due_date || body.scheduled_at;
+  }
+  if (body.notes !== undefined || body.note !== undefined) {
+    planUpdates.note = body.notes || body.note;
+  }
+  if (body.extra_data !== undefined) {
+    planUpdates.extra_data = body.extra_data;
+  }
+
+  const { data: planData, error: planError } = await adminSupabase
+    .from('plans')
+    .update(planUpdates)
+    .eq('id', scheduleId)
+    .eq('pet_id', petId)
+    .select()
+    .maybeSingle()
+
+  if (planError) {
+    console.error('[API/schedules PATCH] plans fallback error:', planError)
+    return NextResponse.json({ error: 'Plan güncellenirken bir hata oluştu.' }, { status: 500 })
+  }
+
+  if (planData) {
+    return NextResponse.json(planData)
+  }
+
+  // 3. Her iki tabloda da kayıt bulunamadı
+  return NextResponse.json({ error: 'Görev veya plan kaydı bulunamadı.' }, { status: 404 })
 }
 
 export async function DELETE(
@@ -52,18 +98,49 @@ export async function DELETE(
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const supabase = await createServerSupabaseClient()
+  const canManage = await hasPetCapability(supabase, petId, 'can_manage_pet_care')
+  if (!canManage) {
+    return NextResponse.json({ error: 'Bu evcil hayvanın planlarını silme yetkiniz bulunmuyor.' }, { status: 403 })
+  }
+
+  const adminSupabase = createAdminSupabaseClient()
 
   // OPOS Cilt 5 gereği: hard delete yapılmaz, iptal durumuna (cancelled) veya arşiv durumuna çekilir.
-  // "Sağlık Verisi Silinemez, Sadece Arşivlenir (Health Data Archival Only - Cilt 5)"
-  const { error } = await supabase
+  // 1. health_schedules tablosunda iptal et
+  const { data: scheduleData, error: scheduleError } = await adminSupabase
     .from('health_schedules')
     .update({ status: 'cancelled' })
     .eq('id', scheduleId)
     .eq('pet_id', petId)
+    .select()
+    .maybeSingle()
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  if (scheduleError) {
+    console.error('[API/schedules DELETE] health_schedules error:', scheduleError)
+    return NextResponse.json({ error: 'Görev iptal edilirken bir hata oluştu.' }, { status: 500 })
   }
 
-  return NextResponse.json({ success: true })
+  if (scheduleData) {
+    return NextResponse.json({ success: true })
+  }
+
+  // 2. Resilience Fallback: plans tablosunda iptal et
+  const { data: planData, error: planError } = await adminSupabase
+    .from('plans')
+    .update({ status: 'cancelled' })
+    .eq('id', scheduleId)
+    .eq('pet_id', petId)
+    .select()
+    .maybeSingle()
+
+  if (planError) {
+    console.error('[API/schedules DELETE] plans fallback error:', planError)
+    return NextResponse.json({ error: 'Plan iptal edilirken bir hata oluştu.' }, { status: 500 })
+  }
+
+  if (planData) {
+    return NextResponse.json({ success: true })
+  }
+
+  return NextResponse.json({ error: 'Görev veya plan kaydı bulunamadı.' }, { status: 404 })
 }
