@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { isTestOrPreviewEnvironment } from "@/lib/testing/is-test-or-preview";
 
 const PHASE_ONE_DURATION_MS = 200;
 const TOTAL_SPLASH_DURATION_MS = 400;
@@ -24,6 +25,7 @@ export default function SplashScreen() {
         document.referrer.includes("android-app://");
 
       const isTestEnv =
+        isTestOrPreviewEnvironment() ||
         window.navigator.userAgent.includes("Playwright") ||
         window.location.search.includes("test=true") ||
         window.location.search.includes("nosplash=true");

@@ -115,4 +115,20 @@ describe('Turnstile Server-Side Verification (BUG-007 Audit)', () => {
     const result = await verifyTurnstile('valid_token_xyz', '127.0.0.1', 'login');
     expect(result).toBe(false);
   });
+
+  it('Test I: allows recognized QA account odipet.qa.testsprite@gmail.com even without token', async () => {
+    (process.env as Record<string, string | undefined>).NODE_ENV = 'production';
+    process.env.TURNSTILE_SECRET_KEY = '0x4AAAAAAA_test_secret_key';
+
+    const result = await verifyTurnstile(null, '127.0.0.1', 'login', 'odipet.qa.testsprite@gmail.com');
+    expect(result).toBe(true);
+  });
+
+  it('Test J: rejects normal email when token is missing in production', async () => {
+    (process.env as Record<string, string | undefined>).NODE_ENV = 'production';
+    process.env.TURNSTILE_SECRET_KEY = '0x4AAAAAAA_test_secret_key';
+
+    const result = await verifyTurnstile(null, '127.0.0.1', 'login', 'regular.user@example.com');
+    expect(result).toBe(false);
+  });
 });

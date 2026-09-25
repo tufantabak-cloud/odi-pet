@@ -96,18 +96,8 @@ export default function SpotlightTour({ steps, onComplete }: SpotlightTourProps 
     onCompleteRef.current = onComplete;
   }, [onComplete]);
 
-  // PET-018 Fix: Test ortamında (Playwright / HeadlessChrome / ?test=true)
-  // driver.js overlay'ini hiç render etme. Overlay tam ekranı kaplar, 
-  // pointer-events'i bloke eder ve test araçlarının viewport emülasyonu
-  // ile mobil navigasyon testlerini engeller.
-  const isTestEnv =
-    typeof window !== 'undefined' &&
-    (window.navigator.userAgent.includes('Playwright') ||
-      window.navigator.userAgent.includes('HeadlessChrome') ||
-      window.location.search.includes('test=true') ||
-      window.location.search.includes('notour=true'));
-
   useEffect(() => {
+    if (!isReady || !isEnabled) return;
     // Inject custom CSS
     const styleId = 'odi-driver-css';
     if (!document.getElementById(styleId)) {
@@ -116,13 +106,12 @@ export default function SpotlightTour({ steps, onComplete }: SpotlightTourProps 
       style.innerHTML = driverCssOverride;
       document.head.appendChild(style);
     }
-  }, []);
+  }, [isReady, isEnabled]);
 
   // Effect 1: Wizard-driven tour
   useEffect(() => {
     if (!steps || steps.length === 0) return;
     if (!isReady || !isEnabled) return;
-    if (isTestEnv) return; // PET-018: test ortamında overlay başlatma
 
     if (hasStarted.current) return;
 
@@ -220,7 +209,6 @@ export default function SpotlightTour({ steps, onComplete }: SpotlightTourProps 
     if (steps && steps.length > 0) return;
 
     if (!isReady || !isEnabled) return;
-    if (isTestEnv) return; // PET-018: test ortamında global overlay başlatma
 
     const globalDriver = driver({
       showProgress: false,

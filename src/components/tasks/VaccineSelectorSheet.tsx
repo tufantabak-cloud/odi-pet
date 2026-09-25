@@ -111,8 +111,17 @@ export default function VaccineSelectorSheet({
     try {
       const supabase = createBrowserSupabaseClient();
       const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) throw new Error('Oturum bulunamadı.');
+      let currentUserId = user?.id;
+      if (!currentUserId) {
+        try {
+          const meRes = await fetch('/api/auth/me', { credentials: 'include' });
+          if (meRes.ok) {
+            const meData = await meRes.json();
+            if (meData.user?.id) currentUserId = meData.user.id;
+          }
+        } catch {}
+      }
+      if (!currentUserId) throw new Error('Oturum bulunamadı.');
 
       const speciesEng = (species?.toLowerCase() === 'kedi' || species?.toLowerCase() === 'cat') ? 'cat' : 'dog';
 

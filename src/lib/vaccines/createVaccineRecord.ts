@@ -173,6 +173,50 @@ export async function createVaccineRecord(
       }
     }
 
+    // ── 2.5. Idempotency / Duplicate Check ────────────────────────────────
+    if (input.idempotency_key) {
+      const { data: existingByKey } = await supabase
+        .from('vaccine_records_v2')
+        .select('*')
+        .eq('pet_id', input.pet_id)
+        .eq('idempotency_key', input.idempotency_key)
+        .maybeSingle()
+
+      if (existingByKey) {
+        return {
+          success: true,
+          record: existingByKey as Record<string, unknown>,
+          brand_resolution: brandResolution,
+          protocol_resolved: protocolResolved,
+        }
+      }
+    }
+
+    if (input.administered_at && resolvedVaccineName) {
+      const adminDate = input.administered_at.includes('T')
+        ? input.administered_at.split('T')[0]
+        : input.administered_at
+
+      const { data: existingSameDay } = await supabase
+        .from('vaccine_records_v2')
+        .select('*')
+        .eq('pet_id', input.pet_id)
+        .eq('vaccine_name', resolvedVaccineName)
+        .gte('administered_at', `${adminDate}T00:00:00`)
+        .lte('administered_at', `${adminDate}T23:59:59.999Z`)
+        .or('is_archived.is.null,is_archived.eq.false')
+        .maybeSingle()
+
+      if (existingSameDay) {
+        return {
+          success: true,
+          record: existingSameDay as Record<string, unknown>,
+          brand_resolution: brandResolution,
+          protocol_resolved: protocolResolved,
+        }
+      }
+    }
+
     // ── 3. vaccine_records_v2 insert ─────────────────────────────────────
     const { data: record, error: insertError } = await supabase
       .from('vaccine_records_v2')

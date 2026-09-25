@@ -7,6 +7,7 @@ import { GlassCard } from '@/components/ui/primitives'
 import { MapPin, Bell, X, Check, Loader2, AlertCircle, ShieldAlert, Smartphone } from 'lucide-react'
 import { detectPlatformAndBrowser } from '@/lib/notifications/web-push-client'
 import IosPermissionGuideModal from './IosPermissionGuideModal'
+import { isTestOrPreviewEnvironment } from '@/lib/testing/is-test-or-preview'
 
 const ONBOARDING_KEY = 'odi_permission_onboarding_completed'
 
@@ -141,6 +142,7 @@ export default function PermissionOnboarding() {
     }
   }
 
+  if (isTestOrPreviewEnvironment()) return null
   if (!show && !showIosGuide) return null
 
   const isAllGranted = locSuccess && notifSuccess

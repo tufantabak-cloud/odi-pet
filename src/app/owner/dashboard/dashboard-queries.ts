@@ -150,10 +150,11 @@ async function fetchDashboardData(uid: string): Promise<DashboardData> {
               .in('id', petMembershipPetIds)
               .order('created_at', { ascending: false })
 
-        const { data: pets, error: petsError } = petResult
+        const rawPets = (petResult.data ?? []) as DashboardPet[]
+        const pets = rawPets.filter((p: any) => !p.is_archived)
 
-        if (petsError) {
-          console.error('[dashboard] pets fetch failed:', petsError.message)
+        if (petResult.error) {
+          console.error('[dashboard] pets fetch failed:', petResult.error.message)
         }
 
         /* ── Health schedules (sessiz) ───────────────────── */
@@ -397,7 +398,12 @@ async function fetchDashboardData(uid: string): Promise<DashboardData> {
 }
 
 export async function getCachedDashboardData(userId: string): Promise<DashboardData> {
-  if (process.env.PLAYWRIGHT_TEST === 'true') {
+  if (
+    process.env.PLAYWRIGHT_TEST === 'true' ||
+    process.env.NODE_ENV === 'test' ||
+    process.env.VERCEL_ENV === 'preview' ||
+    process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview'
+  ) {
     return fetchDashboardData(userId)
   }
 
@@ -406,7 +412,7 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
     [`dashboard-${userId}`],
     {
       tags: [`dashboard-${userId}`, 'dashboard'],
-      revalidate: 30, // 30 saniye TTL
+      revalidate: 10,
     }
   )
 

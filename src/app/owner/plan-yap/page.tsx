@@ -98,16 +98,17 @@ function PlanYapContent() {
   // Step 0: Pet Selection
   if (!selectedPet) {
     return (
-      <div className="min-h-screen bg-surface flex flex-col md:justify-center transition-colors duration-700">
-        <div className="p-6 max-w-md mx-auto w-full animate-in fade-in duration-300 pt-12 md:pt-6">
+      <div className="w-full flex flex-col items-center justify-center transition-colors duration-700 py-2 sm:py-6">
+        <div className="p-4 sm:p-6 max-w-md mx-auto w-full animate-in fade-in duration-300">
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-3 bg-indigo-100 rounded-2xl">
+            <div className="p-3 bg-indigo-100 rounded-2xl shrink-0">
               <Semi3DIcon svgPath={PetIcons.DefaultAvatar} className="w-8 h-8 text-indigo-600" />
             </div>
-            <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-center gap-3">
               <button
                 onClick={() => router.back()}
-                className="w-11 h-11 rounded-xl bg-bg-main border border-border-main flex items-center justify-center hover:bg-surface-hover transition-colors active:scale-95"
+                data-testid="plan-yap-back-btn"
+                className="w-11 h-11 rounded-xl bg-bg-main border border-border-main flex items-center justify-center hover:bg-surface-hover transition-colors active:scale-95 shrink-0"
                 aria-label="Geri dön"
               >
                 <ArrowLeft size={20} className="text-text-secondary" />
@@ -115,7 +116,7 @@ function PlanYapContent() {
               <h1 className="text-[22px] font-black text-text-primary">{isLog ? 'Kayıt Ekle' : 'Rutin Planla'}</h1>
             </div>
           </div>
-          <p className="text-text-secondary mb-8 ml-1">{isLog ? 'Hangi dostunuz için kayıt ekliyoruz?' : 'Kimin için plan oluşturuyoruz?'}</p>
+          <p className="text-text-secondary mb-6 ml-1">{isLog ? 'Hangi dostunuz için kayıt ekliyoruz?' : 'Kimin için plan oluşturuyoruz?'}</p>
           
           {isLoadingPets ? (
             <div className="space-y-4 animate-pulse">
@@ -123,11 +124,13 @@ function PlanYapContent() {
                <div className="h-20 bg-gray-200 rounded-3xl" />
             </div>
           ) : pets.length > 0 ? (
-            <div className="space-y-4" role="list">
+            <div className="space-y-4" role="list" data-testid="pet-selection-list">
               {pets.map(pet => (
                 <button
                   key={pet.id}
                   role="listitem"
+                  data-testid={`pet-card-${pet.name.toLowerCase()}`}
+                  data-testid-select={`pet-select-${pet.name.toLowerCase()}`}
                   aria-label={`${pet.name} profili için plan oluştur`}
                   onClick={() => {
                     setSelectedPet(pet.id);
@@ -162,8 +165,8 @@ function PlanYapContent() {
 
   // Category Selection
   return (
-    <div className="min-h-screen bg-surface flex flex-col md:justify-center p-6 transition-colors duration-700">
-      <div className="max-w-md mx-auto w-full flex flex-col animate-in fade-in duration-300">
+    <div className="w-full flex flex-col items-center justify-center transition-colors duration-700 py-2 sm:py-6">
+      <div className="max-w-md mx-auto w-full flex flex-col animate-in fade-in duration-300 p-2 sm:p-4">
         
         {/* Active Pet Header */}
         <div className="flex items-center justify-between mb-6 bg-white p-4 rounded-3xl shadow-sm border border-gray-100">
@@ -177,7 +180,7 @@ function PlanYapContent() {
             </div>
             <div>
               <p className="text-[11px] text-text-secondary font-bold uppercase tracking-wider">Aktif Profil</p>
-              <h2 className="text-[13px] font-black text-text-primary">{activePetInfo?.name}</h2>
+              <h2 className="text-[13px] font-black text-text-primary" data-testid="active-pet-name">{activePetInfo?.name}</h2>
             </div>
           </div>
           {pets.length > 1 && (
@@ -186,7 +189,8 @@ function PlanYapContent() {
                 setSelectedPet(null);
                 router.push(isLog ? '/owner/plan-yap?mode=log' : '/owner/plan-yap');
               }}
-              className="text-[12px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-colors px-3 py-1.5 rounded-xl"
+              data-testid="change-active-pet-btn"
+              className="text-[12px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-colors px-3 py-1.5 rounded-xl cursor-pointer"
             >
               Değiştir
             </button>
@@ -202,7 +206,8 @@ function PlanYapContent() {
                 router.push('/owner/dashboard')
               }
             }}
-            className="w-11 h-11 bg-white rounded-xl shadow-sm text-text-secondary hover:text-text-primary flex items-center justify-center border border-gray-100 transition-all active:scale-95"
+            data-testid="plan-yap-back-btn"
+            className="w-11 h-11 bg-white rounded-xl shadow-sm text-text-secondary hover:text-text-primary flex items-center justify-center border border-gray-100 transition-all active:scale-95 shrink-0"
             aria-label="Geri dön"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -212,23 +217,25 @@ function PlanYapContent() {
         <p className="text-text-secondary text-[12px] mb-6 ml-1">{isLog ? 'Yapılan işlemin kategorisini seçin.' : 'Lütfen plan oluşturmak istediğiniz kategoriyi seçin.'}</p>
 
         {/* Categories List */}
-        <div className="space-y-3" role="list">
+        <div className="space-y-3 w-full" role="list" data-testid="plan-yap-category-list">
           {CATEGORIES.map(category => (
             <button
               key={category.key}
               role="listitem"
+              data-testid={`category-btn-${category.key}`}
+              data-testid-cat={category.key}
               aria-label={`${category.title} plan sihirbazını başlat`}
               onClick={() => {
                 router.push(`/owner/plan-yap/${category.key}?pet_id=${selectedPet}${modeSuffix}`);
               }}
-              className="w-full flex items-start p-4 bg-white border border-gray-100 rounded-3xl shadow-sm hover:shadow-md hover:border-gray-200 transition-all group focus:outline-none focus:ring-4 focus:ring-slate-300/30 text-left"
+              className="w-full flex items-start p-4 bg-white border border-gray-100 rounded-3xl shadow-sm hover:shadow-md hover:border-gray-200 transition-all group focus:outline-none focus:ring-4 focus:ring-slate-300/30 text-left cursor-pointer"
             >
               {category.renderIcon()}
               <div className="ml-4 flex-1">
                 <span className="font-bold text-text-primary text-[13px] block">{category.title}</span>
                 <span className="text-[11px] text-text-secondary mt-0.5 block leading-relaxed">{category.desc}</span>
               </div>
-              <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-text-secondary transition-colors self-center ml-2" aria-hidden="true" />
+              <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-text-secondary transition-colors self-center ml-2 shrink-0" aria-hidden="true" />
             </button>
           ))}
         </div>

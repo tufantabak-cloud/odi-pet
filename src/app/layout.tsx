@@ -77,7 +77,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr" className="antialiased h-full">
-      <head />
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover" />
+      </head>
       <body className="min-h-full flex flex-col font-sans text-[16px] bg-bg-main text-text-primary">
         <PwaEnforcer />
         <SplashScreen />

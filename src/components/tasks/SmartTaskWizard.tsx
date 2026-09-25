@@ -497,7 +497,17 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
 
       // ── CREATE MODE ──────────────────────────────────────────────
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Oturum bulunamadı.');
+      let currentUserId = user?.id;
+      if (!currentUserId) {
+        try {
+          const meRes = await fetch('/api/auth/me', { credentials: 'include' });
+          if (meRes.ok) {
+            const meData = await meRes.json();
+            if (meData.user?.id) currentUserId = meData.user.id;
+          }
+        } catch {}
+      }
+      if (!currentUserId) throw new Error('Oturum bulunamadı.');
 
       let planId = null;
       if (formData.frequency !== 'once') {

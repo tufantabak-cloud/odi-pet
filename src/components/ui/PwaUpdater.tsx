@@ -2,6 +2,7 @@
  
 import { useEffect, useRef, useState } from "react";
 import { RefreshCw, X } from "lucide-react";
+import { isTestOrPreviewEnvironment } from "@/lib/testing/is-test-or-preview";
  
 export default function PwaUpdater() {
   const [showUpdate, setShowUpdate] = useState(false);
@@ -141,7 +142,7 @@ export default function PwaUpdater() {
     }, 5 * 60 * 1000); // 5 dakika
   };
  
-  if (!showUpdate) return null;
+  if (!showUpdate || isTestOrPreviewEnvironment()) return null;
  
   return (
     <div className="fixed bottom-24 left-4 right-4 md:bottom-8 md:left-auto md:right-8 md:w-96 z-[999999] animate-in slide-in-from-bottom-5 fade-in duration-500">
