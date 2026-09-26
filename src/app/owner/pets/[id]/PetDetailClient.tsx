@@ -326,7 +326,9 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, a
       ? 'bakim'
       : (tabParam === 'takvim' || tabParam === 'ekstra' || tabParam === 'beslenme' || tabParam === 'veteriner')
         ? tabParam
-        : 'ozet'
+        : (tabParam === 'estrus' || tabParam === 'kizginlik')
+          ? 'takvim'
+          : 'ozet'
 
   const [canonicalActionPlan, setCanonicalActionPlan] = useState<any>(null);
   const [initialModalDetails, setInitialModalDetails] = useState<any>(null);
@@ -351,7 +353,9 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, a
           ? 'bakim'
           : (tabParam === 'takvim' || tabParam === 'ekstra' || tabParam === 'beslenme' || tabParam === 'veteriner')
             ? tabParam
-            : null;
+            : (tabParam === 'estrus' || tabParam === 'kizginlik')
+              ? 'takvim'
+              : null;
       if (targetTab) {
         setActiveTab(targetTab as any);
       }
@@ -2034,7 +2038,12 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, a
       </div>
 
       {pet.gender === 'female' && !pet.is_neutered && (
-        <EstrusTracker petId={pet.id} petSpecies={pet.species} />
+        <EstrusTracker
+          petId={pet.id}
+          petSpecies={pet.species}
+          autoOpenNewModal={searchParams?.get('action') === 'new-cycle'}
+          returnUrl={searchParams?.get('return_url')}
+        />
       )}
 
       </div>
