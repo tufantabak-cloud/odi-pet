@@ -17,6 +17,7 @@ interface Adoption {
   story: string | null
   requirements: string[] | null
   created_at: string
+  special_needs?: string | null
 }
 
 const AVAILABLE_REQUIREMENTS = [
@@ -37,9 +38,11 @@ export default function AdoptionTab({ pet }: { pet: PetRow }) {
   
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false)
+  const [showCompleteConfirm, setShowCompleteConfirm] = useState(false)
 
   // Form states
   const [storyInput, setStoryInput] = useState('')
+  const [specialNeedsInput, setSpecialNeedsInput] = useState('')
   const [selectedRequirements, setSelectedRequirements] = useState<string[]>([])
   const [cityInput, setCityInput] = useState<string>(pet.city || '')
 
@@ -51,6 +54,7 @@ export default function AdoptionTab({ pet }: { pet: PetRow }) {
   }
 
   const isActive = adoption?.status === 'active'
+  const isCompleted = adoption?.status === 'completed'
 
   const fetchAdoption = useCallback(async () => {
     try {
@@ -69,13 +73,16 @@ export default function AdoptionTab({ pet }: { pet: PetRow }) {
     if (adoption?.story) {
       setStoryInput(adoption.story)
     }
+    if (adoption?.special_needs) {
+      setSpecialNeedsInput(adoption.special_needs)
+    }
     if (adoption?.requirements) {
       setSelectedRequirements(adoption.requirements)
     }
     if (pet.city) {
       setCityInput(pet.city)
     }
-  }, [adoption?.story, adoption?.requirements, pet.city, isEditing])
+  }, [adoption?.story, adoption?.special_needs, adoption?.requirements, pet.city, isEditing])
 
   const getAgeText = (birthDate?: string | null) => {
     if (!birthDate) return ''
@@ -102,7 +109,8 @@ export default function AdoptionTab({ pet }: { pet: PetRow }) {
           action: isActive ? 'cancel' : 'activate',
           story: isActive ? null : storyInput,
           requirements: isActive ? null : selectedRequirements,
-          city: cityInput
+          city: cityInput,
+          special_needs: isActive ? null : specialNeedsInput
         }),
       })
       const data = await res.json()
@@ -120,6 +128,31 @@ export default function AdoptionTab({ pet }: { pet: PetRow }) {
     } finally { setToggling(false) }
   }
 
+  async function handleComplete() {
+    setToggling(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/pets/${pet.id}/adoption`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'complete' }),
+      })
+      const data = await res.json()
+      if (!res.ok) { 
+        setError(data.error || 'İşlem sırasında bir hata oluştu.')
+        showToast(data.error || 'Bir hata oluştu.', 'error')
+        return 
+      }
+      showToast('Tebrikler! Petiniz yeni yuvasına kavuştu 🎉', 'success')
+      setShowCompleteConfirm(false)
+      fetchAdoption()
+    } catch {
+      showToast('Bağlantı hatası.', 'error')
+    } finally { 
+      setToggling(false) 
+    }
+  }
+
   async function handleUpdate() {
     setToggling(true)
     setError(null)
@@ -130,7 +163,8 @@ export default function AdoptionTab({ pet }: { pet: PetRow }) {
         body: JSON.stringify({ 
           story: storyInput,
           requirements: selectedRequirements,
-          city: cityInput
+          city: cityInput,
+          special_needs: specialNeedsInput
         }),
       })
       const data = await res.json()
@@ -197,8 +231,17 @@ export default function AdoptionTab({ pet }: { pet: PetRow }) {
       <div className="p-6 bg-white border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] rounded-3xl flex flex-col items-center text-center gap-5">
         
         {isActive && !isEditing && (
-          <div className="w-full flex justify-end">
+          <div className="w-full flex items-center justify-end gap-2 flex-wrap">
             <button 
+              type="button"
+              onClick={() => setShowCompleteConfirm(true)}
+              className="text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 px-3.5 py-1.5 rounded-xl transition-all active:scale-[0.98] flex items-center gap-1.5 shadow-sm shadow-emerald-500/10"
+            >
+              <Heart className="w-3.5 h-3.5 text-emerald-600 fill-emerald-600/30" />
+              Sahiplendirildi Olarak İşaretle
+            </button>
+            <button 
+              type="button"
               onClick={() => setIsEditing(true)}
               className="text-xs font-bold text-violet-700 bg-violet-50 px-3.5 py-1.5 rounded-xl hover:bg-violet-100 transition-colors"
             >
@@ -208,19 +251,33 @@ export default function AdoptionTab({ pet }: { pet: PetRow }) {
         )}
 
         <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm transition-colors ${
-          isActive
+          isCompleted
+            ? 'bg-gradient-to-tr from-emerald-100 to-teal-50 text-emerald-600'
+            : isActive
             ? 'bg-gradient-to-tr from-emerald-100 to-teal-50 text-emerald-600'
             : 'bg-gradient-to-tr from-violet-100 to-indigo-50 text-violet-600'
         }`}>
-          {isActive ? <CheckCircle2 className="w-7 h-7 stroke-[2]" /> : <Home className="w-7 h-7 stroke-[2]" />}
+          {isCompleted ? (
+            <Heart className="w-7 h-7 stroke-[2] fill-emerald-600/30" />
+          ) : isActive ? (
+            <CheckCircle2 className="w-7 h-7 stroke-[2]" />
+          ) : (
+            <Home className="w-7 h-7 stroke-[2]" />
+          )}
         </div>
         
         <div>
           <h3 className="font-extrabold text-slate-900 text-lg mb-1">
-            {isActive ? 'İlan Aktif' : 'Yeni Bir Yuva Bul'}
+            {isCompleted
+              ? `Tebrikler! ${pet.name} Yeni Yuvasına Kavuştu 🎉`
+              : isActive
+              ? 'İlan Aktif'
+              : 'Yeni Bir Yuva Bul'}
           </h3>
           <p className="text-xs text-slate-500 font-normal leading-relaxed max-w-sm mx-auto">
-            {isActive
+            {isCompleted
+              ? `${pet.name} için sahiplendirme süreci başarıyla tamamlandı. İlan yayından kaldırıldı ve arşive alındı.`
+              : isActive
               ? `${pet.name} şu anda sahiplendirme sekmesinde yuva arıyor.`
               : `${pet.name} için sahiplendirme ilanı oluşturun. İlan ${speciesLower} sahiplenmek isteyen tüm kullanıcılara gösterilecektir.`}
           </p>
@@ -236,6 +293,13 @@ export default function AdoptionTab({ pet }: { pet: PetRow }) {
               <p className="text-xs text-slate-600 italic">"{adoption.story}"</p>
             </div>
           )}
+
+          {isActive && !isEditing && adoption?.special_needs && (
+            <div className="mt-3 p-3.5 bg-amber-50/60 rounded-2xl border border-amber-100 text-left">
+              <span className="text-2xs font-bold text-amber-800 uppercase tracking-wider block mb-0.5">Özel Bakım veya İhtiyaç Notu</span>
+              <p className="text-xs text-amber-900">{adoption.special_needs}</p>
+            </div>
+          )}
           
           {isActive && !isEditing && adoption?.requirements && adoption.requirements.length > 0 && (
             <div className="mt-3 flex flex-wrap justify-center gap-1.5">
@@ -248,7 +312,7 @@ export default function AdoptionTab({ pet }: { pet: PetRow }) {
           )}
         </div>
 
-        {(!isActive || isEditing) && (
+        {((!isActive && !isCompleted) || isEditing) && (
           <div className="w-full text-left mt-1 flex flex-col gap-4">
             <div>
               <label className="text-xs font-semibold text-slate-700 ml-1">İlan Şehri / Konum</label>
@@ -275,6 +339,20 @@ export default function AdoptionTab({ pet }: { pet: PetRow }) {
               />
               <span className="text-2xs text-slate-400 ml-1 mt-1 block">
                 {isEditing ? 'En az 20, en fazla 500 karakter' : 'En fazla 500 karakter'}
+              </span>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-slate-700 ml-1">Özel Bakım veya İhtiyaç Notu (Opsiyonel)</label>
+              <textarea
+                value={specialNeedsInput}
+                onChange={(e) => setSpecialNeedsInput(e.target.value)}
+                placeholder="Varsa kronik rahatsızlık, özel diyet veya dikkat edilmesi gereken bakım ihtiyaçları..."
+                className="w-full min-h-[80px] mt-1.5 p-3.5 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all text-xs font-normal text-slate-900 placeholder:text-slate-400"
+                maxLength={500}
+              />
+              <span className="text-2xs text-slate-400 ml-1 mt-1 block">
+                En fazla 500 karakter
               </span>
             </div>
             
@@ -313,20 +391,29 @@ export default function AdoptionTab({ pet }: { pet: PetRow }) {
         )}
 
         {!isEditing ? (
-          <button
-            onClick={handleToggle}
-            disabled={toggling}
-            className={`w-full py-3.5 text-xs font-extrabold rounded-2xl transition-all active:scale-[0.98] disabled:opacity-60 shadow-sm ${
-              isActive
-                ? 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                : 'bg-violet-600 hover:bg-violet-700 text-white shadow-violet-600/20'
-            }`}
-          >
-            {toggling
-              ? (isActive ? 'Kapatılıyor...' : 'Oluşturuluyor...')
-              : (isActive ? 'İlanı Kapat' : 'İlan Oluştur')
-            }
-          </button>
+          isCompleted ? (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="w-full py-3.5 text-xs font-bold rounded-2xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all active:scale-[0.98] shadow-sm"
+            >
+              İhtiyaç Halinde Yeniden İlan Oluştur
+            </button>
+          ) : (
+            <button
+              onClick={handleToggle}
+              disabled={toggling}
+              className={`w-full py-3.5 text-xs font-extrabold rounded-2xl transition-all active:scale-[0.98] disabled:opacity-60 shadow-sm ${
+                isActive
+                  ? 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  : 'bg-violet-600 hover:bg-violet-700 text-white shadow-violet-600/20'
+              }`}
+            >
+              {toggling
+                ? (isActive ? 'Kapatılıyor...' : 'Oluşturuluyor...')
+                : (isActive ? 'İlanı Kapat' : 'İlan Oluştur')
+              }
+            </button>
+          )
         ) : (
           <div className="w-full flex gap-3">
             <button
@@ -346,6 +433,47 @@ export default function AdoptionTab({ pet }: { pet: PetRow }) {
           </div>
         )}
       </div>
+
+      {/* Sahiplendirildi Onay Modalı */}
+      {showCompleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="w-full max-w-sm bg-white rounded-3xl border border-slate-100 p-6 shadow-2xl text-center space-y-4 relative">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 mx-auto flex items-center justify-center">
+              <Heart className="w-7 h-7 fill-emerald-600/30" />
+            </div>
+
+            <div>
+              <h3 className="text-base font-extrabold text-slate-900">
+                Sahiplendirmeyi Tamamla
+              </h3>
+              <p className="text-xs font-semibold text-slate-500 mt-1">{pet.name}</p>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
+              {pet.name}'in yeni yuvasına kavuştuğunu onaylıyor musunuz? İlan yayından kaldırılacak ve sahiplendirildi olarak işaretlenecektir.
+            </p>
+
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowCompleteConfirm(false)}
+                disabled={toggling}
+                className="flex-1 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all active:scale-[0.98] disabled:opacity-50"
+              >
+                Vazgeç
+              </button>
+              <button
+                type="button"
+                onClick={handleComplete}
+                disabled={toggling}
+                className="flex-1 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-sm shadow-emerald-600/20 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-1.5"
+              >
+                {toggling ? 'İşleniyor...' : 'Evet, Sahiplendirildi'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Floating Toast */}
       {toastMsg && (

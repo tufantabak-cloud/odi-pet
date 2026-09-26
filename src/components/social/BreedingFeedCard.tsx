@@ -1,13 +1,14 @@
 import React, { useState } from 'react'
 import Image from 'next/image'
 import { PetSelectorModal } from './PetSelectorModal'
-import { Heart, Sparkles, MapPin, Check, ChevronRight } from 'lucide-react'
+import { Heart, Sparkles, MapPin, Check, ChevronRight, Camera } from 'lucide-react'
 import { getSpeciesLabel } from '@/lib/species'
 
 export function BreedingFeedCard({ listing, userApplications = [] }: { listing: any, userApplications?: any[] }) {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  const { pets: pet, title, notes, photo_url, experience_level } = listing
+  const { pets: pet, title, notes, photo_url, experience_level, additional_photos } = listing
+  const hasAdditionalPhotos = additional_photos && Array.isArray(additional_photos) && additional_photos.length > 0
 
   if (!pet) return null
 
@@ -60,6 +61,13 @@ export function BreedingFeedCard({ listing, userApplications = [] }: { listing: 
             {pet.gender === 'male' && <span className="px-1.5 py-0.5 rounded-md bg-blue-600/90 text-white text-2xs font-extrabold shadow-sm">♂ Erkek</span>}
             {pet.gender === 'female' && <span className="px-1.5 py-0.5 rounded-md bg-pink-600/90 text-white text-2xs font-extrabold shadow-sm">♀ Dişi</span>}
           </div>
+
+          {hasAdditionalPhotos && (
+            <div className="absolute bottom-1.5 right-1.5 bg-black/60 backdrop-blur-sm text-white text-2xs font-semibold px-1.5 py-0.5 rounded-md flex items-center gap-1 shadow-sm">
+              <Camera className="w-3 h-3 stroke-[2]" />
+              <span>+{additional_photos.length}</span>
+            </div>
+          )}
         </div>
 
         {/* Right: Info & Actions */}

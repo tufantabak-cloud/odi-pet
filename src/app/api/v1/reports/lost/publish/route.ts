@@ -220,6 +220,12 @@ export async function POST(request: Request) {
             : null,
         source_session_id: parsedRequest.data.sessionId,
         ...(lastSeenAt ? { last_seen_at: lastSeenAt } : {}),
+        distinctive_features: parsedPayload.data.distinctiveFeatures ?? (location as any)?.distinctiveFeatures ?? null,
+        collar_info: parsedPayload.data.collarInfo ?? (location as any)?.collarInfo ?? null,
+        color: parsedPayload.data.color ?? (location as any)?.color ?? null,
+        additional_photos: parsedPayload.data.additionalPhotos 
+          ?? (parsedPayload.data.photo && 'additionalPhotos' in parsedPayload.data.photo ? (parsedPayload.data.photo as any).additionalPhotos : []) 
+          ?? [],
         status: 'active',
       })
       .select('id')

@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import Image from 'next/image'
 import {
   AlertTriangle, Clock, MapPin, Share2, Phone,
-  CheckCircle2, X, Loader2
+  CheckCircle2, X, Loader2, Camera
 } from 'lucide-react'
 import { translateSpecies, getAge } from '@/lib/utils/petLabels'
 
@@ -241,9 +241,17 @@ export function LostFeaturedCard({ report }: { report: any }) {
 
         {/* Top Header: Badge & Share */}
         <div className="absolute top-3 left-3 right-3 flex justify-between items-center z-10">
-          <span className="bg-rose-600/90 backdrop-blur-md text-white text-2xs font-extrabold px-2.5 py-1 rounded-xl shadow-sm flex items-center gap-1 animate-pulse">
-            <AlertTriangle className="w-3 h-3 stroke-[2.5]" /> Acil Kayıp
-          </span>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="bg-rose-600/90 backdrop-blur-md text-white text-2xs font-extrabold px-2.5 py-1 rounded-xl shadow-sm flex items-center gap-1 animate-pulse">
+              <AlertTriangle className="w-3 h-3 stroke-[2.5]" /> Acil Kayıp
+            </span>
+            {report.additional_photos && report.additional_photos.length > 0 && (
+              <span className="bg-black/60 backdrop-blur-md text-white text-2xs font-bold px-2 py-1 rounded-xl shadow-sm flex items-center gap-1">
+                <Camera className="w-3 h-3 stroke-[2]" />
+                +{report.additional_photos.length}
+              </span>
+            )}
+          </div>
           <button
             type="button"
             onClick={handleShare}
@@ -260,9 +268,28 @@ export function LostFeaturedCard({ report }: { report: any }) {
             <p className="text-xs text-white/90 font-medium truncate drop-shadow-sm">
               {[speciesLabel, pet.breed, ageText].filter(Boolean).join(' • ')}
             </p>
+            {(report.color || report.collar_info) && (
+              <div className="flex flex-wrap items-center gap-1 mt-1">
+                {report.color && (
+                  <span className="px-1.5 py-0.5 rounded-md bg-white/20 backdrop-blur-sm text-white text-2xs font-semibold">
+                    {report.color}
+                  </span>
+                )}
+                {report.collar_info && (
+                  <span className="px-1.5 py-0.5 rounded-md bg-amber-400/30 border border-amber-300/40 text-amber-200 text-2xs font-semibold truncate max-w-[130px]">
+                    {report.collar_info}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="bg-white/10 backdrop-blur-md rounded-xl p-2 border border-white/15 flex flex-col gap-0.5 text-2xs text-white/90">
+            {report.distinctive_features && (
+              <p className="text-white/95 font-medium line-clamp-1 truncate">
+                <span className="text-white/70">Özellik:</span> {report.distinctive_features}
+              </p>
+            )}
             <p className="font-medium flex items-center gap-1 truncate">
               <MapPin className="w-3 h-3 text-rose-400 stroke-[2] shrink-0" />
               <span className="truncate">{report.last_seen_location}</span>

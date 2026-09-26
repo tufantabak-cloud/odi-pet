@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import Image from 'next/image'
-import { HeartHandshake, ShieldCheck, X, Heart, MapPin } from 'lucide-react'
+import { HeartHandshake, ShieldCheck, X, Heart, MapPin, Camera } from 'lucide-react'
 
 export function AdoptionFeedCard({ 
   adoption, 
@@ -11,7 +11,7 @@ export function AdoptionFeedCard({
   currentUserId?: string;
   onApply?: (listingId: string) => void;
 }) {
-  const { pet, story, requirements, created_at, user_id, id } = adoption
+  const { pet, story, requirements, created_at, user_id, id, additional_photos } = adoption
 
   const [showModal, setShowModal] = useState(false)
   const [message, setMessage] = useState('')
@@ -65,6 +65,8 @@ export function AdoptionFeedCard({
     }
   }
 
+  const hasAdditionalPhotos = Array.isArray(additional_photos) && additional_photos.length > 0
+
   return (
     <>
       <div className="rounded-3xl bg-white border border-slate-100/80 p-3 flex gap-3.5 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] relative overflow-hidden transition-all hover:shadow-md group items-center">
@@ -82,6 +84,13 @@ export function AdoptionFeedCard({
           ) : (
             <div className="w-full h-full flex items-center justify-center text-slate-300">
               <HeartHandshake className="w-8 h-8 stroke-[1.5]" />
+            </div>
+          )}
+
+          {hasAdditionalPhotos && (
+            <div className="absolute bottom-1.5 right-1.5 bg-black/60 backdrop-blur-sm text-white text-2xs font-semibold px-1.5 py-0.5 rounded-md flex items-center gap-1 shadow-sm">
+              <Camera className="w-3 h-3 stroke-[2]" />
+              <span>+{additional_photos.length}</span>
             </div>
           )}
         </div>
@@ -117,9 +126,17 @@ export function AdoptionFeedCard({
 
           {/* Bottom row: Badge & CTA Button */}
           <div className="flex items-center justify-between gap-2 mt-2 pt-1">
-            <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-2xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100">
-              Aşıları Tam
-            </span>
+            <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+              {pet?.is_neutered ? (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-2xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                  Kısırlaştırılmış
+                </span>
+              ) : (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-2xs font-semibold bg-violet-50 text-violet-700 border border-violet-100">
+                  Yuva Arıyor
+                </span>
+              )}
+            </div>
 
             {!isOwner ? (
               <button 

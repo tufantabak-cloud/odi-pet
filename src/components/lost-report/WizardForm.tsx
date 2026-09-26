@@ -194,12 +194,20 @@ export function WizardForm({
             sessionId={sessionId}
             defaultPhotoUrl={pets.find((p) => p.id === payload.petId)?.avatar_url}
             petName={pets.find((p) => p.id === payload.petId)?.name}
-            onNext={(photo) => void saveDraftAndAdvance({ photo }, 3)}
+            onNext={(photo) => void saveDraftAndAdvance({ 
+              photo, 
+              additionalPhotos: photo.additionalPhotos 
+            }, 3)}
           />
         )}
         {step === 3 && (
           <LocationForm
-            onNext={(location) => void saveDraftAndAdvance({ location }, 4)}
+            onNext={(location) => void saveDraftAndAdvance({ 
+              location,
+              color: location.color,
+              collarInfo: location.collarInfo,
+              distinctiveFeatures: location.distinctiveFeatures
+            }, 4)}
           />
         )}
         {step === 4 && (

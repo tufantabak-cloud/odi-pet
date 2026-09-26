@@ -1,12 +1,13 @@
 import React, { useState } from 'react'
 import Image from 'next/image'
-import { Heart, Sparkles, MapPin, Check, ChevronRight } from 'lucide-react'
+import { Heart, Sparkles, MapPin, Check, ChevronRight, Camera } from 'lucide-react'
 import { PetSelectorModal } from './PetSelectorModal'
 import { getSpeciesLabel } from '@/lib/species'
 
 export function BreedingFeaturedCard({ listing, userApplications = [] }: { listing: any, userApplications?: any[] }) {
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const { pets: pet, title, notes, photo_url, experience_level } = listing
+  const { pets: pet, title, notes, photo_url, experience_level, additional_photos } = listing
+  const hasAdditionalPhotos = additional_photos && Array.isArray(additional_photos) && additional_photos.length > 0
 
   if (!pet) return null
 
@@ -53,9 +54,16 @@ export function BreedingFeaturedCard({ listing, userApplications = [] }: { listi
 
         {/* Top Header: Badge & Gender */}
         <div className="absolute top-3 left-3 right-3 flex justify-between items-center z-10">
-          <span className="bg-pink-600/90 backdrop-blur-md text-white text-2xs font-extrabold px-2.5 py-1 rounded-xl shadow-sm flex items-center gap-1">
-            <Sparkles className="w-3 h-3 stroke-[2.5]" /> Öne Çıkan
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="bg-pink-600/90 backdrop-blur-md text-white text-2xs font-extrabold px-2.5 py-1 rounded-xl shadow-sm flex items-center gap-1">
+              <Sparkles className="w-3 h-3 stroke-[2.5]" /> Öne Çıkan
+            </span>
+            {hasAdditionalPhotos && (
+              <span className="bg-black/60 backdrop-blur-md text-white text-2xs font-semibold px-2 py-1 rounded-xl shadow-sm flex items-center gap-1">
+                <Camera className="w-3 h-3 stroke-[2]" /> +{additional_photos.length}
+              </span>
+            )}
+          </div>
           {genderText && (
             <span className={`text-2xs font-bold px-2 py-0.5 rounded-xl backdrop-blur-md text-white border border-white/20 ${
               pet.gender === 'male' ? 'bg-blue-600/80' : 'bg-pink-600/80'
