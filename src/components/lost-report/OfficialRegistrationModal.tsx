@@ -9,6 +9,17 @@ interface OfficialRegistrationModalProps {
   pet: any
   onClose?: () => void
   onSuccess: () => Promise<void> | void
+  onLater?: () => void
+}
+
+export function checkHasMissingOfficialInfo(pet: any): boolean {
+  if (!pet) return true
+  if (!pet.microchip_no) return true
+  if (!pet.passport_no) return true
+  if (!pet.registration_city || !pet.registration_district || !pet.agriculture_directorate) {
+    return true
+  }
+  return false
 }
 
 /* ─────────────────────────────────────────────
@@ -33,6 +44,7 @@ export function OfficialRegistrationModal({
   pet,
   onClose,
   onSuccess,
+  onLater,
 }: OfficialRegistrationModalProps) {
   /* ── state ── */
   const [microchipNo, setMicrochipNo] = useState(pet?.microchip_no || '')
@@ -77,6 +89,13 @@ export function OfficialRegistrationModal({
       fields.push('location')
     return fields
   }, [pet])
+
+  /* ── Boş Modal Koruması: Eksik alan yoksa beklemeden doğrudan yayınlama akışını tamamla ── */
+  useEffect(() => {
+    if (missingFields.length === 0) {
+      void onSuccess()
+    }
+  }, [missingFields, onSuccess])
 
   const hasMissing = (key: string) => missingFields.includes(key)
 
@@ -138,6 +157,10 @@ export function OfficialRegistrationModal({
     provinces
       .find((p) => p.name === registrationCity)
       ?.districts?.sort((a: any, b: any) => a.name.localeCompare(b.name, 'tr')) ?? []
+
+  if (missingFields.length === 0) {
+    return null
+  }
 
   return createPortal(
     /*
@@ -446,11 +469,11 @@ export function OfficialRegistrationModal({
             )}
           </button>
 
-          {/* OPOS Ghost — "Şimdi Değil" */}
-          {onClose && (
+          {/* OPOS Ghost — "Şimdi Değil" (Sonra Tamamla) */}
+          {(onLater || onClose) && (
             <button
               type="button"
-              onClick={onClose}
+              onClick={onLater || onClose}
               disabled={loading}
               className="
                 w-full h-11 text-sm font-semibold text-text-secondary
@@ -459,7 +482,7 @@ export function OfficialRegistrationModal({
                 disabled:opacity-50
               "
             >
-              Şimdi Değil
+              Şimdi Değil (Sonra Tamamla)
             </button>
           )}
         </div>

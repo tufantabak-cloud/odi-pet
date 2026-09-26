@@ -1,4 +1,10 @@
 import { z } from 'zod'
+import {
+  turkishMobileSchema,
+  normalizeTurkishMobilePhone as normalizeTurkishPhone,
+} from '@/lib/phone/turkish-mobile'
+
+export { normalizeTurkishPhone }
 
 export const lostReportSessionIdSchema = z
   .string()
@@ -32,29 +38,10 @@ const lostReportPhotoSchema = z.union([
 export const lostReportPublishPayloadSchema = z.object({
   petId: z.string().uuid(),
   location: lostReportLocationSchema,
-  contactPhone: z.string().min(10).max(24),
+  contactPhone: turkishMobileSchema,
   photo: lostReportPhotoSchema.optional(),
   lastSeenAt: z.string().datetime().optional(),
 })
-
-export function normalizeTurkishPhone(input: string): string | null {
-  const trimmed = input.trim()
-  const digits = trimmed.replace(/\D/g, '')
-
-  if (digits.length === 10 && digits.startsWith('5')) {
-    return `+90${digits}`
-  }
-
-  if (digits.length === 11 && digits.startsWith('05')) {
-    return `+90${digits.slice(1)}`
-  }
-
-  if (digits.length === 12 && digits.startsWith('905')) {
-    return `+${digits}`
-  }
-
-  return null
-}
 
 export function getLostReportLocationText(
   location: z.infer<typeof lostReportLocationSchema>

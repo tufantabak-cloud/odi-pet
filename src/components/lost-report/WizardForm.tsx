@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-
 import dynamic from 'next/dynamic'
+import { CheckCircle2, Sparkles } from 'lucide-react'
 
 import { OTPVerification } from './OTPVerification'
 import { PetSelection } from './PetSelection'
@@ -29,6 +29,11 @@ type PetOption = {
   name: string
   species: string | null
   avatar_url?: string | null
+  microchip_no?: string | null
+  passport_no?: string | null
+  registration_city?: string | null
+  registration_district?: string | null
+  agriculture_directorate?: string | null
 }
 
 export function WizardForm({
@@ -44,6 +49,7 @@ export function WizardForm({
   const [sessionId, setSessionId] = useState('')
   const [payload, setPayload] = useState<Record<string, unknown>>({})
   const [reportId, setReportId] = useState<string | null>(null)
+  const [isPending, setIsPending] = useState(false)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -94,17 +100,80 @@ export function WizardForm({
     )
   }
 
+  const currentPet = pets.find((p) => p.id === payload.petId) || pets[0]
+
   if (reportId) {
     return (
+      <div className="card-base mx-auto w-full max-w-md p-6 text-center flex flex-col gap-4">
+        <div className="mx-auto w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+          <CheckCircle2 className="w-10 h-10" strokeWidth={2.5} />
+        </div>
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900">Kayıp İlanı Yayında!</h2>
+          <p className="mt-1 text-sm text-slate-600">
+            Kayıp ihbarınız aktif edildi ve sosyal kayıp pet akışında tüm kullanıcılara ve haritaya duyuruldu.
+          </p>
+        </div>
+
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 text-xs font-mono text-slate-500">
+          İlan Referans No: {reportId}
+        </div>
+
+        {!currentPet?.microchip_no && (
+          <div className="bg-purple-50 border border-purple-200 rounded-2xl p-4 text-left flex flex-col gap-2">
+            <div className="flex items-center gap-2 text-purple-800 font-semibold text-sm">
+              <Sparkles className="w-4 h-4 text-purple-600 shrink-0" />
+              <span>Bulan Kliniklerin Size Ulaşmasını Kolaylaştırın</span>
+            </div>
+            <p className="text-xs text-purple-700 leading-relaxed">
+              Petinizi bulan bir veteriner hekim veya barınak mikroçip taraması yaptığında doğrudan size ulaşabilmesi için mikroçip numaranızı ekleyebilirsiniz.
+            </p>
+            {currentPet?.id && (
+              <Link
+                href={`/owner/pets/${currentPet.id}`}
+                className="mt-1 inline-flex items-center justify-center gap-1.5 w-full py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-semibold transition-all active:scale-[0.98]"
+              >
+                Profile Mikroçip Ekle
+              </Link>
+            )}
+          </div>
+        )}
+
+        <div className="flex flex-col gap-2 mt-2">
+          <Link
+            href="/owner/pets"
+            className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl text-sm font-semibold transition-all active:scale-[0.98]"
+          >
+            Petlerime Dön
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  if (isPending) {
+    return (
       <div className="card-base mx-auto w-full max-w-md p-6 text-center">
-        <div className="mb-4 text-4xl" aria-hidden="true">✅</div>
-        <h2 className="mb-2 text-2xl font-bold text-green-700">İlan yayınlandı</h2>
+        <div className="mb-4 text-4xl" aria-hidden="true">⏳</div>
+        <h2 className="mb-2 text-2xl font-bold text-amber-600">İlan Beklemeye Alındı</h2>
         <p className="mb-4 text-gray-600">
-          Kayıp ilanı aktif edildi ve sosyal kayıp pet akışında görünür durumda.
+          Kayıp ihbarı bilgileriniz taslak olarak güvenle kaydedildi. Eksik resmi kayıt bilgilerinizi dilediğiniz zaman tamamlayarak ilanınızı yayına alabilirsiniz.
         </p>
-        <p className="inline-block rounded bg-gray-100 p-2 font-mono text-sm text-gray-500">
-          ID: {reportId}
-        </p>
+        <div className="flex flex-col gap-2 mt-6">
+          <button
+            type="button"
+            onClick={() => setIsPending(false)}
+            className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 rounded-xl transition-all active:scale-[0.98]"
+          >
+            Bilgileri Şimdi Tamamla
+          </button>
+          <Link
+            href="/owner/pets"
+            className="w-full py-2.5 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors"
+          >
+            Petlerime Dön
+          </Link>
+        </div>
       </div>
     )
   }
@@ -148,6 +217,7 @@ export function WizardForm({
             payload={payload}
             selectedPet={pets.find((p) => p.id === payload.petId) || pets[0]}
             onPublish={setReportId}
+            onPending={() => setIsPending(true)}
           />
         )}
       </div>
