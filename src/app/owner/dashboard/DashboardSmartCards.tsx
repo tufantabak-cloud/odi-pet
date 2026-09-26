@@ -98,6 +98,7 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
     scheduledAt: selectedCardPlan.due_date || selectedCardPlan.scheduled_at,
     status: selectedCardPlan.status,
     petId: selectedCardPlan.pet_id,
+    sourceTable: selectedCardPlan._source || (selectedCardPlan.plan_type || selectedCardPlan.vaccine_id ? 'health_schedules' : 'plans'),
   } : null
 
   useEffect(() => {

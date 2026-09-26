@@ -33,6 +33,23 @@ const ParasitePlanCompletionModal = dynamic(
   { ssr: false }
 );
 
+function sanitizeErrorMessage(rawMessage: string | undefined, defaultFallback = 'İşlem tamamlanırken bir hata oluştu.'): string {
+  if (!rawMessage) return defaultFallback;
+  const lower = rawMessage.toLowerCase();
+  if (
+    lower.includes('coerce') ||
+    lower.includes('json object') ||
+    lower.includes('pgrst') ||
+    lower.includes('null value') ||
+    lower.includes('syntax error') ||
+    lower.includes('failed to fetch') ||
+    lower.includes('network error')
+  ) {
+    return 'İşlem gerçekleştirilemedi. Lütfen bağlantınızı kontrol edip tekrar deneyiniz.';
+  }
+  return rawMessage;
+}
+
 export interface CanonicalPlanActionModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -151,19 +168,41 @@ export function CanonicalPlanActionModal({
     if (!realPlanId) return;
     setLoadingAction('complete');
     try {
-      const res = await fetch(`${getMutationRoute()}`, {
+      const primaryRoute = getMutationRoute();
+      let res = await fetch(primaryRoute, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'completed' }),
       });
+
+      // UI Güvenlik Ağı (Safety Net): Birincil rota başarısız olursa alternatif rotayı dene
+      if (!res.ok) {
+        const isSchedulesRoute = primaryRoute.includes('/schedules/');
+        const fallbackRoute = isSchedulesRoute
+          ? `/api/plans/${realPlanId}`
+          : (petId ? `/api/pets/${petId}/schedules/${realPlanId}` : null);
+
+        if (fallbackRoute) {
+          const fallbackRes = await fetch(fallbackRoute, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'completed' }),
+          }).catch(() => null);
+
+          if (fallbackRes && fallbackRes.ok) {
+            res = fallbackRes;
+          }
+        }
+      }
+
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || 'Tamamlama başarısız oldu.');
+        throw new Error(sanitizeErrorMessage(data.error, 'Tamamlama başarısız oldu.'));
       }
       handleCompleteSuccess();
     } catch (err: any) {
       console.error('[CanonicalPlanActionModal] Completion error:', err);
-      setErrorMsg(err.message || 'İşlem tamamlanırken bir hata oluştu.');
+      setErrorMsg(sanitizeErrorMessage(err.message, 'İşlem tamamlanırken bir hata oluştu.'));
     } finally {
       setLoadingAction(null);
     }
@@ -267,13 +306,13 @@ export function CanonicalPlanActionModal({
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || 'Tamamlama başarısız oldu.');
+        throw new Error(sanitizeErrorMessage(data.error, 'Tamamlama başarısız oldu.'));
       }
 
       handleCompleteSuccess();
     } catch (err: any) {
       console.error('[CanonicalPlanActionModal] Detailed completion error:', err);
-      setErrorMsg(err.message || 'Tamamlama detayları kaydedilemedi.');
+      setErrorMsg(sanitizeErrorMessage(err.message, 'Tamamlama detayları kaydedilemedi.'));
     } finally {
       setLoadingAction(null);
     }
@@ -303,14 +342,14 @@ export function CanonicalPlanActionModal({
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || 'Erteleme başarısız oldu.');
+        throw new Error(sanitizeErrorMessage(data.error, 'Erteleme başarısız oldu.'));
       }
 
       setShowPostponeModal(false);
       handleCompleteSuccess();
     } catch (err: any) {
       console.error('[CanonicalPlanActionModal] Postpone error:', err);
-      setErrorMsg(err.message || 'Erteleme sırasında bir hata oluştu.');
+      setErrorMsg(sanitizeErrorMessage(err.message, 'Erteleme sırasında bir hata oluştu.'));
     } finally {
       setLoadingAction(null);
     }
@@ -325,13 +364,13 @@ export function CanonicalPlanActionModal({
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || 'Silme işlemi başarısız oldu.');
+        throw new Error(sanitizeErrorMessage(data.error, 'Silme işlemi başarısız oldu.'));
       }
       setShowDeleteConfirm(false);
       handleCompleteSuccess();
     } catch (err: any) {
       console.error('[CanonicalPlanActionModal] Delete error:', err);
-      setErrorMsg(err.message || 'Plan silinemedi.');
+      setErrorMsg(sanitizeErrorMessage(err.message, 'Plan silinemedi.'));
     } finally {
       setLoadingAction(null);
     }

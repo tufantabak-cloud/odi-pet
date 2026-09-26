@@ -27,26 +27,31 @@ describe('canonicalActionResolver', () => {
     expect(resolved.sourceTable).toBe('plans');
   });
 
-  it('correctly classifies real plans table UUID Records as plans', () => {
+  it('correctly classifies real plans table UUID Records as plans with repeat_rule and sub_type', () => {
     const context = {
-      planId: 'c2b3d4e5-6789-4321-abcd-ef0123456789',
+      planId: '695ce571-97a7-4b5c-a502-a908135e66d1',
       plan: {
-        id: 'c2b3d4e5-6789-4321-abcd-ef0123456789',
-        type: 'care',
-        cadence: 'monthly',
-        status: 'scheduled',
+        id: '695ce571-97a7-4b5c-a502-a908135e66d1',
+        category: 'bakim',
+        sub_type: 'tuy_bakimi',
+        repeat_rule: 'weekly',
+        status: 'active',
+        scheduled_at: '2026-09-19T09:00:00.000Z',
       },
     };
     const resolved = resolvePlanActions(context);
     expect(resolved.sourceTable).toBe('plans');
+    expect(resolved.canComplete).toBe(true);
   });
 
-  it('correctly falls back to health_schedules when entity lacks plan fields and lacks plan_prefix', () => {
+  it('correctly classifies legacy health_schedules with plan_type or vaccine_id', () => {
     const context = {
       planId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
       plan: {
         id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
-        title: 'Eski SağlĲk Takvimi Kaydı',
+        plan_type: 'vaccine',
+        vaccine_id: 'vac-123',
+        title: 'Karma Aşı Doz 1',
         due_date: '2026-09-20',
       },
     };

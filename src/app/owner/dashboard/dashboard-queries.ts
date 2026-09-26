@@ -175,6 +175,7 @@ async function fetchDashboardData(uid: string): Promise<DashboardData> {
           } else if (upcoming) {
             upcomingSchedules = (upcoming as any[]).map(item => ({
               ...item,
+              _source: 'health_schedules',
               pets: { name: pets.find(p => p.id === item.pet_id)?.name || '' }
             })) as DashboardSchedule[]
           }
@@ -192,6 +193,7 @@ async function fetchDashboardData(uid: string): Promise<DashboardData> {
           } else if (completed) {
             completedSchedules = (completed as any[]).map(item => ({
               ...item,
+              _source: 'health_schedules',
               pets: { name: pets.find(p => p.id === item.pet_id)?.name || '' }
             })) as DashboardSchedule[]
           }
@@ -237,6 +239,7 @@ async function fetchDashboardData(uid: string): Promise<DashboardData> {
 
               return {
                 ...p,
+                _source: 'plans',
                 status: planStatus,
                 displayStatus: planStatus,
               }

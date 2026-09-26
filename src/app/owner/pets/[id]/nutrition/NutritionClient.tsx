@@ -171,7 +171,8 @@ export default function NutritionClient({
       category: plan.category,
       status: plan.status,
       scheduledAt: plan.scheduled_at || plan.due_date,
-      plan: plan
+      plan: plan,
+      sourceTable: plan._source || (plan.plan_type || plan.vaccine_id ? 'health_schedules' : 'plans'),
     })
   }
 

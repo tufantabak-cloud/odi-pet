@@ -26,7 +26,25 @@ const customRuntimeCaching = [
       url.pathname.startsWith('/clinic') ||
       url.pathname.startsWith('/admin') ||
       url.pathname.startsWith('/caregiver'),
-    handler: new NetworkOnly(),
+    handler: new NetworkOnly({
+      plugins: [
+        {
+          handlerDidError: async ({ request, error }: { request: Request; error: Error }) => {
+            // İptal edilen (AbortError / cancelled navigation) istekleri temiz karşıla
+            if (error && (error.name === 'AbortError' || String(error).includes('abort'))) {
+              return new Response(null, { status: 499, statusText: 'Client Closed Request' });
+            }
+            // Sayfa geçişinde ağ kesintisi varsa çevrimdışı fallback sun
+            if (request.destination === 'document' || request.mode === 'navigate') {
+              const offlineFallback = await self.caches.match('/offline');
+              if (offlineFallback) return offlineFallback;
+            }
+            // Gerçek uygulama hatalarını sessizce yutma
+            return Response.error();
+          },
+        },
+      ],
+    }),
   },
   ...defaultCache,
 ];

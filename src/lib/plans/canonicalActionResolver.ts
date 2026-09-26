@@ -162,7 +162,7 @@ export function resolvePlanActions(context: CanonicalPlanContext): ResolvedPlanA
     }
   }
 
-  // Determine actual source table
+  // Determine actual source table (SSOT: 'plans' by default)
   let sourceTable = 'plans';
   if (context.sourceTable) {
     sourceTable = context.sourceTable;
@@ -170,11 +170,27 @@ export function resolvePlanActions(context: CanonicalPlanContext): ResolvedPlanA
     sourceTable = plan._source;
   } else if (occurrence._source) {
     sourceTable = occurrence._source;
-  } else if (plan._plan_id || plan.cadence !== undefined || plan.type !== undefined) {
+  } else if (
+    plan._plan_id ||
+    plan.cadence !== undefined ||
+    plan.type !== undefined ||
+    plan.repeat_rule !== undefined ||
+    plan.sub_type !== undefined ||
+    plan.user_id !== undefined ||
+    plan.notif_before !== undefined
+  ) {
     sourceTable = 'plans';
-  } else if (plan.id && !String(plan.id).startsWith('plan_')) {
-    // If it's a legacy schedule or external record without plan attributes
+  } else if (
+    plan.plan_type !== undefined ||
+    plan.vaccine_id !== undefined ||
+    occurrence.plan_type !== undefined ||
+    occurrence.vaccine_id !== undefined
+  ) {
+    // Only genuine legacy health_schedules records (which have plan_type or vaccine_id)
     sourceTable = 'health_schedules';
+  } else {
+    // Modern default SSOT is plans
+    sourceTable = 'plans';
   }
 
   // Pure health_schedules entries (not linked to a plan) cannot be easily edited via /plans 
