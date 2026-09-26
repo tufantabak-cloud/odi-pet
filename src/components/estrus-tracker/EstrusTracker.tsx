@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEstrusTracker, EstrusCycle } from './useEstrusTracker';
 import { EstrusCycleDetails } from './EstrusCycleDetails';
 import { useReproductiveForecast } from './useReproductiveForecast';
@@ -11,7 +12,19 @@ import { PremiumContent } from '@/components/premium/PremiumContent';
 import { createBrowserSupabaseClient } from '@/lib/supabase/client';
 import { ArchiveConfirmModal } from '@/components/pets/common/ArchiveConfirmModal';
 
-export function EstrusTracker({ petId, petSpecies }: { petId: string, petSpecies: string }) {
+export function EstrusTracker({
+  petId,
+  petSpecies,
+  autoOpenNewModal = false,
+  returnUrl = null,
+}: {
+  petId: string;
+  petSpecies: string;
+  autoOpenNewModal?: boolean;
+  returnUrl?: string | null;
+}) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [cycleToDeleteId, setCycleToDeleteId] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string>('');
 
@@ -41,6 +54,15 @@ export function EstrusTracker({ petId, petSpecies }: { petId: string, petSpecies
   const [notes, setNotes] = useState('');
   const [symptoms, setSymptoms] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+
+  // Auto-open modal if requested via action param
+  useEffect(() => {
+    const shouldOpen = autoOpenNewModal || searchParams?.get('action') === 'new-cycle';
+    if (shouldOpen) {
+      setStartDate(new Date().toISOString().split('T')[0]);
+      setIsNewModalOpen(true);
+    }
+  }, [autoOpenNewModal, searchParams]);
 
   // Feature guard - erişim yoksa PremiumContent göster
   if (!breedingFeature.loading && !breedingFeature.enabled) {
@@ -80,6 +102,11 @@ export function EstrusTracker({ petId, petSpecies }: { petId: string, petSpecies
       setIsNewModalOpen(false);
       resetForms();
       refetchForecast();
+
+      const targetReturnUrl = returnUrl || searchParams?.get('return_url');
+      if (targetReturnUrl) {
+        router.push(targetReturnUrl);
+      }
     } catch (err: any) {
       console.error(err);
       alert(err.message || 'Kaydedilirken bir hata oluştu.');
@@ -377,20 +404,36 @@ export function EstrusTracker({ petId, petSpecies }: { petId: string, petSpecies
               </div>
             </div>
 
-            <div className="px-6 py-4 border-t border-border-main bg-surface flex justify-end gap-3">
-              <button 
-                onClick={() => setIsNewModalOpen(false)}
-                className="px-5 py-2.5 rounded-input text-[14px] font-bold text-text-secondary hover:bg-bg-main transition-colors"
-              >
-                İptal
-              </button>
-              <button 
-                onClick={handleSaveNew}
-                disabled={!startDate || submitting}
-                className="btn-primary px-6 py-2.5 rounded-input text-[14px] disabled:opacity-50"
-              >
-                {submitting ? 'Kaydediliyor...' : 'Dönemi Başlat'}
-              </button>
+            <div className="px-6 py-4 border-t border-border-main bg-surface flex justify-between items-center">
+              <div>
+                {(returnUrl || searchParams?.get('return_url')) && (
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      const targetReturnUrl = returnUrl || searchParams?.get('return_url');
+                      if (targetReturnUrl) router.push(targetReturnUrl);
+                    }}
+                    className="text-[12px] font-bold text-amber-700 hover:text-amber-800 transition-colors"
+                  >
+                    ← İlana Geri Dön
+                  </button>
+                )}
+              </div>
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setIsNewModalOpen(false)}
+                  className="px-5 py-2.5 rounded-input text-[14px] font-bold text-text-secondary hover:bg-bg-main transition-colors"
+                >
+                  İptal
+                </button>
+                <button 
+                  onClick={handleSaveNew}
+                  disabled={!startDate || submitting}
+                  className="btn-primary px-6 py-2.5 rounded-input text-[14px] disabled:opacity-50"
+                >
+                  {submitting ? 'Kaydediliyor...' : 'Dönemi Başlat'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

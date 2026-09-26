@@ -431,7 +431,7 @@ export default function BreedingListingManager({ pet, initialListing }: { pet: P
               <>
                 <h4 className="font-bold text-[13px] text-pink-700 mb-2">🌸 Aktif kızgınlık döngüsü mevcut</h4>
                 <div className="text-[12px] font-normal text-pink-800 mb-3 bg-white p-2 rounded border border-pink-100 inline-block">
-                  Başlangıç: {new Date(activeCycle.start_date).toLocaleDateString('tr-TR')} — Bitiş: {new Date(activeCycle.end_date).toLocaleDateString('tr-TR')}
+                  Başlangıç: {new Date(activeCycle.start_date).toLocaleDateString('tr-TR')} — Bitiş: {activeCycle.end_date ? new Date(activeCycle.end_date).toLocaleDateString('tr-TR') : 'Devam ediyor'}
                 </div>
                 <label className="flex items-center gap-2 cursor-pointer mt-1">
                   <input type="checkbox" checked={estrusNotif} onChange={e => setEstrusNotif(e.target.checked)} className="w-4 h-4 rounded text-pink-500 focus:ring-pink-500 border-pink-300" />
@@ -442,9 +442,16 @@ export default function BreedingListingManager({ pet, initialListing }: { pet: P
               <div className="bg-amber-50 border border-amber-200 p-3 rounded-xl">
                 <h4 className="font-bold text-[13px] text-amber-800 mb-1">🌸 Aktif kızgınlık döngüsü bulunamadı.</h4>
                 <p className="text-[12px] text-amber-700 mb-3 leading-relaxed">
-                  Eşleşme bildirimleri için önce Sağlık sekmesinden kızgınlık döngüsü ekleyin.
+                  Eşleşme bildirimleri için önce Takvim sekmesinden kızgınlık döngüsü ekleyin.
                 </p>
-                <button type="button" onClick={() => router.push(`/owner/pets/${pet.id}?tab=health`)} className="text-[12px] font-bold bg-white text-amber-700 border border-amber-200 px-3 py-1.5 rounded-lg shadow-sm hover:bg-amber-100 transition-colors cursor-pointer">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const returnUrl = encodeURIComponent(`/owner/pets/${pet.id}/match`)
+                    router.push(`/owner/pets/${pet.id}?tab=takvim&action=new-cycle&return_url=${returnUrl}`)
+                  }}
+                  className="text-[12px] font-bold bg-white text-amber-700 border border-amber-200 px-3 py-1.5 rounded-lg shadow-sm hover:bg-amber-100 transition-colors cursor-pointer"
+                >
                   Döngü Ekle →
                 </button>
               </div>
