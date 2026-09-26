@@ -10,8 +10,8 @@ export default async function SocialPage() {
     supabase
       .from('pet_adoptions')
       .select(`
-        id, pet_id, story, requirements, created_at,
-        pet:pets (id, name, species, breed, avatar_url, city, birth_date)
+        id, pet_id, user_id, story, requirements, created_at, additional_photos, special_needs,
+        pet:pets (id, name, species, breed, avatar_url, city, birth_date, is_neutered, gender)
       `)
       .eq('status', 'active')
       .order('created_at', { ascending: false }),
@@ -20,6 +20,7 @@ export default async function SocialPage() {
       .from('lost_reports')
       .select(`
         id, last_seen_location, last_seen_at, contact_phone, created_at, pet_id, status,
+        distinctive_features, collar_info, color, additional_photos,
         pet:pets (id, name, species, avatar_url, city, breed, birth_date)
       `)
       .eq('status', 'active')

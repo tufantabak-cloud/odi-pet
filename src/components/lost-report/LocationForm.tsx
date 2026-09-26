@@ -33,6 +33,11 @@ export const LocationForm = ({ onNext }: { onNext: (data: any) => void }) => {
   const [geoLocating, setGeoLocating] = useState(false);
   const [error, setError] = useState('');
 
+  // Additional identifying pet features
+  const [color, setColor] = useState('');
+  const [collarInfo, setCollarInfo] = useState('');
+  const [distinctiveFeatures, setDistinctiveFeatures] = useState('');
+
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
@@ -171,7 +176,12 @@ export const LocationForm = ({ onNext }: { onNext: (data: any) => void }) => {
           setManualMode(true);
         }
       } else {
-        onNext(data);
+        onNext({
+          ...data,
+          color: color.trim() || undefined,
+          collarInfo: collarInfo.trim() || undefined,
+          distinctiveFeatures: distinctiveFeatures.trim() || undefined,
+        });
       }
     } catch (err) {
       setError('Bir hata oluştu.');
@@ -251,6 +261,60 @@ export const LocationForm = ({ onNext }: { onNext: (data: any) => void }) => {
           </button>
         </div>
       )}
+
+      {/* Ayırt Edici Bilgiler */}
+      <div className="flex flex-col gap-3 pt-3 border-t border-slate-100">
+        <div>
+          <h3 className="text-xs font-bold text-slate-800 tracking-wide">
+            Ayırt Edici Özellikler (Önerilir)
+          </h3>
+          <p className="text-2xs text-slate-400 font-normal mt-0.5">
+            Petinizi görenlerin hızlı tanıması için detayları ekleyin.
+          </p>
+        </div>
+
+        <div>
+          <label className="text-xs font-semibold text-slate-700 ml-1">
+            Renk / Tüy Deseni
+          </label>
+          <input
+            type="text"
+            value={color}
+            onChange={(e) => setColor(e.target.value)}
+            placeholder="Örn: Siyah-Beyaz, Tekir, Sarman, Golden sarısı"
+            maxLength={100}
+            className="w-full mt-1 px-3.5 py-2.5 rounded-2xl border border-slate-200 bg-white text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all"
+          />
+        </div>
+
+        <div>
+          <label className="text-xs font-semibold text-slate-700 ml-1">
+            Tasma Durumu
+          </label>
+          <input
+            type="text"
+            value={collarInfo}
+            onChange={(e) => setCollarInfo(e.target.value)}
+            placeholder="Örn: Kırmızı boyun tasması var / Tasma yok"
+            maxLength={200}
+            className="w-full mt-1 px-3.5 py-2.5 rounded-2xl border border-slate-200 bg-white text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all"
+          />
+        </div>
+
+        <div>
+          <label className="text-xs font-semibold text-slate-700 ml-1">
+            Belirgin Özellikler
+          </label>
+          <textarea
+            value={distinctiveFeatures}
+            onChange={(e) => setDistinctiveFeatures(e.target.value)}
+            placeholder="Örn: Sağ kulağında çentik, göğsünde beyaz leke, sol patisi aksıyor..."
+            rows={2}
+            maxLength={500}
+            className="w-full mt-1 p-3 rounded-2xl border border-slate-200 bg-white text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all resize-none"
+          />
+        </div>
+      </div>
 
       {error && <div className="text-red-500 text-xs font-medium bg-red-50 p-2.5 rounded-xl border border-red-100">{error}</div>}
 

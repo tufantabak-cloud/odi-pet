@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { getAge, translateSpecies } from '@/lib/utils/petLabels'
 import {
   AlertTriangle, Clock, MapPin, Share2, Phone,
-  CheckCircle2, X, Loader2
+  CheckCircle2, X, Loader2, Camera
 } from 'lucide-react'
 
 export interface LostFeedCardProps {
@@ -17,6 +17,10 @@ export interface LostFeedCardProps {
     created_at: string | null
     pet_id?: string | null
     status?: string | null
+    distinctive_features?: string | null
+    collar_info?: string | null
+    color?: string | null
+    additional_photos?: string[] | null
     pet: {
       id: string
       name: string
@@ -294,6 +298,13 @@ export function LostFeedCard({ report }: { report: any }) {
               Kayıp
             </span>
           </div>
+
+          {report.additional_photos && report.additional_photos.length > 0 && (
+            <div className="absolute bottom-1.5 right-1.5 bg-black/60 backdrop-blur-sm text-white text-2xs font-semibold px-1.5 py-0.5 rounded-md flex items-center gap-1 shadow-sm">
+              <Camera className="w-3 h-3 stroke-[2]" />
+              <span>+{report.additional_photos.length}</span>
+            </div>
+          )}
         </div>
 
         {/* Right: Details & Actions */}
@@ -318,6 +329,29 @@ export function LostFeedCard({ report }: { report: any }) {
             <p className="text-xs font-medium text-slate-500 truncate mt-0.5">
               {[speciesLabel, breedText, ageText].filter(Boolean).join(' • ')}
             </p>
+
+            {/* Color & Collar */}
+            {(report.color || report.collar_info) && (
+              <div className="flex flex-wrap items-center gap-1 mt-1">
+                {report.color && (
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-700 text-2xs font-medium">
+                    {report.color}
+                  </span>
+                )}
+                {report.collar_info && (
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200/80 text-2xs font-medium">
+                    {report.collar_info}
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Distinctive Features */}
+            {report.distinctive_features && (
+              <p className="text-2xs text-slate-500 font-normal line-clamp-1 mt-1 bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-100">
+                <span className="font-semibold text-slate-700">Özellik:</span> {report.distinctive_features}
+              </p>
+            )}
 
             {/* Location */}
             <p className="text-2xs text-slate-600 font-medium flex items-center gap-1 mt-1.5 truncate">

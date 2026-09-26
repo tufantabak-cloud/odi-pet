@@ -32,15 +32,23 @@ async function getMatchesHandler(req: NextRequest, context: RouteContext) {
 
   if (!ownerRecord) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  // Petin kendi bilgilerini al (tür, cinsiyet, ırk)
+  // Petin kendi bilgilerini al (tür, cinsiyet, ırk, doğum tarihi)
   const { data: pet } = await supabase
     .from('pets')
-    .select('species, gender, breed')
+    .select('species, gender, breed, birth_date')
     .eq('id', id)
     .single()
     
   if (!pet || !pet.species || !pet.gender || !pet.breed) {
     return NextResponse.json({ error: 'Pet bilgileri eksik (tür, cinsiyet, ırk gerekli).' }, { status: 400 })
+  }
+
+  const oneYearAgo = new Date(Date.now() - 365.25 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  if (!pet.birth_date || pet.birth_date > oneYearAgo) {
+    return NextResponse.json(
+      { error: '1 yaşından küçük evcil hayvanlar için eşleşme adayı aranamaz' },
+      { status: 400 }
+    )
   }
 
   const oppositeGender = pet.gender === 'male' ? 'female' : 'male'
@@ -58,6 +66,7 @@ async function getMatchesHandler(req: NextRequest, context: RouteContext) {
   // - Zıt cinsiyet (gender)
   // - KESİN aynı ırk (breed) - Kullanıcı isteği
   // - Seçilen şehir (city)
+  // - En az 12 aylık (>= 1 yaş)
   // - Daha önce değerlendirilmemiş olmalı
   // - Kişinin kendi petlerinden biri olmamalı (owner_id kontrolü, gerçi gender/breed filtresi zaten çok daraltır ama yine de)
   let query = supabase
@@ -69,6 +78,7 @@ async function getMatchesHandler(req: NextRequest, context: RouteContext) {
     .or('is_neutered.is.null,is_neutered.eq.false')
     .in('city', cities)
     .eq('breeding_listings.status', 'active')
+    .lte('birth_date', oneYearAgo)
     .neq('id', id)
     
   if (actedPetIds.length > 0) {

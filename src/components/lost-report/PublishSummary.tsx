@@ -82,11 +82,22 @@ export const PublishSummary = ({
       ? payload.location.address
       : 'İl / İlçe Belirtilmedi');
 
+  const addPhotosCount =
+    payload.additionalPhotos?.length ||
+    payload.photo?.additionalPhotos?.length ||
+    0;
+
   const photoDisplay = payload.photo?.skipped
     ? 'Fotoğrafsız (Atlandı)'
     : payload.photo?.photoUrl
-    ? 'Fotoğraf Seçildi'
+    ? addPhotosCount > 0
+      ? `Fotoğraf Seçildi (+${addPhotosCount} Ek Fotoğraf)`
+      : 'Fotoğraf Seçildi'
     : 'Fotoğrafsız';
+
+  const petColor = payload.color || payload.location?.color;
+  const petCollar = payload.collarInfo || payload.location?.collarInfo;
+  const petFeatures = payload.distinctiveFeatures || payload.location?.distinctiveFeatures;
 
   return (
     <div className="flex flex-col gap-4">
@@ -113,10 +124,30 @@ export const PublishSummary = ({
         <div className="flex items-center gap-2.5">
           <Camera className="w-4 h-4 text-purple-600 shrink-0" />
           <div className="text-sm">
-            <span className="font-semibold text-slate-800">Görsel:</span>{' '}
+            <span className="font-semibold text-slate-800">Görseller:</span>{' '}
             <span className="text-slate-600 font-medium">{photoDisplay}</span>
           </div>
         </div>
+
+        {(petColor || petCollar || petFeatures) && (
+          <div className="flex flex-col gap-1 text-xs bg-white p-2.5 rounded-xl border border-slate-200/80">
+            {petColor && (
+              <p className="text-slate-700">
+                <span className="font-semibold text-slate-900">Renk:</span> {petColor}
+              </p>
+            )}
+            {petCollar && (
+              <p className="text-slate-700">
+                <span className="font-semibold text-slate-900">Tasma:</span> {petCollar}
+              </p>
+            )}
+            {petFeatures && (
+              <p className="text-slate-700">
+                <span className="font-semibold text-slate-900">Belirgin Özellik:</span> {petFeatures}
+              </p>
+            )}
+          </div>
+        )}
 
         <div className="flex items-center gap-2.5">
           <Phone className="w-4 h-4 text-purple-600 shrink-0" />
