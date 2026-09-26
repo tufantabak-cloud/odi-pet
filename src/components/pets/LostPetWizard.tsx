@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { formatTurkishMobileInput } from '@/lib/phone/turkish-mobile'
 import Image from 'next/image'
 import { DefaultCatAvatar, DefaultDogAvatar } from '@/components/icons/PetIcons'
 import { useGeolocation } from '@/contexts/GeolocationContext'
@@ -192,7 +193,7 @@ export default function LostPetWizard({ pet, ownerPhone, onComplete, onCancel }:
                 <input
                   type="tel"
                   value={contactPhone}
-                  onChange={(e) => setContactPhone(e.target.value)}
+                  onChange={(e) => setContactPhone(formatTurkishMobileInput(e.target.value))}
                   placeholder="05XX XXX XX XX"
                   className="w-full input-base py-3.5 px-4 text-[14px] bg-white border border-border-main rounded-xl focus:outline-none focus:border-error transition-all"
                 />

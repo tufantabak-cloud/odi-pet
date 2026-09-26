@@ -1,4 +1,5 @@
 import * as z from "zod";
+import { optionalTurkishMobileSchema } from '@/lib/phone/turkish-mobile';
 
 // Shared password rules — single source of truth for all auth forms
 export const passwordSchema = z
@@ -31,7 +32,7 @@ export const registerSchema = z.object({
 export const clinicRegisterSchema = z.object({
   name: z.string().trim().min(2, "Ad soyad en az 2 karakter olmalıdır.").max(100),
   clinicName: z.string().trim().min(2, "Klinik adı en az 2 karakter olmalıdır.").max(160),
-  clinicPhone: z.string().trim().max(30).optional(),
+  clinicPhone: optionalTurkishMobileSchema,
   email: z.string().trim().email("Geçerli bir e-posta adresi giriniz.").max(254),
   password: passwordSchema,
   terms: z.literal(true, {

@@ -1,3 +1,5 @@
+import { z } from 'zod'
+
 const TURKISH_MOBILE_LOCAL_DIGITS = /^5\d{9}$/
 
 function getLocalMobileDigits(input: string): string {
@@ -25,6 +27,7 @@ export function formatTurkishMobileInput(input: string): string {
 }
 
 export function normalizeTurkishMobilePhone(input: string): string | null {
+  if (!input) return null
   const localDigits = getLocalMobileDigits(input)
   return TURKISH_MOBILE_LOCAL_DIGITS.test(localDigits)
     ? `+90${localDigits}`
@@ -34,3 +37,22 @@ export function normalizeTurkishMobilePhone(input: string): string | null {
 export function isTurkishMobilePhone(input: string): boolean {
   return normalizeTurkishMobilePhone(input) !== null
 }
+
+export const turkishMobileSchema = z
+  .string()
+  .min(1, 'Telefon numarası zorunludur.')
+  .transform((val) => normalizeTurkishMobilePhone(val) || val)
+  .refine(
+    (val) => isTurkishMobilePhone(val),
+    { message: 'Geçerli bir telefon numarası giriniz.' }
+  )
+
+export const optionalTurkishMobileSchema = z
+  .string()
+  .optional()
+  .nullable()
+  .transform((val) => (val && val.trim() !== '' ? normalizeTurkishMobilePhone(val) || val : null))
+  .refine(
+    (val) => !val || isTurkishMobilePhone(val),
+    { message: 'Geçerli bir telefon numarası giriniz.' }
+  )

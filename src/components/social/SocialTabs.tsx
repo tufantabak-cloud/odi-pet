@@ -817,21 +817,16 @@ export function SocialTabs({
               </div>
             )}
 
-            {/* ── BLOK 5: CTA (bu sekmede iki eşit ağırlıklı aksiyon) ── */}
-            <CtaBar twoUp>
+            {/* ── BLOK 5: CTA ── */}
+            {/* "Buldum Bildir" artık her kayıp ilanı kartı üzerinde karta özel çalışır.
+                Burada yalnızca pet sahibine özel aksiyon yer alır. */}
+            <CtaBar>
               <Link
                 href="/owner/lost-report?mode=lost"
                 className={`${CTA_BUTTON_BASE} ${accentOf('orange').solid}`}
               >
                 <AlertTriangle className="w-4 h-4 stroke-[2.5]" />
                 Kayıp İlanı Ver
-              </Link>
-              <Link
-                href="/owner/lost-report?mode=found"
-                className={`${CTA_BUTTON_BASE} ${accentOf('orange').outline}`}
-              >
-                <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
-                Buldum Bildir
               </Link>
             </CtaBar>
 

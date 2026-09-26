@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { optionalTurkishMobileSchema } from '@/lib/phone/turkish-mobile'
 import { isValidMicrochipNo, isValidPassportNo, BarcodeScanResult } from './barcode-scanner'
 import {
   CoverExtraction,
@@ -61,7 +62,7 @@ export const PassportCoverSchema = z.object({
 export const Page4Schema = z.object({
   owner_first_name: z.string().optional().nullable(),
   owner_last_name: z.string().optional().nullable(),
-  owner_phone: z.string().optional().nullable(),
+  owner_phone: optionalTurkishMobileSchema,
   owner_city: z.string().optional().nullable(),
   owner_district: z.string().optional().nullable(),
   owner_address: z.string().optional().nullable(),
@@ -89,7 +90,7 @@ export const Page6Schema = z.object({
 export const Page7Schema = z.object({
   veterinarian_name: z.string().optional().nullable(),
   clinic_name: z.string().optional().nullable(),
-  vet_phone: z.string().optional().nullable(),
+  vet_phone: optionalTurkishMobileSchema,
   vet_email: z.string().optional().nullable(),
   registration_city: z.string().optional().nullable(),
   registration_district: z.string().optional().nullable(),

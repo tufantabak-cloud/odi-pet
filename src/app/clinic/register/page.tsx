@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Eye, EyeOff } from 'lucide-react'
+import { formatTurkishMobileInput } from '@/lib/phone/turkish-mobile'
 import dynamic from 'next/dynamic'
 
 const Turnstile = dynamic(
@@ -140,8 +141,9 @@ export default function ClinicRegisterPage() {
               id="clinicPhone"
               name="clinicPhone"
               type="tel"
-              placeholder="Örn: 0212 555 55 55"
+              placeholder="Örn: 0555 555 55 55"
               className="input-base py-3 text-base"
+              onChange={(e) => { e.target.value = formatTurkishMobileInput(e.target.value) }}
             />
           </div>
 

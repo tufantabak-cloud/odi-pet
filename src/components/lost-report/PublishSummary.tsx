@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
 import { MapPin, Camera, Phone, CheckCircle, AlertCircle } from 'lucide-react';
-import { OfficialRegistrationModal } from './OfficialRegistrationModal';
+import { OfficialRegistrationModal, checkHasMissingOfficialInfo } from './OfficialRegistrationModal';
 
 export const PublishSummary = ({
   sessionId,
   payload,
   selectedPet,
   onPublish,
+  onPending,
 }: {
   sessionId: string;
   payload: any;
   selectedPet?: any;
   onPublish: (reportId: string) => void;
+  onPending?: () => void;
 }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -50,6 +52,28 @@ export const PublishSummary = ({
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePublishClick = () => {
+    if (checkHasMissingOfficialInfo(selectedPet)) {
+      setShowModal(true);
+    } else {
+      handlePublish();
+    }
+  };
+
+  const handleSaveForLater = async () => {
+    setShowModal(false);
+    try {
+      await fetch('/api/v1/reports/lost/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, payload, action: 'save_draft' }),
+      });
+    } catch (err) {
+      console.warn('Draft sync warning:', err);
+    }
+    onPending?.();
   };
 
   const locationDisplay =
@@ -113,9 +137,9 @@ export const PublishSummary = ({
       )}
 
       <button
-        onClick={() => setShowModal(true)}
+        onClick={handlePublishClick}
         disabled={loading}
-        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition-all active:scale-[0.98] disabled:opacity-50 mt-2"
+        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-2xl shadow-lg transition-all active:scale-[0.98] disabled:opacity-50 mt-2"
       >
         {loading ? 'Yayınlanıyor...' : 'Kayıp İlanını Yayınla'}
       </button>
@@ -125,6 +149,7 @@ export const PublishSummary = ({
           pet={selectedPet}
           onClose={() => setShowModal(false)}
           onSuccess={handlePublish}
+          onLater={handleSaveForLater}
         />
       )}
     </div>
