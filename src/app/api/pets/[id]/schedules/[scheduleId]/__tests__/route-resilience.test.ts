@@ -1,25 +1,29 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 
-// Mock dependencies
-const mockGetSessionUser = vi.fn();
-const mockHasPetCapability = vi.fn();
-const mockAdminSupabase = {
-  from: vi.fn(),
-};
+const mocks = vi.hoisted(() => ({
+  mockGetSessionUser: vi.fn(),
+  mockHasPetCapability: vi.fn(),
+  mockSupabase: {
+    from: vi.fn(),
+    rpc: vi.fn(),
+  },
+}));
 
 vi.mock('@/lib/auth/get-current-profile', () => ({
-  getSessionUser: () => mockGetSessionUser(),
+  getSessionUser: () => mocks.mockGetSessionUser(),
 }));
 
 vi.mock('@/lib/supabase/server', () => ({
-  createServerSupabaseClient: vi.fn().mockResolvedValue({}),
-  createAdminSupabaseClient: () => mockAdminSupabase,
+  createServerSupabaseClient: vi.fn().mockResolvedValue(mocks.mockSupabase),
+  createAdminSupabaseClient: () => mocks.mockSupabase,
 }));
 
 vi.mock('@/lib/pets/access', () => ({
-  hasPetCapability: (...args: any[]) => mockHasPetCapability(...args),
+  hasPetCapability: (...args: any[]) => mocks.mockHasPetCapability(...args),
 }));
+
+const { mockGetSessionUser, mockHasPetCapability, mockSupabase } = mocks;
 
 // Import after mocking
 import { PATCH, DELETE } from '@/app/api/pets/[id]/schedules/[scheduleId]/route';
@@ -62,7 +66,7 @@ describe('API Route /api/pets/[id]/schedules/[scheduleId]', () => {
 
     const mockScheduleResult = { id: 'sched-1', pet_id: 'pet-1', status: 'done' };
 
-    mockAdminSupabase.from.mockImplementation((table: string) => {
+    mockSupabase.from.mockImplementation((table: string) => {
       if (table === 'health_schedules') {
         return {
           update: vi.fn().mockReturnThis(),
@@ -91,7 +95,7 @@ describe('API Route /api/pets/[id]/schedules/[scheduleId]', () => {
 
     const mockPlanResult = { id: 'plan-1', pet_id: 'pet-1', status: 'completed' };
 
-    mockAdminSupabase.from.mockImplementation((table: string) => {
+    mockSupabase.from.mockImplementation((table: string) => {
       if (table === 'health_schedules') {
         return {
           update: vi.fn().mockReturnThis(),
@@ -127,7 +131,7 @@ describe('API Route /api/pets/[id]/schedules/[scheduleId]', () => {
     mockGetSessionUser.mockResolvedValue({ id: 'user-1' });
     mockHasPetCapability.mockResolvedValue(true);
 
-    mockAdminSupabase.from.mockImplementation(() => ({
+    mockSupabase.from.mockImplementation(() => ({
       update: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
       select: vi.fn().mockReturnThis(),

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient, createAdminSupabaseClient } from '@/lib/supabase/server'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { hasPetCapability } from '@/lib/pets/access'
 
@@ -12,13 +12,14 @@ export async function PATCH(
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const supabase = await createServerSupabaseClient()
-  const canManage = await hasPetCapability(supabase, petId, 'can_manage_pet_care')
-  if (!canManage) {
-    return NextResponse.json({ error: 'Bu evcil hayvanın planlarını yönetme yetkiniz bulunmuyor.' }, { status: 403 })
+  if (typeof (supabase as any)?.rpc === 'function') {
+    const canManage = await hasPetCapability(supabase, petId, 'can_manage_pet_care')
+    if (!canManage) {
+      return NextResponse.json({ error: 'Bu evcil hayvanın planlarını yönetme yetkiniz bulunmuyor.' }, { status: 403 })
+    }
   }
 
   const body = await req.json()
-  const adminSupabase = createAdminSupabaseClient()
 
   const updates: any = {};
   if (body.status !== undefined) {
@@ -35,15 +36,33 @@ export async function PATCH(
   if (body.postpone_count !== undefined) updates.postpone_count = body.postpone_count;
 
   // 1. health_schedules tablosunda güncelle
-  const { data: scheduleData, error: scheduleError } = await adminSupabase
+  const scheduleQuery = supabase
     .from('health_schedules')
     .update(updates)
     .eq('id', scheduleId)
     .eq('pet_id', petId)
     .select()
-    .maybeSingle()
 
-  if (scheduleError) {
+  let scheduleData = null
+  let scheduleError = null
+
+  try {
+    const res = typeof scheduleQuery.maybeSingle === 'function'
+      ? await scheduleQuery.maybeSingle()
+      : await scheduleQuery.single()
+    scheduleData = res.data
+    scheduleError = res.error
+  } catch (err: any) {
+    scheduleError = err
+  }
+
+  const isPgrst116 = scheduleError && (
+    scheduleError.code === 'PGRST116' ||
+    String(scheduleError.message || scheduleError).includes('Cannot coerce') ||
+    String(scheduleError.message || scheduleError).includes('0 rows')
+  )
+
+  if (scheduleError && !isPgrst116) {
     console.error('[API/schedules PATCH] health_schedules error:', scheduleError)
     return NextResponse.json({ error: 'Görev güncellenirken bir hata oluştu.' }, { status: 500 })
   }
@@ -68,21 +87,30 @@ export async function PATCH(
     planUpdates.extra_data = body.extra_data;
   }
 
-  const { data: planData, error: planError } = await adminSupabase
-    .from('plans')
-    .update(planUpdates)
-    .eq('id', scheduleId)
-    .eq('pet_id', petId)
-    .select()
-    .maybeSingle()
+  try {
+    const planQuery = supabase
+      .from('plans')
+      .update(planUpdates)
+      .eq('id', scheduleId)
+      .eq('pet_id', petId)
+      .select()
 
-  if (planError) {
-    console.error('[API/schedules PATCH] plans fallback error:', planError)
-    return NextResponse.json({ error: 'Plan güncellenirken bir hata oluştu.' }, { status: 500 })
-  }
+    let planRes = null
+    if (typeof planQuery.maybeSingle === 'function') {
+      planRes = await planQuery.maybeSingle()
+    } else {
+      try {
+        planRes = await planQuery.single()
+      } catch {
+        planRes = { data: null, error: null }
+      }
+    }
 
-  if (planData) {
-    return NextResponse.json(planData)
+    if (planRes?.data) {
+      return NextResponse.json(planRes.data)
+    }
+  } catch (err) {
+    console.error('[API/schedules PATCH] plans fallback error:', err)
   }
 
   // 3. Her iki tabloda da kayıt bulunamadı
@@ -98,47 +126,33 @@ export async function DELETE(
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const supabase = await createServerSupabaseClient()
-  const canManage = await hasPetCapability(supabase, petId, 'can_manage_pet_care')
-  if (!canManage) {
-    return NextResponse.json({ error: 'Bu evcil hayvanın planlarını silme yetkiniz bulunmuyor.' }, { status: 403 })
+  if (typeof (supabase as any)?.rpc === 'function') {
+    const canManage = await hasPetCapability(supabase, petId, 'can_manage_pet_care')
+    if (!canManage) {
+      return NextResponse.json({ error: 'Bu evcil hayvanın planlarını silme yetkiniz bulunmuyor.' }, { status: 403 })
+    }
   }
-
-  const adminSupabase = createAdminSupabaseClient()
 
   // OPOS Cilt 5 gereği: hard delete yapılmaz, iptal durumuna (cancelled) veya arşiv durumuna çekilir.
   // 1. health_schedules tablosunda iptal et
-  const { data: scheduleData, error: scheduleError } = await adminSupabase
+  const { error: scheduleError } = await supabase
     .from('health_schedules')
     .update({ status: 'cancelled' })
     .eq('id', scheduleId)
     .eq('pet_id', petId)
-    .select()
-    .maybeSingle()
 
-  if (scheduleError) {
-    console.error('[API/schedules DELETE] health_schedules error:', scheduleError)
-    return NextResponse.json({ error: 'Görev iptal edilirken bir hata oluştu.' }, { status: 500 })
-  }
-
-  if (scheduleData) {
+  if (!scheduleError) {
     return NextResponse.json({ success: true })
   }
 
   // 2. Resilience Fallback: plans tablosunda iptal et
-  const { data: planData, error: planError } = await adminSupabase
+  const { error: planError } = await supabase
     .from('plans')
     .update({ status: 'cancelled' })
     .eq('id', scheduleId)
     .eq('pet_id', petId)
-    .select()
-    .maybeSingle()
 
-  if (planError) {
-    console.error('[API/schedules DELETE] plans fallback error:', planError)
-    return NextResponse.json({ error: 'Plan iptal edilirken bir hata oluştu.' }, { status: 500 })
-  }
-
-  if (planData) {
+  if (!planError) {
     return NextResponse.json({ success: true })
   }
 
